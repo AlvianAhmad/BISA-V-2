@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "834094387329",
+    "firebase_url": "https://alvian-2832d-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "alvian-2832d",
+    "storage_bucket": "alvian-2832d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834094387329:android:1e92e25769888e3d4dfd80",
+        "android_client_info": {
+          "package_name": "com.example.bisa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "834094387329-9sne0nplckfsnmpcg7t54fo9ginhe18q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.bisa",
+            "certificate_hash": "3a46197209285ba77981f0f584e00863b091aabd"
+          }
+        },
+        {
+          "client_id": "834094387329-vodh9j8g4j4ndtehp9105c4j3664s3r7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMrXiairEZpOEpX-85FA45mrA8liyBv8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834094387329-vodh9j8g4j4ndtehp9105c4j3664s3r7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "834094387329-08bqan1chesh5treqs81jg55s24qu2u5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bisa"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
