@@ -6,6 +6,7 @@ import 'app_routes.dart';
 import '../presentation/pages/welcome_page.dart';
 import '../presentation/pages/auth/login_page.dart';
 import '../presentation/pages/auth/register_page.dart';
+import '../presentation/pages/auth/auth_gate_page.dart';
 
 // ROLE PAGES
 import '../presentation/pages/admin/admin_page.dart';
@@ -50,6 +51,11 @@ class AppRouter {
       case AppRoutes.mahasiswa:
         return _page(
           const MahasiswaPage(),
+        );
+
+      case AppRoutes.authGate:
+        return _page(
+          const AuthGatePage(),
         );
 
       default:

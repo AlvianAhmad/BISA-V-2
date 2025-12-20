@@ -17,7 +17,6 @@ class KursusViewModel
     required this.addCoursesToMyCourses,
   });
 
-  // Search my courses
   final searchController = TextEditingController();
   String _query = '';
 
@@ -30,6 +29,8 @@ class KursusViewModel
     CourseEntity
   >
   get myCourses => _myCourses;
+
+  bool _disposed = false;
 
   List<
     CourseEntity
@@ -55,13 +56,13 @@ class KursusViewModel
     String v,
   ) {
     _query = v;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   void clearSearch() {
     searchController.clear();
     _query = '';
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   Future<
@@ -69,10 +70,12 @@ class KursusViewModel
   >
   init() async {
     isLoading = true;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
+
     _myCourses = await getMyCourses();
+
     isLoading = false;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   Future<
@@ -97,11 +100,12 @@ class KursusViewModel
       selected,
     );
     _myCourses = await getMyCourses();
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   @override
   void dispose() {
+    _disposed = true;
     searchController.dispose();
     super.dispose();
   }

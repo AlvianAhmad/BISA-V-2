@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../pages/auth/login_page.dart';
+import '../../pages/auth/login_page.dart';
 
 class CustomSettingsDrawer
     extends

@@ -9,7 +9,7 @@ import 'routes/app_routes.dart';
 
 // ===== AUTH =====
 import 'data/datasources/auth_firebase_datasource.dart';
-import 'domain/repositories/auth_repository_impl.dart';
+import 'data/repositories/auth_repository_impl.dart';
 
 import 'presentation/viewmodels/auth/auth_viewmodel.dart';
 import 'presentation/viewmodels/admin/admin_viewmodel.dart';
@@ -142,7 +142,8 @@ class _MyAppState
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.welcome,
+        initialRoute: AppRoutes.authGate,
+
         onGenerateRoute: AppRouter.onGenerateRoute,
       ),
     );

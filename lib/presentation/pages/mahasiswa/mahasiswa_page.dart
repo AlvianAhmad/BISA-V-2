@@ -7,8 +7,8 @@ import 'tabs/kursus_page.dart';
 import 'tabs/notifikasi_page.dart';
 import 'tabs/profile_page.dart';
 
-import '../../widgets/custom_user_appbar.dart';
-import '../../widgets/custom_settings_drawer.dart';
+import '../../widgets/mahasiswa/custom_user_appbar.dart';
+import '../../widgets/mahasiswa/custom_settings_drawer.dart';
 
 class MahasiswaPage
     extends

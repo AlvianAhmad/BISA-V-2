@@ -1,22 +1,40 @@
 import '../../domain/repositories/auth_repository.dart';
-import '../../data/datasources/auth_firebase_datasource.dart';
+import '../datasources/auth_firebase_datasource.dart';
 
-class AuthRepositoryImpl implements AuthRepository {
+class AuthRepositoryImpl
+    implements
+        AuthRepository {
   final AuthFirebaseDatasource datasource;
 
-  AuthRepositoryImpl(this.datasource);
+  AuthRepositoryImpl(
+    this.datasource,
+  );
 
   // ================= LOGIN =================
   @override
-  Future<String> login(String email, String password) =>
-      datasource.loginWithEmail(email, password);
+  Future<
+    String
+  >
+  login(
+    String email,
+    String password,
+  ) => datasource.loginWithEmail(
+    email,
+    password,
+  );
 
   @override
-  Future<String> loginWithGoogle() => datasource.signInWithGoogle();
+  Future<
+    String
+  >
+  loginWithGoogle() => datasource.signInWithGoogle();
 
   // ================= REGISTER MAHASISWA =================
   @override
-  Future<void> registerMahasiswa({
+  Future<
+    void
+  >
+  registerMahasiswa({
     required String nama,
     required String username,
     required String nim,
@@ -36,18 +54,39 @@ class AuthRepositoryImpl implements AuthRepository {
 
   // ================= RESET & ROLE =================
   @override
-  Future<void> resetPassword(String email) => datasource.resetPassword(email);
+  Future<
+    void
+  >
+  resetPassword(
+    String email,
+  ) => datasource.resetPassword(
+    email,
+  );
 
   @override
-  Future<String> getRole(String uid) => datasource.getRole(uid);
+  Future<
+    String
+  >
+  getRole(
+    String uid,
+  ) => datasource.getRole(
+    uid,
+  );
 
   // ================= ADMIN CREATE USER =================
   @override
-  Future<void> createUserByAdmin({
+  Future<
+    void
+  >
+  createUserByAdmin({
     required String email,
     required String password,
     required String role,
-    required Map<String, dynamic> data,
+    required Map<
+      String,
+      dynamic
+    >
+    data,
   }) async {
     await datasource.createUserByAdmin(
       email: email,

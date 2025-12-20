@@ -30,7 +30,26 @@ class _TambahKursusPageState
   final Set<
     String
   >
-  _selectedTitles = {}; // kunci by title (dummy)
+  _selectedTitles = {};
+  late Future<
+    List<
+      CourseEntity
+    >
+  >
+  _future;
+
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // ✅ cache future sekali
+    _future = context
+        .read<
+          KursusViewModel
+        >()
+        .loadAvailableCourses();
+  }
 
   @override
   void dispose() {
@@ -55,7 +74,7 @@ class _TambahKursusPageState
               CourseEntity
             >
           >(
-            future: vm.loadAvailableCourses(),
+            future: _future,
             builder:
                 (
                   context,
@@ -106,7 +125,6 @@ class _TambahKursusPageState
                           ),
                         ),
                       ),
-
                       Text(
                         "Tambah / Enroll Kursus",
                         style: GoogleFonts.poppins(
@@ -256,9 +274,11 @@ class _TambahKursusPageState
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              onPressed: () => Navigator.pop(
-                                context,
-                              ),
+                              onPressed: _submitting
+                                  ? null
+                                  : () => Navigator.pop(
+                                      context,
+                                    ),
                               style: OutlinedButton.styleFrom(
                                 side: BorderSide(
                                   color: Colors.grey.shade300,
@@ -286,9 +306,15 @@ class _TambahKursusPageState
                           ),
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: _selectedTitles.isEmpty
+                              onPressed:
+                                  (_selectedTitles.isEmpty ||
+                                      _submitting)
                                   ? null
                                   : () {
+                                      setState(
+                                        () => _submitting = true,
+                                      );
+
                                       final selectedCourses = data
                                           .where(
                                             (
@@ -305,7 +331,7 @@ class _TambahKursusPageState
                                               title: e.title,
                                               lecturer: e.lecturer,
                                               students: e.students,
-                                              progress: 0.0, // progress awal enroll
+                                              progress: 0.0,
                                             ),
                                           )
                                           .toList();
