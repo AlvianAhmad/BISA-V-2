@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'firebase_options.dart';
 
@@ -10,140 +11,117 @@ import 'routes/app_routes.dart';
 // ===== AUTH =====
 import 'data/datasources/auth_firebase_datasource.dart';
 import 'data/repositories/auth_repository_impl.dart';
-
 import 'presentation/viewmodels/auth/auth_viewmodel.dart';
 import 'presentation/viewmodels/admin/admin_viewmodel.dart';
 import 'presentation/viewmodels/auth/login_viewmodel.dart';
 import 'presentation/viewmodels/auth/register_viewmodel.dart';
 
-// ===== COURSE (KURSUS) =====
+// ===== COURSE =====
 import 'data/datasources/course_local_datasource.dart';
 import 'data/repositories/course_repository_impl.dart';
-
 import 'domain/usecases/get_my_courses.dart';
 import 'domain/usecases/get_available_courses.dart';
 import 'domain/usecases/add_courses_to_my_courses.dart';
-
 import 'presentation/viewmodels/mahasiswa/kursus_viewmodel.dart';
 
-void
-main() async {
+// ===== JADWAL =====
+import 'data/datasources/jadwal_remote_datasource.dart';
+import 'data/repositories/jadwal_repository_impl.dart';
+import 'domain/usecases/jadwal/get_jadwal.dart';
+import 'domain/usecases/jadwal/add_jadwal.dart';
+import 'domain/usecases/jadwal/update_jadwal.dart';
+import 'domain/usecases/jadwal/delete_jadwal.dart';
+import 'presentation/viewmodels/admin/jadwal/jadwal_view_model.dart';
+
+// ===== KELAS =====
+import 'data/datasources/kelas_remote_datasource.dart';
+import 'data/repositories/kelas_repository_impl.dart';
+import 'domain/usecases/kelas/get_kelas.dart';
+import 'domain/usecases/kelas/add_kelas.dart';
+import 'domain/usecases/kelas/update_kelas.dart';
+import 'domain/usecases/kelas/delete_kelas.dart';
+import 'presentation/viewmodels/admin/kelas/kelas_view_model.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(
-    const MyApp(),
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const MyApp());
 }
 
-class MyApp
-    extends
-        StatefulWidget {
-  const MyApp({
-    super.key,
-  });
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
-  State<
-    MyApp
-  >
-  createState() => _MyAppState();
-}
-
-class _MyAppState
-    extends
-        State<
-          MyApp
-        > {
-  late final AuthRepositoryImpl _authRepository;
-
-  late final CourseRepositoryImpl _courseRepository;
-  late final GetMyCourses _getMyCourses;
-  late final GetAvailableCourses _getAvailableCourses;
-  late final AddCoursesToMyCourses _addCoursesToMyCourses;
-
-  @override
-  void initState() {
-    super.initState();
-
+  Widget build(BuildContext context) {
     // ===== AUTH =====
-    _authRepository = AuthRepositoryImpl(
-      AuthFirebaseDatasource(),
-    );
+    final authRepository = AuthRepositoryImpl(AuthFirebaseDatasource());
 
     // ===== COURSE =====
-    _courseRepository = CourseRepositoryImpl(
-      CourseLocalDataSource(),
-    );
+    final courseRepository = CourseRepositoryImpl(CourseLocalDataSource());
+    final getMyCourses = GetMyCourses(courseRepository);
+    final getAvailableCourses = GetAvailableCourses(courseRepository);
+    final addCoursesToMyCourses = AddCoursesToMyCourses(courseRepository);
 
-    _getMyCourses = GetMyCourses(
-      _courseRepository,
+    // ===== JADWAL =====
+    final jadwalRepository = JadwalRepositoryImpl(
+      JadwalRemoteDataSource(FirebaseFirestore.instance),
     );
-    _getAvailableCourses = GetAvailableCourses(
-      _courseRepository,
-    );
-    _addCoursesToMyCourses = AddCoursesToMyCourses(
-      _courseRepository,
-    );
-  }
+    final getJadwal = GetJadwal(jadwalRepository);
+    final addJadwal = AddJadwal(jadwalRepository);
+    final updateJadwal = UpdateJadwal(jadwalRepository);
+    final deleteJadwal = DeleteJadwal(jadwalRepository);
 
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
+    // ===== KELAS =====
+    final kelasRepository = KelasRepositoryImpl(
+      KelasRemoteDataSource(FirebaseFirestore.instance),
+    );
+    final getKelas = GetKelas(kelasRepository);
+    final addKelas = AddKelas(kelasRepository);
+    final updateKelas = UpdateKelas(kelasRepository);
+    final deleteKelas = DeleteKelas(kelasRepository);
+
     return MultiProvider(
       providers: [
         // ===== AUTH =====
+        ChangeNotifierProvider(create: (_) => AuthViewModel(authRepository)),
+        ChangeNotifierProvider(create: (_) => AdminViewModel(authRepository)),
+        ChangeNotifierProvider(create: (_) => LoginViewModel(authRepository)),
         ChangeNotifierProvider(
-          create:
-              (
-                _,
-              ) => AuthViewModel(
-                _authRepository,
-              ),
-        ),
-        ChangeNotifierProvider(
-          create:
-              (
-                _,
-              ) => AdminViewModel(
-                _authRepository,
-              ),
-        ),
-        ChangeNotifierProvider(
-          create:
-              (
-                _,
-              ) => LoginViewModel(
-                _authRepository,
-              ),
-        ),
-        ChangeNotifierProvider(
-          create:
-              (
-                _,
-              ) => RegisterViewModel(
-                _authRepository,
-              ),
+          create: (_) => RegisterViewModel(authRepository),
         ),
 
-        // ===== KURSUS =====
+        // ===== COURSE =====
         ChangeNotifierProvider(
-          create:
-              (
-                _,
-              ) => KursusViewModel(
-                getMyCourses: _getMyCourses,
-                getAvailableCourses: _getAvailableCourses,
-                addCoursesToMyCourses: _addCoursesToMyCourses,
-              )..init(), // ✅ auto load my courses
+          create: (_) => KursusViewModel(
+            getMyCourses: getMyCourses,
+            getAvailableCourses: getAvailableCourses,
+            addCoursesToMyCourses: addCoursesToMyCourses,
+          )..init(),
+        ),
+
+        // ===== JADWAL =====
+        ChangeNotifierProvider(
+          create: (_) => JadwalViewModel(
+            getJadwal: getJadwal,
+            addJadwal: addJadwal,
+            updateJadwal: updateJadwal,
+            deleteJadwal: deleteJadwal,
+          ),
+        ),
+
+        // ===== KELAS =====
+        ChangeNotifierProvider(
+          create: (_) => KelasViewModel(
+            getKelas: getKelas,
+            addKelas: addKelas,
+            updateKelas: updateKelas,
+            deleteKelas: deleteKelas,
+          ),
         ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         initialRoute: AppRoutes.authGate,
-
         onGenerateRoute: AppRouter.onGenerateRoute,
       ),
     );
