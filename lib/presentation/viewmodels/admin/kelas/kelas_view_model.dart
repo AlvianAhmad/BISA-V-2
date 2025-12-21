@@ -16,22 +16,31 @@ class KelasViewModel extends ChangeNotifier {
     required this.addKelas,
     required this.updateKelas,
     required this.deleteKelas,
-  });
+  }) {
+    _init();
+  }
 
-  Stream<List<Kelas>> kelasStream() => getKelas();
+  final List<Kelas> _kelasList = [];
+  List<Kelas> get kelasList => _kelasList;
+
+  void _init() {
+    getKelas().listen((data) {
+      _kelasList
+        ..clear()
+        ..addAll(data);
+      notifyListeners();
+    });
+  }
 
   Future<void> tambahKelas(Kelas kelas) async {
     await addKelas(kelas);
-    notifyListeners();
+  }
+
+  Future<void> editKelas(Kelas kelas) async {
+    await updateKelas(kelas);
   }
 
   Future<void> hapusKelas(String id) async {
     await deleteKelas(id);
-    notifyListeners();
-  }
-
-  Future<void> updateKelasData(Kelas kelas) async {
-    await updateKelas(kelas);
-    notifyListeners();
   }
 }

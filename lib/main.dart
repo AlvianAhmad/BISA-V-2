@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'firebase_options.dart';
-
 import 'routes/app_router.dart';
 import 'routes/app_routes.dart';
 
@@ -42,6 +41,7 @@ import 'domain/usecases/kelas/update_kelas.dart';
 import 'domain/usecases/kelas/delete_kelas.dart';
 import 'presentation/viewmodels/admin/kelas/kelas_view_model.dart';
 
+// ===== TUGAS =====
 import 'data/datasources/tugas_remote_datasource.dart';
 import 'data/repositories/tugas_repository_impl.dart';
 import 'domain/usecases/tugas/get_tugas.dart';
@@ -49,6 +49,24 @@ import 'domain/usecases/tugas/add_tugas.dart';
 import 'domain/usecases/tugas/update_tugas.dart';
 import 'domain/usecases/tugas/delete_tugas.dart';
 import 'presentation/viewmodels/admin/tugas/tugas_view_model.dart';
+
+// ===== ABSENSI =====
+import 'data/datasources/absensi_remote_datasource.dart';
+import 'data/repositories/absensi_repository_impl.dart';
+import 'domain/usecases/absensi/add_absensi.dart';
+import 'domain/usecases/absensi/get_absensi.dart';
+import 'domain/usecases/absensi/update_absensi.dart';
+import 'domain/usecases/absensi/delete_absensi.dart';
+import 'presentation/viewmodels/admin/absensi/absensi_view_model.dart';
+
+// ===== MATERI =====
+import 'data/datasources/materi_remote_datasource.dart';
+import 'data/repositories/materi_repository_impl.dart';
+import 'domain/usecases/materi/get_materi.dart';
+import 'domain/usecases/materi/add_materi.dart';
+import 'domain/usecases/materi/update_materi.dart';
+import 'domain/usecases/materi/delete_materi.dart';
+import 'presentation/viewmodels/admin/materi/materi_view_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -92,11 +110,28 @@ class MyApp extends StatelessWidget {
     final tugasRepository = TugasRepositoryImpl(
       TugasRemoteDataSource(FirebaseFirestore.instance),
     );
-
     final getTugas = GetTugas(tugasRepository);
     final addTugas = AddTugas(tugasRepository);
     final updateTugas = UpdateTugas(tugasRepository);
     final deleteTugas = DeleteTugas(tugasRepository);
+
+    // ===== ABSENSI =====
+    final absensiRepository = AbsensiRepositoryImpl(
+      AbsensiRemoteDatasource(FirebaseFirestore.instance),
+    );
+    final getAbsensi = GetAbsensi(absensiRepository);
+    final addAbsensi = AddAbsensi(absensiRepository);
+    final updateAbsensi = UpdateAbsensi(absensiRepository);
+    final deleteAbsensi = DeleteAbsensi(absensiRepository);
+
+    // ===== MATERI =====
+    final materiRepository = MateriRepositoryImpl(
+      MateriRemoteDatasource(FirebaseFirestore.instance),
+    );
+    final getMateri = GetMateri(materiRepository);
+    final addMateri = AddMateri(materiRepository);
+    final updateMateri = UpdateMateri(materiRepository);
+    final deleteMateri = DeleteMateri(materiRepository);
 
     return MultiProvider(
       providers: [
@@ -137,12 +172,33 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
+        // ===== TUGAS =====
         ChangeNotifierProvider(
           create: (_) => TugasViewModel(
             getTugas: getTugas,
             addTugas: addTugas,
             updateTugas: updateTugas,
             deleteTugas: deleteTugas,
+          ),
+        ),
+
+        // ===== ABSENSI =====
+        ChangeNotifierProvider(
+          create: (_) => AbsensiViewModel(
+            getAbsensi: getAbsensi,
+            addAbsensi: addAbsensi,
+            updateAbsensi: updateAbsensi,
+            deleteAbsensi: deleteAbsensi,
+          ),
+        ),
+
+        // ===== MATERI =====
+        ChangeNotifierProvider(
+          create: (_) => MateriViewModel(
+            getMateri: getMateri,
+            addMateri: addMateri,
+            updateMateri: updateMateri,
+            deleteMateri: deleteMateri,
           ),
         ),
       ],

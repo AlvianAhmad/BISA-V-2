@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../domain/entities/tugas.dart';
 import '../../../viewmodels/admin/tugas/tugas_view_model.dart';
 import '../../../viewmodels/admin/kelas/kelas_view_model.dart';
@@ -15,26 +16,16 @@ class EditTugasPage extends StatefulWidget {
 
 class _EditTugasPageState extends State<EditTugasPage> {
   final _formKey = GlobalKey<FormState>();
+
   late TextEditingController judul;
   late TextEditingController deskripsi;
-  DateTime? deadline;
-  String? selectedKelas;
 
-  List<String> kelasItems = [];
+  String? selectedKelas;
+  DateTime? deadline;
 
   @override
   void initState() {
     super.initState();
-    final kelasVM = context.read<KelasViewModel>();
-
-    // Ambil list kelas
-    kelasVM.kelasStream().listen((kelasList) {
-      setState(() {
-        kelasItems = kelasList.map((k) => k.nama).toList();
-      });
-    });
-
-    // Pre-fill data tugas
     judul = TextEditingController(text: widget.tugas.judul);
     deskripsi = TextEditingController(text: widget.tugas.deskripsi);
     selectedKelas = widget.tugas.kelas;
@@ -42,8 +33,16 @@ class _EditTugasPageState extends State<EditTugasPage> {
   }
 
   @override
+  void dispose() {
+    judul.dispose();
+    deskripsi.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final tugasVM = context.read<TugasViewModel>();
+    final kelasVM = context.watch<KelasViewModel>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Tugas')),
@@ -56,23 +55,36 @@ class _EditTugasPageState extends State<EditTugasPage> {
               TextFormField(
                 controller: judul,
                 decoration: const InputDecoration(labelText: 'Judul Tugas'),
-                validator: (v) => v!.isEmpty ? 'Judul wajib diisi' : null,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Judul wajib diisi' : null,
               ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: deskripsi,
                 decoration: const InputDecoration(labelText: 'Deskripsi'),
-                validator: (v) => v!.isEmpty ? 'Deskripsi wajib diisi' : null,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Deskripsi wajib diisi' : null,
               ),
+              const SizedBox(height: 12),
+
+              /// ===== DROPDOWN KELAS =====
               DropdownButtonFormField<String>(
                 value: selectedKelas,
                 decoration: const InputDecoration(labelText: 'Kelas'),
-                items: kelasItems
-                    .map((k) => DropdownMenuItem(value: k, child: Text(k)))
+                items: kelasVM.kelasList
+                    .map(
+                      (k) => DropdownMenuItem<String>(
+                        value: k.nama,
+                        child: Text(k.nama),
+                      ),
+                    )
                     .toList(),
                 onChanged: (v) => setState(() => selectedKelas = v),
                 validator: (v) => v == null ? 'Pilih kelas' : null,
               ),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 20),
+
               ElevatedButton(
                 onPressed: () async {
                   if (!_formKey.currentState!.validate()) return;
@@ -102,6 +114,8 @@ class _EditTugasPageState extends State<EditTugasPage> {
           ),
         ),
       ),
+
+      /// ===== PICK DEADLINE =====
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final picked = await showDatePicker(
@@ -110,7 +124,9 @@ class _EditTugasPageState extends State<EditTugasPage> {
             firstDate: DateTime.now(),
             lastDate: DateTime(2100),
           );
-          if (picked != null) setState(() => deadline = picked);
+          if (picked != null) {
+            setState(() => deadline = picked);
+          }
         },
         child: const Icon(Icons.calendar_today),
       ),

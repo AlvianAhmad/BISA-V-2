@@ -45,7 +45,7 @@ class _EditKelasPageState extends State<EditKelasPage> {
                 onPressed: () async {
                   if (!_formKey.currentState!.validate()) return;
 
-                  await vm.updateKelasData(
+                  await vm.editKelas(
                     Kelas(
                       id: widget.kelas.id,
                       nama: nama.text,

@@ -1,3 +1,4 @@
+import 'package:bisa/presentation/pages/admin/absensi/absensi_admin_page.dart';
 import 'package:flutter/material.dart';
 import 'create_user_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:bisa/presentation/pages/admin/jadwal/jadwal_admin_page.dart';
 import 'package:bisa/presentation/pages/admin/kelas/kelas_admin_page.dart';
 import 'package:bisa/presentation/pages/admin/tugas/tugas_admin_page.dart';
+import 'package:bisa/presentation/pages/admin/materi/materi_admin_page.dart';
 import '../../widgets/admin/admin_drawer.dart';
 import '../../widgets/admin/admin_sliver_appbar.dart';
 
@@ -175,9 +177,16 @@ class AdminPage extends StatelessWidget {
                       ),
 
                       _MiniMenuCard(
-                        title: 'Presensi',
+                        title: 'Absensi',
                         icon: Icons.how_to_reg_rounded,
-                        onTap: () => _snack(context, 'Menu Presensi'),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AbsensiPage(),
+                            ),
+                          );
+                        },
                       ),
                       _MiniMenuCard(
                         title: 'Tugas',
@@ -194,8 +203,16 @@ class AdminPage extends StatelessWidget {
                       _MiniMenuCard(
                         title: 'Materi',
                         icon: Icons.menu_book_rounded,
-                        onTap: () => _snack(context, 'Menu Materi'),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const KelasPage(),
+                            ),
+                          );
+                        },
                       ),
+
                       _MiniMenuCard(
                         title: 'Kelas',
                         icon: Icons.calendar_month_rounded,

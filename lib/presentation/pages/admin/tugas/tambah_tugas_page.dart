@@ -18,22 +18,10 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
   DateTime? deadline;
   String? selectedKelas;
 
-  List<String> kelasItems = [];
-
-  @override
-  void initState() {
-    super.initState();
-    final kelasVM = context.read<KelasViewModel>();
-    kelasVM.kelasStream().listen((kelasList) {
-      setState(() {
-        kelasItems = kelasList.map((k) => k.nama).toList();
-      });
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final tugasVM = context.read<TugasViewModel>();
+    final kelasVM = context.watch<KelasViewModel>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tambah Tugas')),
@@ -45,33 +33,31 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
             children: [
               TextFormField(
                 controller: judul,
-                decoration: const InputDecoration(labelText: 'Judul Tugas'),
-                validator: (v) => v!.isEmpty ? 'Judul wajib diisi' : null,
+                decoration: const InputDecoration(labelText: 'Judul'),
+                validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
               ),
               TextFormField(
                 controller: deskripsi,
                 decoration: const InputDecoration(labelText: 'Deskripsi'),
-                validator: (v) => v!.isEmpty ? 'Deskripsi wajib diisi' : null,
+                validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
               ),
               DropdownButtonFormField<String>(
                 value: selectedKelas,
                 decoration: const InputDecoration(labelText: 'Kelas'),
-                items: kelasItems
-                    .map((k) => DropdownMenuItem(value: k, child: Text(k)))
+                items: kelasVM.kelasList
+                    .map(
+                      (k) =>
+                          DropdownMenuItem(value: k.nama, child: Text(k.nama)),
+                    )
                     .toList(),
-                onChanged: (v) => setState(() => selectedKelas = v),
+                onChanged: (v) => selectedKelas = v,
                 validator: (v) => v == null ? 'Pilih kelas' : null,
               ),
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () async {
                   if (!_formKey.currentState!.validate()) return;
-                  if (deadline == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Pilih deadline tugas')),
-                    );
-                    return;
-                  }
+                  if (deadline == null) return;
 
                   await tugasVM.tambahTugas(
                     Tugas(
@@ -83,7 +69,6 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
                     ),
                   );
 
-                  if (!mounted) return;
                   Navigator.pop(context);
                 },
                 child: const Text('Simpan'),
@@ -94,13 +79,13 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final picked = await showDatePicker(
+          final d = await showDatePicker(
             context: context,
             initialDate: DateTime.now(),
             firstDate: DateTime.now(),
             lastDate: DateTime(2100),
           );
-          if (picked != null) setState(() => deadline = picked);
+          if (d != null) setState(() => deadline = d);
         },
         child: const Icon(Icons.calendar_today),
       ),
