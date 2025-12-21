@@ -42,6 +42,14 @@ import 'domain/usecases/kelas/update_kelas.dart';
 import 'domain/usecases/kelas/delete_kelas.dart';
 import 'presentation/viewmodels/admin/kelas/kelas_view_model.dart';
 
+import 'data/datasources/tugas_remote_datasource.dart';
+import 'data/repositories/tugas_repository_impl.dart';
+import 'domain/usecases/tugas/get_tugas.dart';
+import 'domain/usecases/tugas/add_tugas.dart';
+import 'domain/usecases/tugas/update_tugas.dart';
+import 'domain/usecases/tugas/delete_tugas.dart';
+import 'presentation/viewmodels/admin/tugas/tugas_view_model.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -80,6 +88,16 @@ class MyApp extends StatelessWidget {
     final updateKelas = UpdateKelas(kelasRepository);
     final deleteKelas = DeleteKelas(kelasRepository);
 
+    // ===== TUGAS =====
+    final tugasRepository = TugasRepositoryImpl(
+      TugasRemoteDataSource(FirebaseFirestore.instance),
+    );
+
+    final getTugas = GetTugas(tugasRepository);
+    final addTugas = AddTugas(tugasRepository);
+    final updateTugas = UpdateTugas(tugasRepository);
+    final deleteTugas = DeleteTugas(tugasRepository);
+
     return MultiProvider(
       providers: [
         // ===== AUTH =====
@@ -116,6 +134,15 @@ class MyApp extends StatelessWidget {
             addKelas: addKelas,
             updateKelas: updateKelas,
             deleteKelas: deleteKelas,
+          ),
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => TugasViewModel(
+            getTugas: getTugas,
+            addTugas: addTugas,
+            updateTugas: updateTugas,
+            deleteTugas: deleteTugas,
           ),
         ),
       ],

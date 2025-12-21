@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:bisa/presentation/pages/admin/jadwal/jadwal_admin_page.dart';
 import 'package:bisa/presentation/pages/admin/kelas/kelas_admin_page.dart';
+import 'package:bisa/presentation/pages/admin/tugas/tugas_admin_page.dart';
 import '../../widgets/admin/admin_drawer.dart';
 import '../../widgets/admin/admin_sliver_appbar.dart';
 
@@ -181,7 +182,14 @@ class AdminPage extends StatelessWidget {
                       _MiniMenuCard(
                         title: 'Tugas',
                         icon: Icons.assignment_rounded,
-                        onTap: () => _snack(context, 'Menu Tugas'),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TugasPage(),
+                            ),
+                          );
+                        },
                       ),
                       _MiniMenuCard(
                         title: 'Materi',
