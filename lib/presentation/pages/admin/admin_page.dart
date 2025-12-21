@@ -2,6 +2,7 @@ import 'package:bisa/presentation/pages/admin/absensi/absensi_admin_page.dart';
 import 'package:flutter/material.dart';
 import 'create_user_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../auth/login_page.dart';
 // import '../../pages/auth/login_page.dart'; // sesuaikan path
 
 import 'package:bisa/presentation/pages/admin/jadwal/jadwal_admin_page.dart';
@@ -47,29 +48,16 @@ class AdminPage extends StatelessWidget {
     if (confirm != true) return;
 
     // ====== PROSES LOGOUT ======
-    // Kalau kamu pakai Google Sign-In juga:
-    // await GoogleSignIn().signOut();
-
     await FirebaseAuth.instance.signOut();
 
     if (!context.mounted) return;
 
-    // ====== REDIRECT (pilih salah satu) ======
-
-    // 1) Kalau kamu pakai route:
-    // Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (r) => false);
-
-    // 2) Kalau kamu langsung ke halaman (contoh):
-    // Navigator.pushAndRemoveUntil(
-    //   context,
-    //   MaterialPageRoute(builder: (_) => const LoginPage()),
-    //   (r) => false,
-    // );
-
-    // Untuk sementara, kalau belum punya halaman tujuan:
-    ScaffoldMessenger.of(
+    // 🔥 INI YANG PALING PENTING
+    Navigator.pushAndRemoveUntil(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Berhasil logout')));
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false, // HAPUS SEMUA HALAMAN SEBELUMNYA
+    );
   }
 
   @override
@@ -85,8 +73,8 @@ class AdminPage extends StatelessWidget {
         onTapDashboard: () => _snack(context, 'Dashboard'),
         onTapManajemenUser: () =>
             _snack(context, 'Manajemen User belum dihubungkan'),
-        onTapLogout: () async {
-          await FirebaseAuth.instance.signOut();
+        onTapLogout: () {
+          _confirmLogout(context); // ✅ PANGGIL FUNGSI INI
         },
       ),
 
