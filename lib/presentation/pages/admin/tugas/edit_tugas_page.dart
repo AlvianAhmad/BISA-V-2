@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../../domain/entities/tugas.dart';
 import '../../../viewmodels/admin/tugas/tugas_view_model.dart';
-import '../../../viewmodels/admin/kelas/kelas_view_model.dart';
 
 class EditTugasPage extends StatefulWidget {
   final Tugas tugas;
-
   const EditTugasPage({super.key, required this.tugas});
 
   @override
@@ -19,30 +16,21 @@ class _EditTugasPageState extends State<EditTugasPage> {
 
   late TextEditingController judul;
   late TextEditingController deskripsi;
-
-  String? selectedKelas;
   DateTime? deadline;
+  String? kelas;
 
   @override
   void initState() {
     super.initState();
     judul = TextEditingController(text: widget.tugas.judul);
     deskripsi = TextEditingController(text: widget.tugas.deskripsi);
-    selectedKelas = widget.tugas.kelas;
+    kelas = widget.tugas.kelas;
     deadline = widget.tugas.deadline;
   }
 
   @override
-  void dispose() {
-    judul.dispose();
-    deskripsi.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final tugasVM = context.read<TugasViewModel>();
-    final kelasVM = context.watch<KelasViewModel>();
+    final vm = context.read<TugasViewModel>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Tugas')),
@@ -54,53 +42,37 @@ class _EditTugasPageState extends State<EditTugasPage> {
             children: [
               TextFormField(
                 controller: judul,
-                decoration: const InputDecoration(labelText: 'Judul Tugas'),
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Judul wajib diisi' : null,
+                decoration: const InputDecoration(labelText: 'Judul'),
+                validator: (v) => v!.isEmpty ? 'Judul wajib diisi' : null,
               ),
               const SizedBox(height: 12),
+
               TextFormField(
                 controller: deskripsi,
                 decoration: const InputDecoration(labelText: 'Deskripsi'),
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Deskripsi wajib diisi' : null,
+                validator: (v) => v!.isEmpty ? 'Deskripsi wajib diisi' : null,
               ),
               const SizedBox(height: 12),
 
-              /// ===== DROPDOWN KELAS =====
-              DropdownButtonFormField<String>(
-                value: selectedKelas,
+              TextFormField(
+                initialValue: kelas,
                 decoration: const InputDecoration(labelText: 'Kelas'),
-                items: kelasVM.kelasList
-                    .map(
-                      (k) => DropdownMenuItem<String>(
-                        value: k.nama,
-                        child: Text(k.nama),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (v) => setState(() => selectedKelas = v),
-                validator: (v) => v == null ? 'Pilih kelas' : null,
+                onChanged: (v) => kelas = v,
+                validator: (v) => v!.isEmpty ? 'Kelas wajib diisi' : null,
               ),
-
               const SizedBox(height: 20),
 
               ElevatedButton(
                 onPressed: () async {
                   if (!_formKey.currentState!.validate()) return;
-                  if (deadline == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Pilih deadline tugas')),
-                    );
-                    return;
-                  }
+                  if (deadline == null) return;
 
-                  await tugasVM.updateTugasItem(
+                  await vm.updateTugasItem(
                     Tugas(
-                      id: widget.tugas.id,
+                      id: widget.tugas.id, // ❗ wajib
                       judul: judul.text,
                       deskripsi: deskripsi.text,
-                      kelas: selectedKelas!,
+                      kelas: kelas!,
                       deadline: deadline!,
                     ),
                   );
@@ -114,9 +86,8 @@ class _EditTugasPageState extends State<EditTugasPage> {
           ),
         ),
       ),
-
-      /// ===== PICK DEADLINE =====
       floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.calendar_month),
         onPressed: () async {
           final picked = await showDatePicker(
             context: context,
@@ -128,7 +99,6 @@ class _EditTugasPageState extends State<EditTugasPage> {
             setState(() => deadline = picked);
           }
         },
-        child: const Icon(Icons.calendar_today),
       ),
     );
   }
