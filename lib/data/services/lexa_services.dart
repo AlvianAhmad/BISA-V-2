@@ -2,7 +2,7 @@ import 'gemini_service.dart';
 import '../firestore_helper.dart';
 
 class LexaService {
-  final GeminiService gemini;
+  final GroqService gemini;
   final FirestoreHelper db;
 
   LexaService(this.gemini, this.db);

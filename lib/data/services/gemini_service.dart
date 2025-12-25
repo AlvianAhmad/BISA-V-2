@@ -1,26 +1,28 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class GeminiService {
-  static const String _apiKey = 'AIzaSyD0OV_OIIFKOuVb9ZvVzJ9HUASB3gtP6ds';
+class GroqService {
+  static const String _apiKey =
+      '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';
 
   static const String _endpoint =
-      'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent';
+      'https://api.groq.com/openai/v1/chat/completions';
 
   Future<String> generateReply(String prompt) async {
     try {
       final response = await http.post(
-        Uri.parse('$_endpoint?key=$_apiKey'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(_endpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_apiKey',
+        },
         body: jsonEncode({
-          "contents": [
-            {
-              "role": "user",
-              "parts": [
-                {"text": prompt},
-              ],
-            },
+          "model": "llama-3.1-8b-instant",
+          "messages": [
+            {"role": "user", "content": prompt},
           ],
+          "temperature": 0.7,
+          "max_tokens": 512,
         }),
       );
 
@@ -30,7 +32,7 @@ class GeminiService {
 
       final data = jsonDecode(response.body);
 
-      return data['candidates'][0]['content']['parts'][0]['text'];
+      return data['choices'][0]['message']['content'];
     } catch (e) {
       return 'LEXA error: $e';
     }
