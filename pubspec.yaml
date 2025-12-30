@@ -49,6 +49,7 @@ dependencies:
   firebase_storage: ^13.0.5
   http: ^1.6.0
   flutter_dotenv: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -76,7 +77,6 @@ flutter:
   assets:
   - assets/images/bisaa.png
   - assets/images/bisa.png
-  - assets/images/bisaa.png
   - assets/images/alvian.jpg
   - assets/images/google_logo.png
   - assets/images/student.png
@@ -114,3 +114,8 @@ flutter_native_splash:
   android: true
   ios: true
   web: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/images/bisa.png

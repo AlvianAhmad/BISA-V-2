@@ -21,7 +21,6 @@ import 'data/repositories/course_repository_impl.dart';
 import 'domain/usecases/get_my_courses.dart';
 import 'domain/usecases/get_available_courses.dart';
 import 'domain/usecases/add_courses_to_my_courses.dart';
-import 'presentation/viewmodels/mahasiswa/kursus_viewmodel.dart';
 
 // ===== JADWAL =====
 import 'data/datasources/jadwal_remote_datasource.dart';
@@ -141,15 +140,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LoginViewModel(authRepository)),
         ChangeNotifierProvider(
           create: (_) => RegisterViewModel(authRepository),
-        ),
-
-        // ===== COURSE =====
-        ChangeNotifierProvider(
-          create: (_) => KursusViewModel(
-            getMyCourses: getMyCourses,
-            getAvailableCourses: getAvailableCourses,
-            addCoursesToMyCourses: addCoursesToMyCourses,
-          )..init(),
         ),
 
         // ===== JADWAL =====

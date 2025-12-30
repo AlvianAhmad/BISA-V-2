@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'app_routes.dart';
 
@@ -13,89 +14,62 @@ import '../presentation/pages/admin/admin_page.dart';
 import '../presentation/pages/dosen/dosen_page.dart';
 import '../presentation/pages/mahasiswa/mahasiswa_page.dart';
 
+// MAHASISWA
+import '../data/datasources/mahasiswa_firestore_datasource.dart';
+import '../presentation/viewmodels/mahasiswa/mahasiswa_viewmodel.dart';
+
 class AppRouter {
   AppRouter._();
 
-  static Route<
-    dynamic
-  >
-  onGenerateRoute(
-    RouteSettings settings,
-  ) {
+  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppRoutes.welcome:
-        return _page(
-          const WelcomePage(),
-        );
+        return _page(const WelcomePage());
 
       case AppRoutes.login:
-        return _page(
-          const LoginPage(),
-        );
+        return _page(const LoginPage());
 
       case AppRoutes.register:
-        return _page(
-          const RegisterPage(),
-        );
+        return _page(const RegisterPage());
 
       case AppRoutes.admin:
-        return _page(
-          const AdminPage(),
-        );
+        return _page(const AdminPage());
 
       case AppRoutes.dosen:
-        return _page(
-          const DosenPage(),
-        );
+        return _page(const DosenPage());
 
+      // ✅ FIX PALING PENTING
       case AppRoutes.mahasiswa:
-        return _page(
-          const MahasiswaPage(),
+        return MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider(
+            create: (_) => MahasiswaViewModel(MahasiswaFirestoreDatasource()),
+            child: const MahasiswaPage(),
+          ),
         );
 
       case AppRoutes.authGate:
-        return _page(
-          const AuthGatePage(),
-        );
+        return _page(const AuthGatePage());
 
       default:
-        return _unknownRoute(
-          settings.name,
-        );
+        return _unknownRoute(settings.name);
     }
   }
 
-  static MaterialPageRoute _page(
-    Widget page,
-  ) {
-    return MaterialPageRoute(
-      builder:
-          (
-            _,
-          ) => page,
-    );
+  static MaterialPageRoute _page(Widget page) {
+    return MaterialPageRoute(builder: (_) => page);
   }
 
-  static MaterialPageRoute _unknownRoute(
-    String? routeName,
-  ) {
+  static MaterialPageRoute _unknownRoute(String? routeName) {
     return MaterialPageRoute(
-      builder:
-          (
-            _,
-          ) => Scaffold(
-            appBar: AppBar(
-              title: const Text(
-                'Error',
-              ),
-            ),
-            body: Center(
-              child: Text(
-                'Route tidak ditemukan:\n$routeName',
-                textAlign: TextAlign.center,
-              ),
-            ),
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: const Text('Error')),
+        body: Center(
+          child: Text(
+            'Route tidak ditemukan:\n$routeName',
+            textAlign: TextAlign.center,
           ),
+        ),
+      ),
     );
   }
 }

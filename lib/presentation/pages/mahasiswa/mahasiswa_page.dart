@@ -1,174 +1,77 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'kelas/kelas_page.dart';
+import 'materi/materi_page.dart';
+import 'tugas/tugas_page.dart';
+import 'absensi/absensi_page.dart';
+import 'jadwal/jadwal_page.dart';
+import 'lexa/lexa_chat_page.dart';
 
-import '../../viewmodels/mahasiswa/mahasiswa_viewmodel.dart';
-import 'tabs/beranda_page.dart';
-import 'tabs/kursus_page.dart';
-import 'tabs/notifikasi_page.dart';
-import 'tabs/profile_page.dart';
-
-import '../../widgets/mahasiswa/custom_user_appbar.dart';
-import '../../widgets/mahasiswa/custom_settings_drawer.dart';
-
-class MahasiswaPage
-    extends
-        StatefulWidget {
-  const MahasiswaPage({
-    super.key,
-  });
+class MahasiswaPage extends StatelessWidget {
+  const MahasiswaPage({super.key});
 
   @override
-  State<
-    MahasiswaPage
-  >
-  createState() => _MahasiswaPageState();
-}
+  Widget build(BuildContext context) {
+    // ⚠️ sementara hardcode, nanti ambil dari kelas yang di-join
+    const kelasId = 'kelas_1';
 
-class _MahasiswaPageState
-    extends
-        State<
-          MahasiswaPage
-        > {
-  bool isDarkMode = false;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Dashboard Mahasiswa')),
+      body: GridView.count(
+        crossAxisCount: 2,
+        padding: const EdgeInsets.all(16),
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        children: [
+          _menu(context, 'Kelas', Icons.class_, const KelasPage()),
 
-  void toggleTheme() {
-    setState(
-      () => isDarkMode = !isDarkMode,
+          _menu(
+            context,
+            'Materi',
+            Icons.menu_book,
+            MateriPage(kelasId: kelasId),
+          ),
+
+          _menu(
+            context,
+            'Tugas',
+            Icons.assignment,
+            TugasPage(kelasId: kelasId),
+          ),
+
+          _menu(
+            context,
+            'Absensi',
+            Icons.fact_check,
+            AbsensiPage(kelasId: kelasId),
+          ),
+
+          _menu(
+            context,
+            'Jadwal',
+            Icons.schedule,
+            JadwalPage(kelasId: kelasId),
+          ),
+
+          _menu(context, 'LEXA', Icons.smart_toy, const LexaChatPage()),
+        ],
+      ),
     );
   }
 
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return ChangeNotifierProvider(
-      create:
-          (
-            _,
-          ) => MahasiswaViewModel(),
-      child:
-          Consumer<
-            MahasiswaViewModel
-          >(
-            builder:
-                (
-                  context,
-                  vm,
-                  _,
-                ) {
-                  final pages = const [
-                    BerandaMahasiswaPage(),
-                    KursusPage(),
-                    NotifikasiPage(),
-                    ProfilPage(),
-                  ];
-
-                  return Scaffold(
-                    backgroundColor: const Color(
-                      0xFFF4F7FF,
-                    ),
-
-                    // ✅ Drawer
-                    drawer: CustomSettingsDrawer(
-                      isDarkMode: isDarkMode,
-                      onToggleTheme: toggleTheme,
-                    ),
-
-                    // ✅ AppBar custom
-                    appBar: const CustomUserAppBar(
-                      userName: "Mahasiswa", // nanti bisa dari session / auth
-                      subtitle: "Program / Kelas",
-                      avatarAssetPath: "assets/images/alvian.jpg", // sesuaikan
-                    ),
-
-                    body: pages[vm.selectedIndex],
-
-                    // bottom nav floating kamu tetap
-                    bottomNavigationBar: Container(
-                      margin: const EdgeInsets.only(
-                        left: 16,
-                        right: 16,
-                        bottom: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(
-                          0xFF002F6C,
-                        ),
-                        borderRadius: BorderRadius.circular(
-                          24,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(
-                              0.2,
-                            ),
-                            blurRadius: 12,
-                            offset: const Offset(
-                              0,
-                              6,
-                            ),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          24,
-                        ),
-                        child: BottomNavigationBar(
-                          currentIndex: vm.selectedIndex,
-                          onTap: vm.changeTab,
-                          type: BottomNavigationBarType.fixed,
-                          backgroundColor: const Color(
-                            0xFF002F6C,
-                          ),
-                          selectedItemColor: Colors.white,
-                          unselectedItemColor: Colors.white70,
-                          showSelectedLabels: false,
-                          showUnselectedLabels: false,
-                          items: const [
-                            BottomNavigationBarItem(
-                              icon: Icon(
-                                Icons.home_outlined,
-                              ),
-                              activeIcon: Icon(
-                                Icons.home,
-                              ),
-                              label: 'Beranda',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: Icon(
-                                Icons.book_outlined,
-                              ),
-                              activeIcon: Icon(
-                                Icons.book,
-                              ),
-                              label: 'Kursus',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: Icon(
-                                Icons.notifications_outlined,
-                              ),
-                              activeIcon: Icon(
-                                Icons.notifications,
-                              ),
-                              label: 'Notif',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: Icon(
-                                Icons.person_outline,
-                              ),
-                              activeIcon: Icon(
-                                Icons.person,
-                              ),
-                              label: 'Profil',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-          ),
+  Widget _menu(BuildContext c, String t, IconData i, Widget p) {
+    return InkWell(
+      onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => p)),
+      child: Card(
+        elevation: 3,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(i, size: 36),
+            const SizedBox(height: 8),
+            Text(t, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
     );
   }
 }
