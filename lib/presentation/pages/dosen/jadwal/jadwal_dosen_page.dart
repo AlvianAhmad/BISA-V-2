@@ -1,5 +1,5 @@
-// lib/presentation/pages/admin/jadwal/jadwal_admin_page.dart
-// ignore_for_file: deprecated_member_use
+// lib/presentation/pages/dosen/jadwal/jadwal_dosen_page.dart
+// ignore_for_file: deprecated_member_use, unused_element
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -7,24 +7,51 @@ import 'package:provider/provider.dart';
 
 import '../../../../domain/entities/jadwal.dart';
 import '../../../viewmodels/admin/jadwal/jadwal_view_model.dart';
+
 import 'tambah_jadwal_page.dart';
 import 'edit_jadwal_page.dart';
 
 // ================== GLOBAL THEME ==================
-const Color kJadwalPrimary = Color(0xFF0E2E72);
-const Color kJadwalPrimary2 = Color(0xFF1B3C9E);
-const Color kJadwalBg = Color(0xFFF5F6FA);
-const Color kJadwalTextDark = Color(0xFF1A2552);
-const Color kJadwalMuted = Color(0xFF6F7AA6);
+const Color
+kJadwalPrimary = Color(
+  0xFF0E2E72,
+);
+const Color
+kJadwalPrimary2 = Color(
+  0xFF1B3C9E,
+);
+const Color
+kJadwalBg = Color(
+  0xFFF5F6FA,
+);
+const Color
+kJadwalTextDark = Color(
+  0xFF1A2552,
+);
+const Color
+kJadwalMuted = Color(
+  0xFF6F7AA6,
+);
 
-class JadwalPage extends StatefulWidget {
-  const JadwalPage({super.key});
+class JadwalDosenPage
+    extends
+        StatefulWidget {
+  const JadwalDosenPage({
+    super.key,
+  });
 
   @override
-  State<JadwalPage> createState() => _JadwalPageState();
+  State<
+    JadwalDosenPage
+  >
+  createState() => _JadwalDosenPageState();
 }
 
-class _JadwalPageState extends State<JadwalPage> {
+class _JadwalDosenPageState
+    extends
+        State<
+          JadwalDosenPage
+        > {
   final TextEditingController _search = TextEditingController();
   String _query = '';
 
@@ -34,21 +61,48 @@ class _JadwalPageState extends State<JadwalPage> {
     super.dispose();
   }
 
-  List<Jadwal> _applySearch(List<Jadwal> data) {
+  List<
+    Jadwal
+  >
+  _applySearch(
+    List<
+      Jadwal
+    >
+    data,
+  ) {
     final q = _query.toLowerCase().trim();
     if (q.isEmpty) return data;
-    return data.where((j) {
-      return j.mataKuliah.toLowerCase().contains(q) ||
-          j.dosen.toLowerCase().contains(q) ||
-          j.kelas.toLowerCase().contains(q) ||
-          j.hari.toLowerCase().contains(q) ||
-          j.jam.toLowerCase().contains(q);
-    }).toList();
+    return data.where(
+      (
+        j,
+      ) {
+        return j.mataKuliah.toLowerCase().contains(
+              q,
+            ) ||
+            j.dosen.toLowerCase().contains(
+              q,
+            ) ||
+            j.kelas.toLowerCase().contains(
+              q,
+            ) ||
+            j.hari.toLowerCase().contains(
+              q,
+            ) ||
+            j.jam.toLowerCase().contains(
+              q,
+            );
+      },
+    ).toList();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final vm = context.read<JadwalViewModel>();
+  Widget build(
+    BuildContext context,
+  ) {
+    final vm = context
+        .read<
+          JadwalViewModel
+        >();
 
     return Scaffold(
       backgroundColor: kJadwalBg,
@@ -57,57 +111,87 @@ class _JadwalPageState extends State<JadwalPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+          ),
+          onPressed: () => Navigator.pop(
+            context,
+          ),
         ),
         title: const Text(
           'Jadwal Perkuliahan',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+          ),
         ),
       ),
-
       body: SafeArea(
-        child: StreamBuilder<List<Jadwal>>(
-          stream: vm.jadwalStream(),
-          builder: (context, snapshot) {
-            final all = snapshot.data ?? const <Jadwal>[];
-            final data = _applySearch(all);
+        child:
+            StreamBuilder<
+              List<
+                Jadwal
+              >
+            >(
+              stream: vm.jadwalStream(),
+              builder:
+                  (
+                    context,
+                    snapshot,
+                  ) {
+                    final all =
+                        snapshot.data ??
+                        const <
+                          Jadwal
+                        >[];
+                    final data = _applySearch(
+                      all,
+                    );
 
-            return CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                // HEADER biru
-                SliverToBoxAdapter(
-                  child: _HeroHeader(
-                    controller: _search,
-                    query: _query,
-                    total: all.length,
-                    shown: data.length,
-                    onChanged: (v) => setState(() => _query = v),
-                    onAdd: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const TambahJadwalPage(),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // LIST KONTEN (langsung sliver list, jangan dibungkus scroll lain)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-                  sliver: _buildContentSliver(
-                    context: context,
-                    vm: vm,
-                    snapshot: snapshot,
-                    all: all,
-                    data: data,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+                    return CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: _HeroHeader(
+                            controller: _search,
+                            query: _query,
+                            total: all.length,
+                            shown: data.length,
+                            onChanged:
+                                (
+                                  v,
+                                ) => setState(
+                                  () => _query = v,
+                                ),
+                            onAdd: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (
+                                      _,
+                                    ) => const TambahJadwalPage(),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            16,
+                            16,
+                            16,
+                            120,
+                          ),
+                          sliver: _buildContentSliver(
+                            context: context,
+                            vm: vm,
+                            snapshot: snapshot,
+                            all: all,
+                            data: data,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+            ),
       ),
 
       // ================= FAB =================
@@ -117,9 +201,16 @@ class _JadwalPageState extends State<JadwalPage> {
         elevation: 8,
         onPressed: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const TambahJadwalPage()),
+          MaterialPageRoute(
+            builder:
+                (
+                  _,
+                ) => const TambahJadwalPage(),
+          ),
         ),
-        child: const Icon(Icons.add_rounded),
+        child: const Icon(
+          Icons.add_rounded,
+        ),
       ),
     );
   }
@@ -127,81 +218,128 @@ class _JadwalPageState extends State<JadwalPage> {
   SliverList _buildContentSliver({
     required BuildContext context,
     required JadwalViewModel vm,
-    required AsyncSnapshot<List<Jadwal>> snapshot,
-    required List<Jadwal> all,
-    required List<Jadwal> data,
+    required AsyncSnapshot<
+      List<
+        Jadwal
+      >
+    >
+    snapshot,
+    required List<
+      Jadwal
+    >
+    all,
+    required List<
+      Jadwal
+    >
+    data,
   }) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
+    if (snapshot.connectionState ==
+        ConnectionState.waiting) {
       return SliverList(
-        delegate: SliverChildListDelegate(const [
-          SizedBox(height: 24),
-          _SkeletonCard(),
-          _SkeletonCard(),
-          _SkeletonCard(),
-        ]),
+        delegate: SliverChildListDelegate(
+          const [
+            SizedBox(
+              height: 24,
+            ),
+            _SkeletonCard(),
+            _SkeletonCard(),
+            _SkeletonCard(),
+          ],
+        ),
       );
     }
 
     if (snapshot.hasError) {
       return SliverList(
-        delegate: SliverChildListDelegate(const [
-          SizedBox(height: 24),
-          _ModernInfo(
-            icon: Icons.wifi_off_rounded,
-            title: 'Gagal memuat data',
-            subtitle: 'Cek koneksi atau coba lagi.',
-          ),
-        ]),
+        delegate: SliverChildListDelegate(
+          const [
+            SizedBox(
+              height: 24,
+            ),
+            _ModernInfo(
+              icon: Icons.wifi_off_rounded,
+              title: 'Gagal memuat data',
+              subtitle: 'Cek koneksi atau coba lagi.',
+            ),
+          ],
+        ),
       );
     }
 
     if (all.isEmpty) {
       return SliverList(
-        delegate: SliverChildListDelegate([
-          const SizedBox(height: 18),
-          _ModernInfo(
-            icon: Icons.calendar_month_rounded,
-            title: 'Belum ada jadwal',
-            subtitle: 'Tambah jadwal pertama kamu biar rapi.',
-            actionLabel: 'Tambah Jadwal',
-            onAction: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const TambahJadwalPage()),
+        delegate: SliverChildListDelegate(
+          [
+            const SizedBox(
+              height: 18,
             ),
-          ),
-        ]),
+            _ModernInfo(
+              icon: Icons.calendar_month_rounded,
+              title: 'Belum ada jadwal',
+              subtitle: 'Tambah jadwal pertama kamu biar rapi.',
+              actionLabel: 'Tambah Jadwal',
+              onAction: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (
+                        _,
+                      ) => const TambahJadwalPage(),
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
     if (data.isEmpty) {
       return SliverList(
-        delegate: SliverChildListDelegate(const [
-          SizedBox(height: 18),
-          _ModernInfo(
-            icon: Icons.search_off_rounded,
-            title: 'Tidak ditemukan',
-            subtitle: 'Coba kata kunci lain ya.',
-          ),
-        ]),
+        delegate: SliverChildListDelegate(
+          const [
+            SizedBox(
+              height: 18,
+            ),
+            _ModernInfo(
+              icon: Icons.search_off_rounded,
+              title: 'Tidak ditemukan',
+              subtitle: 'Coba kata kunci lain ya.',
+            ),
+          ],
+        ),
       );
     }
 
     return SliverList(
-      delegate: SliverChildBuilderDelegate((context, index) {
-        final j = data[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _ScheduleCardV2(
-            jadwal: j,
-            onMore: () =>
-                _openActionsSheet(context: context, jadwal: j, vm: vm),
-          ),
-        );
-      }, childCount: data.length),
+      delegate: SliverChildBuilderDelegate(
+        (
+          context,
+          index,
+        ) {
+          final j = data[index];
+          return Padding(
+            padding: const EdgeInsets.only(
+              bottom: 12,
+            ),
+            child: _ScheduleCardV2(
+              jadwal: j,
+              onMore: () => _openActionsSheet(
+                context: context,
+                jadwal: j,
+                vm: vm,
+              ),
+            ),
+          );
+        },
+        childCount: data.length,
+      ),
     );
   }
 
-  Future<void> _openActionsSheet({
+  Future<
+    void
+  >
+  _openActionsSheet({
     required BuildContext context,
     required Jadwal jadwal,
     required JadwalViewModel vm,
@@ -210,62 +348,588 @@ class _JadwalPageState extends State<JadwalPage> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: false,
-      builder: (_) {
-        return _ActionSheet(
-          title: jadwal.mataKuliah,
-          subtitle: '${jadwal.hari}, ${jadwal.jam} • ${jadwal.kelas}',
-          onEdit: () async {
-            Navigator.pop(context);
+      builder:
+          (
+            _,
+          ) {
+            return _ActionSheet(
+              title: jadwal.mataKuliah,
+              subtitle: '${jadwal.hari}, ${jadwal.jam} • ${jadwal.kelas}',
+              onEdit: () async {
+                Navigator.pop(
+                  context,
+                );
 
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => EditJadwalPage(jadwal: jadwal)),
+                final ok =
+                    await Navigator.push<
+                      bool
+                    >(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (
+                              _,
+                            ) => EditJadwalPage(
+                              jadwal: jadwal,
+                            ),
+                      ),
+                    );
+
+                if (ok ==
+                        true &&
+                    context.mounted) {
+                  _showTopToast(
+                    context,
+                    message: 'Jadwal berhasil diperbarui',
+                  );
+                }
+              },
+              onDelete: () async {
+                Navigator.pop(
+                  context,
+                );
+
+                final ok = await _confirmDelete(
+                  context,
+                  jadwal.mataKuliah,
+                );
+                if (ok ==
+                    true) {
+                  await vm.deleteJadwal(
+                    jadwal.id,
+                  );
+
+                  if (context.mounted) {
+                    _showTopToast(
+                      context,
+                      message: 'Jadwal berhasil dihapus',
+                    );
+                  }
+                }
+              },
             );
           },
-
-          onDelete: () async {
-            Navigator.pop(context);
-            final ok = await _confirmDelete(context, jadwal.mataKuliah);
-            if (ok == true) {
-              await vm.deleteJadwal(jadwal.id);
-            }
-          },
-        );
-      },
     );
   }
 
-  static Future<bool?> _confirmDelete(BuildContext context, String mk) {
-    return showDialog<bool>(
+  static Future<
+    bool?
+  >
+  _confirmDelete(
+    BuildContext context,
+    String mk,
+  ) {
+    return showGeneralDialog<
+      bool
+    >(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Hapus Jadwal'),
-        content: Text('Yakin hapus "$mk"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Hapus'),
-          ),
-        ],
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black.withOpacity(
+        0.45,
       ),
+      transitionDuration: const Duration(
+        milliseconds: 220,
+      ),
+      pageBuilder:
+          (
+            context,
+            anim1,
+            anim2,
+          ) {
+            return const SizedBox.shrink();
+          },
+      transitionBuilder:
+          (
+            context,
+            anim,
+            _,
+            __,
+          ) {
+            final curved = CurvedAnimation(
+              parent: anim,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            );
+
+            return SafeArea(
+              child: Stack(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(
+                      context,
+                      false,
+                    ),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(
+                        sigmaX:
+                            10 *
+                            curved.value,
+                        sigmaY:
+                            10 *
+                            curved.value,
+                      ),
+                      child: Container(
+                        color: Colors.transparent,
+                      ),
+                    ),
+                  ),
+                  Center(
+                    child: FadeTransition(
+                      opacity: curved,
+                      child: ScaleTransition(
+                        scale:
+                            Tween<
+                                  double
+                                >(
+                                  begin: 0.95,
+                                  end: 1.0,
+                                )
+                                .animate(
+                                  curved,
+                                ),
+                        child: SlideTransition(
+                          position:
+                              Tween<
+                                    Offset
+                                  >(
+                                    begin: const Offset(
+                                      0,
+                                      0.03,
+                                    ),
+                                    end: Offset.zero,
+                                  )
+                                  .animate(
+                                    curved,
+                                  ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  22,
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(
+                                          0.22,
+                                        ),
+                                        blurRadius: 34,
+                                        offset: const Offset(
+                                          0,
+                                          18,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.fromLTRB(
+                                          16,
+                                          16,
+                                          16,
+                                          14,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.withOpacity(
+                                            0.08,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 44,
+                                              height: 44,
+                                              decoration: BoxDecoration(
+                                                color: Colors.red.withOpacity(
+                                                  0.14,
+                                                ),
+                                                borderRadius: BorderRadius.circular(
+                                                  14,
+                                                ),
+                                              ),
+                                              child: const Icon(
+                                                Icons.delete_rounded,
+                                                color: Colors.red,
+                                                size: 26,
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              width: 12,
+                                            ),
+                                            const Expanded(
+                                              child: Text(
+                                                'Hapus Jadwal?',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w900,
+                                                  color: kJadwalTextDark,
+                                                ),
+                                              ),
+                                            ),
+                                            InkWell(
+                                              borderRadius: BorderRadius.circular(
+                                                999,
+                                              ),
+                                              onTap: () => Navigator.pop(
+                                                context,
+                                                false,
+                                              ),
+                                              child: const Padding(
+                                                padding: EdgeInsets.all(
+                                                  6,
+                                                ),
+                                                child: Icon(
+                                                  Icons.close_rounded,
+                                                  color: kJadwalMuted,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          16,
+                                          14,
+                                          16,
+                                          2,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Kamu yakin ingin menghapus jadwal ini?',
+                                              style: TextStyle(
+                                                color: kJadwalMuted,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              height: 10,
+                                            ),
+                                            Container(
+                                              width: double.infinity,
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 10,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: const Color(
+                                                  0xFFF7F8FD,
+                                                ),
+                                                borderRadius: BorderRadius.circular(
+                                                  14,
+                                                ),
+                                                border: Border.all(
+                                                  color: Colors.black.withOpacity(
+                                                    0.06,
+                                                  ),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  const Icon(
+                                                    Icons.school_rounded,
+                                                    size: 18,
+                                                    color: kJadwalMuted,
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 8,
+                                                  ),
+                                                  Expanded(
+                                                    child: Text(
+                                                      mk,
+                                                      maxLines: 2,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                        color: kJadwalTextDark,
+                                                        fontWeight: FontWeight.w900,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              height: 12,
+                                            ),
+                                            const Text(
+                                              'Tindakan ini tidak dapat dibatalkan.',
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 12.5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 14,
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          16,
+                                          0,
+                                          16,
+                                          16,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: OutlinedButton(
+                                                onPressed: () => Navigator.pop(
+                                                  context,
+                                                  false,
+                                                ),
+                                                style: OutlinedButton.styleFrom(
+                                                  foregroundColor: kJadwalTextDark,
+                                                  side: BorderSide(
+                                                    color: Colors.black.withOpacity(
+                                                      0.12,
+                                                    ),
+                                                  ),
+                                                  padding: const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                  ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(
+                                                      14,
+                                                    ),
+                                                  ),
+                                                ),
+                                                child: const Text(
+                                                  'Batal',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              width: 10,
+                                            ),
+                                            Expanded(
+                                              child: ElevatedButton(
+                                                onPressed: () => Navigator.pop(
+                                                  context,
+                                                  true,
+                                                ),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.red,
+                                                  foregroundColor: Colors.white,
+                                                  padding: const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                  ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(
+                                                      14,
+                                                    ),
+                                                  ),
+                                                  elevation: 0,
+                                                ),
+                                                child: const Text(
+                                                  'Hapus',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+    );
+  }
+
+  void _showTopToast(
+    BuildContext context, {
+    required String message,
+    Color bgColor = const Color(
+      0xFF22C55E,
+    ),
+    IconData icon = Icons.check_circle_rounded,
+  }) {
+    final overlay = Overlay.of(
+      context,
+    );
+
+    late OverlayEntry entry;
+
+    entry = OverlayEntry(
+      builder:
+          (
+            _,
+          ) {
+            final top =
+                MediaQuery.of(
+                  context,
+                ).padding.top +
+                12;
+
+            return Positioned(
+              top: top,
+              left: 16,
+              right: 16,
+              child: Material(
+                color: Colors.transparent,
+                child:
+                    TweenAnimationBuilder<
+                      double
+                    >(
+                      duration: const Duration(
+                        milliseconds: 220,
+                      ),
+                      curve: Curves.easeOutCubic,
+                      tween: Tween(
+                        begin: 0.0,
+                        end: 1.0,
+                      ),
+                      builder:
+                          (
+                            context,
+                            t,
+                            child,
+                          ) {
+                            return Opacity(
+                              opacity: t,
+                              child: Transform.translate(
+                                offset: Offset(
+                                  0,
+                                  (1 -
+                                          t) *
+                                      -14,
+                                ),
+                                child: child,
+                              ),
+                            );
+                          },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(
+                            18,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(
+                                0.25,
+                              ),
+                              blurRadius: 16,
+                              offset: const Offset(
+                                0,
+                                8,
+                              ),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              icon,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Expanded(
+                              child: Text(
+                                message,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 6,
+                            ),
+                            InkWell(
+                              onTap: () => entry.remove(),
+                              borderRadius: BorderRadius.circular(
+                                999,
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(
+                                  6,
+                                ),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+              ),
+            );
+          },
+    );
+
+    overlay.insert(
+      entry,
+    );
+
+    Future.delayed(
+      const Duration(
+        seconds: 2,
+      ),
+      () {
+        try {
+          entry.remove();
+        } catch (
+          _
+        ) {}
+      },
     );
   }
 }
 
 // ================== HERO HEADER ==================
 
-class _HeroHeader extends StatelessWidget {
+class _HeroHeader
+    extends
+        StatelessWidget {
   final TextEditingController controller;
   final String query;
   final int total;
   final int shown;
-  final ValueChanged<String> onChanged;
+  final ValueChanged<
+    String
+  >
+  onChanged;
   final VoidCallback onAdd;
 
   const _HeroHeader({
@@ -278,18 +942,25 @@ class _HeroHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      decoration: const BoxDecoration(color: kJadwalPrimary),
-
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        24,
+      ),
+      decoration: const BoxDecoration(
+        color: kJadwalPrimary,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // TOP ROW
           Row(
-            children: [
-              const Expanded(
+            children: const [
+              Expanded(
                 child: Text(
                   'Manajemen Jadwal Perkuliahan',
                   style: TextStyle(
@@ -302,7 +973,9 @@ class _HeroHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(
+            height: 6,
+          ),
           const Text(
             'Kelola dan pantau jadwal perkuliahan',
             style: TextStyle(
@@ -311,13 +984,16 @@ class _HeroHeader extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 14),
-
-          // SEARCH (glass)
-          _GlassSearch(controller: controller, onChanged: onChanged),
-          const SizedBox(height: 12),
-
-          // STATS
+          const SizedBox(
+            height: 14,
+          ),
+          _GlassSearch(
+            controller: controller,
+            onChanged: onChanged,
+          ),
+          const SizedBox(
+            height: 12,
+          ),
           Row(
             children: [
               Expanded(
@@ -327,7 +1003,9 @@ class _HeroHeader extends StatelessWidget {
                   icon: Icons.list_alt_rounded,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(
+                width: 10,
+              ),
               Expanded(
                 child: _StatPill(
                   label: 'Ditampilkan',
@@ -343,30 +1021,60 @@ class _HeroHeader extends StatelessWidget {
   }
 }
 
-class _GlassSearch extends StatelessWidget {
+class _GlassSearch
+    extends
+        StatelessWidget {
   final TextEditingController controller;
-  final ValueChanged<String> onChanged;
+  final ValueChanged<
+    String
+  >
+  onChanged;
 
-  const _GlassSearch({required this.controller, required this.onChanged});
+  const _GlassSearch({
+    required this.controller,
+    required this.onChanged,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(
+        18,
+      ),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(
+          sigmaX: 10,
+          sigmaY: 10,
+        ),
         child: Container(
           height: 50,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 14,
+          ),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.16),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.22)),
+            color: Colors.white.withOpacity(
+              0.16,
+            ),
+            borderRadius: BorderRadius.circular(
+              18,
+            ),
+            border: Border.all(
+              color: Colors.white.withOpacity(
+                0.22,
+              ),
+            ),
           ),
           child: Row(
             children: [
-              const Icon(Icons.search_rounded, color: Colors.white70),
-              const SizedBox(width: 10),
+              const Icon(
+                Icons.search_rounded,
+                color: Colors.white70,
+              ),
+              const SizedBox(
+                width: 10,
+              ),
               Expanded(
                 child: TextField(
                   controller: controller,
@@ -377,12 +1085,17 @@ class _GlassSearch extends StatelessWidget {
                   ),
                   decoration: const InputDecoration(
                     hintText: 'Cari mata kuliah / dosen / kelas...',
-                    hintStyle: TextStyle(color: Colors.white70),
+                    hintStyle: TextStyle(
+                      color: Colors.white70,
+                    ),
                     border: InputBorder.none,
                   ),
                 ),
               ),
-              const Icon(Icons.tune_rounded, color: Colors.white70),
+              const Icon(
+                Icons.tune_rounded,
+                color: Colors.white70,
+              ),
             ],
           ),
         ),
@@ -391,7 +1104,9 @@ class _GlassSearch extends StatelessWidget {
   }
 }
 
-class _StatPill extends StatelessWidget {
+class _StatPill
+    extends
+        StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
@@ -403,22 +1118,46 @@ class _StatPill extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(
+        18,
+      ),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(
+          sigmaX: 10,
+          sigmaY: 10,
+        ),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 10,
+          ),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.14),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.18)),
+            color: Colors.white.withOpacity(
+              0.14,
+            ),
+            borderRadius: BorderRadius.circular(
+              18,
+            ),
+            border: Border.all(
+              color: Colors.white.withOpacity(
+                0.18,
+              ),
+            ),
           ),
           child: Row(
             children: [
-              Icon(icon, color: Colors.white70, size: 18),
-              const SizedBox(width: 8),
+              Icon(
+                icon,
+                color: Colors.white70,
+                size: 18,
+              ),
+              const SizedBox(
+                width: 8,
+              ),
               Expanded(
                 child: Text(
                   label,
@@ -445,88 +1184,120 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-class _GlassIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final String tooltip;
-
-  const _GlassIconButton({
-    required this.icon,
-    required this.onTap,
-    required this.tooltip,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.16),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withOpacity(0.22)),
-          ),
-          child: Icon(icon, color: Colors.white, size: 20),
-        ),
-      ),
-    );
-  }
-}
-
 // ================== CARD V2 ==================
 
-class _ScheduleCardV2 extends StatelessWidget {
+class _ScheduleCardV2
+    extends
+        StatelessWidget {
   final Jadwal jadwal;
   final VoidCallback onMore;
 
-  const _ScheduleCardV2({required this.jadwal, required this.onMore});
+  const _ScheduleCardV2({
+    required this.jadwal,
+    required this.onMore,
+  });
 
-  Color _accentForDay(String hari) {
+  Color _accentForDay(
+    String hari,
+  ) {
     final h = hari.toLowerCase();
-    if (h.contains('senin')) return const Color(0xFF6366F1);
-    if (h.contains('selasa')) return const Color(0xFF06B6D4);
-    if (h.contains('rabu')) return const Color(0xFF22C55E);
-    if (h.contains('kamis')) return const Color(0xFFF59E0B);
-    if (h.contains('jumat') || h.contains('jum\'at'))
-      return const Color(0xFFEF4444);
-    if (h.contains('sabtu')) return const Color(0xFF8B5CF6);
-    if (h.contains('minggu')) return const Color(0xFFEC4899);
+    if (h.contains(
+      'senin',
+    ))
+      return const Color(
+        0xFF6366F1,
+      );
+    if (h.contains(
+      'selasa',
+    ))
+      return const Color(
+        0xFF06B6D4,
+      );
+    if (h.contains(
+      'rabu',
+    ))
+      return const Color(
+        0xFF22C55E,
+      );
+    if (h.contains(
+      'kamis',
+    ))
+      return const Color(
+        0xFFF59E0B,
+      );
+    if (h.contains(
+          'jumat',
+        ) ||
+        h.contains(
+          'jum\'at',
+        ))
+      return const Color(
+        0xFFEF4444,
+      );
+    if (h.contains(
+      'sabtu',
+    ))
+      return const Color(
+        0xFF8B5CF6,
+      );
+    if (h.contains(
+      'minggu',
+    ))
+      return const Color(
+        0xFFEC4899,
+      );
     return kJadwalPrimary;
   }
 
   @override
-  Widget build(BuildContext context) {
-    final accent = _accentForDay(jadwal.hari);
+  Widget build(
+    BuildContext context,
+  ) {
+    final accent = _accentForDay(
+      jadwal.hari,
+    );
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(
+          20,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withOpacity(
+              0.06,
+            ),
             blurRadius: 22,
-            offset: const Offset(0, 10),
+            offset: const Offset(
+              0,
+              10,
+            ),
           ),
         ],
       ),
       child: Stack(
         children: [
-          // CARD
           Container(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+            padding: const EdgeInsets.fromLTRB(
+              14,
+              14,
+              14,
+              12,
+            ),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.black.withOpacity(0.05)),
+              borderRadius: BorderRadius.circular(
+                20,
+              ),
+              border: Border.all(
+                color: Colors.black.withOpacity(
+                  0.05,
+                ),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // TOP ROW
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -542,27 +1313,40 @@ class _ScheduleCardV2 extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(
+                      width: 8,
+                    ),
                     InkWell(
                       onTap: onMore,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(
+                        12,
+                      ),
                       child: Padding(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(
+                          6,
+                        ),
                         child: Icon(
                           Icons.more_horiz_rounded,
-                          color: kJadwalMuted.withOpacity(0.9),
+                          color: kJadwalMuted.withOpacity(
+                            0.9,
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-
-                // META
+                const SizedBox(
+                  height: 8,
+                ),
                 Row(
                   children: [
-                    _MetaChip(icon: Icons.class_rounded, text: jadwal.kelas),
-                    const SizedBox(width: 8),
+                    _MetaChip(
+                      icon: Icons.class_rounded,
+                      text: jadwal.kelas,
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
                     Expanded(
                       child: _MetaChip(
                         icon: Icons.person_rounded,
@@ -571,18 +1355,21 @@ class _ScheduleCardV2 extends StatelessWidget {
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 10),
-
-                // TIME PILL
+                const SizedBox(
+                  height: 10,
+                ),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 9,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3F5FB),
-                    borderRadius: BorderRadius.circular(14),
+                    color: const Color(
+                      0xFFF3F5FB,
+                    ),
+                    borderRadius: BorderRadius.circular(
+                      14,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -591,7 +1378,9 @@ class _ScheduleCardV2 extends StatelessWidget {
                         size: 16,
                         color: kJadwalMuted,
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(
+                        width: 6,
+                      ),
                       Expanded(
                         child: Text(
                           '${jadwal.hari} • ${jadwal.jam}',
@@ -608,8 +1397,6 @@ class _ScheduleCardV2 extends StatelessWidget {
               ],
             ),
           ),
-
-          // ACCENT STRIP
           Positioned(
             left: 0,
             top: 12,
@@ -618,7 +1405,9 @@ class _ScheduleCardV2 extends StatelessWidget {
               width: 5,
               decoration: BoxDecoration(
                 color: accent,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(
+                  999,
+                ),
               ),
             ),
           ),
@@ -628,26 +1417,50 @@ class _ScheduleCardV2 extends StatelessWidget {
   }
 }
 
-class _MetaChip extends StatelessWidget {
+class _MetaChip
+    extends
+        StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _MetaChip({required this.icon, required this.text});
+  const _MetaChip({
+    required this.icon,
+    required this.text,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 8,
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F8FD),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        color: const Color(
+          0xFFF7F8FD,
+        ),
+        borderRadius: BorderRadius.circular(
+          14,
+        ),
+        border: Border.all(
+          color: Colors.black.withOpacity(
+            0.05,
+          ),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: kJadwalMuted),
-          const SizedBox(width: 6),
+          Icon(
+            icon,
+            size: 16,
+            color: kJadwalMuted,
+          ),
+          const SizedBox(
+            width: 6,
+          ),
           Flexible(
             child: Text(
               text,
@@ -668,7 +1481,9 @@ class _MetaChip extends StatelessWidget {
 
 // ================== ACTION SHEET ==================
 
-class _ActionSheet extends StatelessWidget {
+class _ActionSheet
+    extends
+        StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onEdit;
@@ -682,34 +1497,56 @@ class _ActionSheet extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+      padding: const EdgeInsets.fromLTRB(
+        14,
+        0,
+        14,
+        14,
+      ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(
+          22,
+        ),
         child: Container(
           color: Colors.white,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
               Container(
                 width: 46,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(999),
+                  color: Colors.black.withOpacity(
+                    0.12,
+                  ),
+                  borderRadius: BorderRadius.circular(
+                    999,
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-
+              const SizedBox(
+                height: 12,
+              ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  0,
+                  16,
+                  8,
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       title,
+                      textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -718,9 +1555,12 @@ class _ActionSheet extends StatelessWidget {
                         color: kJadwalTextDark,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(
+                      height: 4,
+                    ),
                     Text(
                       subtitle,
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: kJadwalMuted,
                         fontWeight: FontWeight.w600,
@@ -729,16 +1569,23 @@ class _ActionSheet extends StatelessWidget {
                   ],
                 ),
               ),
-
-              const Divider(height: 1),
-
+              const Divider(
+                height: 1,
+              ),
               ListTile(
-                leading: const Icon(Icons.edit_rounded),
-                title: const Text('Edit'),
+                leading: const Icon(
+                  Icons.edit_rounded,
+                ),
+                title: const Text(
+                  'Edit',
+                ),
                 onTap: onEdit,
               ),
               ListTile(
-                leading: const Icon(Icons.delete_rounded, color: Colors.red),
+                leading: const Icon(
+                  Icons.delete_rounded,
+                  color: Colors.red,
+                ),
                 title: const Text(
                   'Hapus',
                   style: TextStyle(
@@ -748,8 +1595,9 @@ class _ActionSheet extends StatelessWidget {
                 ),
                 onTap: onDelete,
               ),
-
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
             ],
           ),
         ),
@@ -760,7 +1608,9 @@ class _ActionSheet extends StatelessWidget {
 
 // ================== EMPTY / INFO ==================
 
-class _ModernInfo extends StatelessWidget {
+class _ModernInfo
+    extends
+        StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
@@ -776,21 +1626,39 @@ class _ModernInfo extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+        padding: const EdgeInsets.fromLTRB(
+          16,
+          18,
+          16,
+          16,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(
+            22,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withOpacity(
+                0.06,
+              ),
               blurRadius: 20,
-              offset: const Offset(0, 10),
+              offset: const Offset(
+                0,
+                10,
+              ),
             ),
           ],
-          border: Border.all(color: Colors.black.withOpacity(0.05)),
+          border: Border.all(
+            color: Colors.black.withOpacity(
+              0.05,
+            ),
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -799,12 +1667,22 @@ class _ModernInfo extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: kJadwalPrimary.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(18),
+                color: kJadwalPrimary.withOpacity(
+                  0.10,
+                ),
+                borderRadius: BorderRadius.circular(
+                  18,
+                ),
               ),
-              child: Icon(icon, color: kJadwalPrimary, size: 28),
+              child: Icon(
+                icon,
+                color: kJadwalPrimary,
+                size: 28,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(
+              height: 12,
+            ),
             Text(
               title,
               textAlign: TextAlign.center,
@@ -814,7 +1692,9 @@ class _ModernInfo extends StatelessWidget {
                 color: kJadwalTextDark,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(
+              height: 6,
+            ),
             Text(
               subtitle,
               textAlign: TextAlign.center,
@@ -823,8 +1703,13 @@ class _ModernInfo extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 14),
+            if (actionLabel !=
+                    null &&
+                onAction !=
+                    null) ...[
+              const SizedBox(
+                height: 14,
+              ),
               ElevatedButton(
                 onPressed: onAction,
                 style: ElevatedButton.styleFrom(
@@ -835,12 +1720,16 @@ class _ModernInfo extends StatelessWidget {
                     vertical: 12,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(
+                      14,
+                    ),
                   ),
                 ),
                 child: Text(
                   actionLabel!,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
@@ -853,69 +1742,120 @@ class _ModernInfo extends StatelessWidget {
 
 // ================== SKELETON ==================
 
-class _SkeletonCard extends StatelessWidget {
+class _SkeletonCard
+    extends
+        StatelessWidget {
   const _SkeletonCard();
 
   @override
-  Widget build(BuildContext context) {
-    Widget bar({double w = double.infinity, double h = 12}) {
+  Widget build(
+    BuildContext context,
+  ) {
+    Widget bar({
+      double w = double.infinity,
+      double h = 12,
+    }) {
       return Container(
         width: w,
         height: h,
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.06),
-          borderRadius: BorderRadius.circular(999),
+          color: Colors.black.withOpacity(
+            0.06,
+          ),
+          borderRadius: BorderRadius.circular(
+            999,
+          ),
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(
+        bottom: 12,
+      ),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(
+          14,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.black.withOpacity(0.05)),
+          borderRadius: BorderRadius.circular(
+            20,
+          ),
+          border: Border.all(
+            color: Colors.black.withOpacity(
+              0.05,
+            ),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            bar(w: 180, h: 14),
-            const SizedBox(height: 10),
+            bar(
+              w: 180,
+              h: 14,
+            ),
+            const SizedBox(
+              height: 10,
+            ),
             Row(
               children: [
-                Expanded(child: bar(h: 12)),
-                const SizedBox(width: 10),
-                Expanded(child: bar(h: 12)),
+                Expanded(
+                  child: bar(
+                    h: 12,
+                  ),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Expanded(
+                  child: bar(
+                    h: 12,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            bar(h: 36),
+            const SizedBox(
+              height: 12,
+            ),
+            bar(
+              h: 36,
+            ),
           ],
         ),
       ),
     );
   }
 }
+
 // ================== HELPERS FOR CURVED WHITE CONTENT ==================
 
-class _ContentSliverWrapper extends StatelessWidget {
+class _ContentSliverWrapper
+    extends
+        StatelessWidget {
   final Widget sliver;
 
-  const _ContentSliverWrapper({required this.sliver});
+  const _ContentSliverWrapper({
+    required this.sliver,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return CustomScrollView(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      slivers: [sliver],
+      slivers: [
+        sliver,
+      ],
     );
   }
 }
 
-class _HeaderWithOverlappingContent extends StatelessWidget {
+class _HeaderWithOverlappingContent
+    extends
+        StatelessWidget {
   final Widget header;
   final Widget sliverContent;
 
@@ -925,42 +1865,61 @@ class _HeaderWithOverlappingContent extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    // tinggi area header (atur sesuai feel yang kamu mau)
+  Widget build(
+    BuildContext context,
+  ) {
     const double headerHeight = 250;
 
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // HEADER (biru) jadi background
-        SizedBox(height: headerHeight, child: header),
-
-        // WHITE CONTENT yang "naik" nabrak header
+        SizedBox(
+          height: headerHeight,
+          child: header,
+        ),
         Positioned(
           left: 0,
           right: 0,
-          top: headerHeight - 40, // makin kecil => makin nabrak
+          top:
+              headerHeight -
+              40,
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(
+                26,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withOpacity(
+                    0.12,
+                  ),
                   blurRadius: 18,
-                  offset: const Offset(0, 8),
+                  offset: const Offset(
+                    0,
+                    8,
+                  ),
                 ),
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 28, 16, 120),
-              child: _ContentSliverWrapper(sliver: sliverContent),
+              padding: const EdgeInsets.fromLTRB(
+                16,
+                28,
+                16,
+                120,
+              ),
+              child: _ContentSliverWrapper(
+                sliver: sliverContent,
+              ),
             ),
           ),
         ),
-
-        // Spacer bawah biar konten ga kepotong (karena Positioned)
-        const SizedBox(height: headerHeight + 1000),
+        const SizedBox(
+          height:
+              headerHeight +
+              1000,
+        ),
       ],
     );
   }

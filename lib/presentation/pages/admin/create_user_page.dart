@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/admin/admin_viewmodel.dart';
@@ -96,16 +98,17 @@ class _CreateUserPageState
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Akun berhasil dibuat (password: 123456)',
-          ),
-        ),
+      _showSnack(
+        message: 'Akun berhasil dibuat (password: 123456)',
+        success: true,
       );
 
+      await Future.delayed(
+        const Duration(
+          milliseconds: 350,
+        ),
+      );
+      if (!mounted) return;
       Navigator.pop(
         context,
       );
@@ -114,20 +117,16 @@ class _CreateUserPageState
     ) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Gagal membuat akun: $e',
-          ),
-        ),
+      _showSnack(
+        message: 'Gagal membuat akun: $e',
+        success: false,
       );
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _submitting = false,
         );
+      }
     }
   }
 
@@ -348,8 +347,9 @@ class _CreateUserPageState
                                               value,
                                             ) {
                                               if (value ==
-                                                  null)
+                                                  null) {
                                                 return;
+                                              }
                                               setState(
                                                 () {
                                                   role = value;
@@ -387,8 +387,9 @@ class _CreateUserPageState
                                                 '';
                                             if (value.isEmpty) return 'Nama wajib diisi';
                                             if (value.length <
-                                                3)
+                                                3) {
                                               return 'Nama minimal 3 karakter';
+                                            }
                                             return null;
                                           },
                                     ),
@@ -417,8 +418,9 @@ class _CreateUserPageState
                                             if (value.isEmpty) return 'Email wajib diisi';
                                             if (!value.contains(
                                               '@',
-                                            ))
+                                            )) {
                                               return 'Format email tidak valid';
+                                            }
                                             return null;
                                           },
                                     ),
@@ -444,15 +446,17 @@ class _CreateUserPageState
                                               v,
                                             ) {
                                               if (role !=
-                                                  'mahasiswa')
+                                                  'mahasiswa') {
                                                 return null;
+                                              }
                                               final value =
                                                   v?.trim() ??
                                                   '';
                                               if (value.isEmpty) return 'NIM wajib diisi';
                                               if (value.length <
-                                                  5)
+                                                  5) {
                                                 return 'NIM terlalu pendek';
+                                              }
                                               return null;
                                             },
                                       ),
@@ -473,8 +477,9 @@ class _CreateUserPageState
                                               v,
                                             ) {
                                               if (role !=
-                                                  'mahasiswa')
+                                                  'mahasiswa') {
                                                 return null;
+                                              }
                                               final value =
                                                   v?.trim() ??
                                                   '';
@@ -501,15 +506,17 @@ class _CreateUserPageState
                                               v,
                                             ) {
                                               if (role !=
-                                                  'dosen')
+                                                  'dosen') {
                                                 return null;
+                                              }
                                               final value =
                                                   v?.trim() ??
                                                   '';
                                               if (value.isEmpty) return 'NIDN wajib diisi';
                                               if (value.length <
-                                                  5)
+                                                  5) {
                                                 return 'NIDN terlalu pendek';
+                                              }
                                               return null;
                                             },
                                       ),
@@ -682,5 +689,67 @@ class _CreateUserPageState
         ),
       ),
     );
+  }
+
+  void _showSnack({
+    required String message,
+    bool success = true,
+  }) {
+    final bg = success
+        ? const Color(
+            0xFF0E2E72,
+          )
+        : const Color(
+            0xFFE53935,
+          );
+
+    ScaffoldMessenger.of(
+        context,
+      )
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: bg,
+          elevation: 0,
+          margin: const EdgeInsets.fromLTRB(
+            16,
+            0,
+            16,
+            16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              14,
+            ),
+          ),
+          content: Row(
+            children: [
+              Icon(
+                success
+                    ? Icons.check_circle_rounded
+                    : Icons.error_rounded,
+                color: Colors.white,
+              ),
+              const SizedBox(
+                width: 10,
+              ),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(
+            seconds: 3,
+          ),
+        ),
+      );
   }
 }

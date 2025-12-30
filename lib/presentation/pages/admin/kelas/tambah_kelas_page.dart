@@ -42,6 +42,7 @@ class _TambahKelasPageState
   static const Color _bg = Color(
     0xFFF6F7FB,
   );
+  // ignore: unused_field
   static const Color _primary = Color(
     0xFF1B3C9E,
   );
@@ -364,7 +365,7 @@ class _TambahKelasPageState
 
                               _ModernField(
                                 label: 'Nama Kelas',
-                                hint: 'Contoh: TI-3A',
+                                hint: 'Contoh: 23IK-A',
                                 controller: nama,
                                 icon: Icons.badge_rounded,
                                 textInputAction: TextInputAction.next,
@@ -375,7 +376,7 @@ class _TambahKelasPageState
 
                               _ModernField(
                                 label: 'Jurusan',
-                                hint: 'Contoh: Teknik Informatika',
+                                hint: 'Contoh: Ilmu Komputer',
                                 controller: jurusan,
                                 icon: Icons.school_rounded,
                                 textInputAction: TextInputAction.next,

@@ -1,8 +1,13 @@
+// lib/presentation/pages/dosen/jadwal/tambah_jadwal_page.dart
+// ignore_for_file: deprecated_member_use
+
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../domain/entities/jadwal.dart';
 import '../../../viewmodels/admin/jadwal/jadwal_view_model.dart';
+import '../../../viewmodels/admin/kelas/kelas_view_model.dart';
 
 class TambahJadwalPage
     extends
@@ -30,7 +35,7 @@ class _TambahJadwalPageState
 
   final mataKuliah = TextEditingController();
   final dosen = TextEditingController();
-  final kelas = TextEditingController();
+  String? _kelas;
 
   String _hari = '';
   String _jam = '';
@@ -46,8 +51,6 @@ class _TambahJadwalPageState
   static const Color _primary2 = Color(
     0xFF0E2E72,
   );
-  // ignore: unused_field
-  static const Color _card = Colors.white;
 
   final List<
     String
@@ -65,7 +68,6 @@ class _TambahJadwalPageState
   void dispose() {
     mataKuliah.dispose();
     dosen.dispose();
-    kelas.dispose();
     super.dispose();
   }
 
@@ -82,7 +84,6 @@ class _TambahJadwalPageState
             context,
             child,
           ) {
-            // bikin time picker lebih modern + konsisten warna
             final theme = Theme.of(
               context,
             );
@@ -102,7 +103,6 @@ class _TambahJadwalPageState
         null)
       return;
 
-    // format 2 digit
     final hh = picked.hour.toString().padLeft(
       2,
       '0',
@@ -128,12 +128,20 @@ class _TambahJadwalPageState
     final validForm =
         _formKey.currentState?.validate() ??
         false;
-
     if (!validForm) return;
 
     if (_hari.isEmpty) {
       _toast(
         'Hari wajib dipilih',
+      );
+      return;
+    }
+
+    if (_kelas ==
+            null ||
+        _kelas!.trim().isEmpty) {
+      _toast(
+        'Kelas wajib dipilih',
       );
       return;
     }
@@ -155,15 +163,20 @@ class _TambahJadwalPageState
           id: '',
           mataKuliah: mataKuliah.text.trim(),
           dosen: dosen.text.trim(),
-          kelas: kelas.text.trim(),
+          kelas: _kelas!.trim(),
           hari: _hari,
           jam: _jam,
         ),
       );
 
       if (!mounted) return;
+      _showTopToast(
+        context,
+        message: 'Jadwal berhasil ditambahkan',
+      );
       Navigator.pop(
         context,
+        true,
       );
     } catch (
       _
@@ -199,6 +212,156 @@ class _TambahJadwalPageState
     );
   }
 
+  void _showTopToast(
+    BuildContext context, {
+    required String message,
+    Color bgColor = const Color(
+      0xFF22C55E,
+    ),
+    IconData icon = Icons.check_circle_rounded,
+  }) {
+    final overlay = Overlay.of(
+      context,
+    );
+
+    late OverlayEntry entry;
+
+    entry = OverlayEntry(
+      builder:
+          (
+            _,
+          ) {
+            final top =
+                MediaQuery.of(
+                  context,
+                ).padding.top +
+                12;
+
+            return Positioned(
+              top: top,
+              left: 16,
+              right: 16,
+              child: Material(
+                color: Colors.transparent,
+                child:
+                    TweenAnimationBuilder<
+                      double
+                    >(
+                      duration: const Duration(
+                        milliseconds: 220,
+                      ),
+                      curve: Curves.easeOutCubic,
+                      tween: Tween(
+                        begin: 0.0,
+                        end: 1.0,
+                      ),
+                      builder:
+                          (
+                            context,
+                            t,
+                            child,
+                          ) {
+                            return Opacity(
+                              opacity: t,
+                              child: Transform.translate(
+                                offset: Offset(
+                                  0,
+                                  (1 -
+                                          t) *
+                                      -14,
+                                ),
+                                child: child,
+                              ),
+                            );
+                          },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(
+                            18,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(
+                                0.25,
+                              ),
+                              blurRadius: 16,
+                              offset: const Offset(
+                                0,
+                                8,
+                              ),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              icon,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Expanded(
+                              child: Text(
+                                message,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 6,
+                            ),
+                            InkWell(
+                              onTap: () => entry.remove(),
+                              borderRadius: BorderRadius.circular(
+                                999,
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(
+                                  6,
+                                ),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+              ),
+            );
+          },
+    );
+
+    overlay.insert(
+      entry,
+    );
+
+    Future.delayed(
+      const Duration(
+        seconds: 2,
+      ),
+      () {
+        try {
+          entry.remove();
+        } catch (
+          _
+        ) {}
+      },
+    );
+  }
+
   @override
   Widget build(
     BuildContext context,
@@ -207,17 +370,43 @@ class _TambahJadwalPageState
         .read<
           JadwalViewModel
         >();
+    final kelasVM = context
+        .watch<
+          KelasViewModel
+        >();
+
+    final kelasList =
+        kelasVM.kelasList
+            .map(
+              (
+                e,
+              ) => e.nama.trim(),
+            )
+            .where(
+              (
+                e,
+              ) => e.isNotEmpty,
+            )
+            .toSet()
+            .toList()
+          ..sort();
+
+    final String? safeKelas =
+        (_kelas !=
+                null &&
+            kelasList.contains(
+              _kelas!.trim(),
+            ))
+        ? _kelas!.trim()
+        : null;
 
     return Scaffold(
       backgroundColor: _bg,
-
       appBar: AppBar(
         elevation: 0,
         backgroundColor: _primary2,
         surfaceTintColor: _primary2,
-
-        foregroundColor: Colors.white, // ⭐ ini kuncinya
-
+        foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_rounded,
@@ -233,7 +422,6 @@ class _TambahJadwalPageState
           ),
         ),
       ),
-
       body: Stack(
         children: [
           SafeArea(
@@ -242,9 +430,8 @@ class _TambahJadwalPageState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 🔵 biru FULL layar + ikut scroll
                   Container(
-                    height: 160, // atur panjang biru
+                    height: 160,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: _primary2,
@@ -258,14 +445,11 @@ class _TambahJadwalPageState
                       ),
                     ),
                   ),
-
-                  // 🤍 area konten dikasih padding 16, card overlap ditarik ke atas
                   Transform.translate(
                     offset: const Offset(
                       0,
                       -120,
-                    ), // 🔼 card naik lebih ke atas
-                    // atur besar overlap
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
                         16,
@@ -282,8 +466,7 @@ class _TambahJadwalPageState
                               const SizedBox(
                                 height: 4,
                               ),
-
-                              _SectionTitle(
+                              const _SectionTitle(
                                 icon: Icons.edit_note_rounded,
                                 title: 'Detail Jadwal',
                                 caption: 'Lengkapi informasi utama mata kuliah.',
@@ -291,7 +474,6 @@ class _TambahJadwalPageState
                               const SizedBox(
                                 height: 16,
                               ),
-
                               _ModernField(
                                 label: 'Mata Kuliah',
                                 hint: 'Contoh: Mobile Programming',
@@ -302,10 +484,9 @@ class _TambahJadwalPageState
                               const SizedBox(
                                 height: 12,
                               ),
-
                               _ModernField(
                                 label: 'Dosen',
-                                hint: 'Contoh: Muhamad Fauzan Iqbal',
+                                hint: 'Contoh: Drs. Muklis',
                                 controller: dosen,
                                 icon: Icons.person_rounded,
                                 textInputAction: TextInputAction.next,
@@ -313,15 +494,29 @@ class _TambahJadwalPageState
                               const SizedBox(
                                 height: 12,
                               ),
-
-                              _ModernField(
+                              _ModernDropdown(
                                 label: 'Kelas',
-                                hint: 'Contoh: TI-3A',
-                                controller: kelas,
+                                hint:
+                                    safeKelas ==
+                                            null &&
+                                        (_kelas?.isNotEmpty ??
+                                            false)
+                                    ? 'Kelas sebelumnya sudah dihapus'
+                                    : 'Pilih Kelas',
                                 icon: Icons.class_rounded,
-                                textInputAction: TextInputAction.done,
+                                value: safeKelas,
+                                items: kelasList,
+                                onChanged:
+                                    (
+                                      v,
+                                    ) {
+                                      setState(
+                                        () {
+                                          _kelas = v?.trim();
+                                        },
+                                      );
+                                    },
                               ),
-
                               const SizedBox(
                                 height: 22,
                               ),
@@ -329,8 +524,7 @@ class _TambahJadwalPageState
                               const SizedBox(
                                 height: 18,
                               ),
-
-                              _SectionTitle(
+                              const _SectionTitle(
                                 icon: Icons.schedule_rounded,
                                 title: 'Waktu',
                                 caption: 'Pilih hari dan jam perkuliahan.',
@@ -338,7 +532,6 @@ class _TambahJadwalPageState
                               const SizedBox(
                                 height: 14,
                               ),
-
                               Text(
                                 'Hari',
                                 style: TextStyle(
@@ -353,7 +546,6 @@ class _TambahJadwalPageState
                               const SizedBox(
                                 height: 10,
                               ),
-
                               Wrap(
                                 spacing: 10,
                                 runSpacing: 10,
@@ -375,12 +567,10 @@ class _TambahJadwalPageState
                                           ) => setState(
                                             () => _hari = h,
                                           ),
-
                                       showCheckmark: true,
                                       checkmarkColor: const Color(
                                         0xFF22C55E,
-                                      ), // ✅ hijau
-
+                                      ),
                                       labelStyle: TextStyle(
                                         fontWeight: FontWeight.w700,
                                         color: selected
@@ -401,11 +591,9 @@ class _TambahJadwalPageState
                                   },
                                 ).toList(),
                               ),
-
                               const SizedBox(
                                 height: 16,
                               ),
-
                               _PickerTile(
                                 label: 'Jam',
                                 value: _jam.isEmpty
@@ -415,22 +603,22 @@ class _TambahJadwalPageState
                                 onTap: _pickTime,
                                 isFilled: _jam.isNotEmpty,
                               ),
-
                               const SizedBox(
                                 height: 18,
                               ),
-
                               _PreviewCard(
                                 mataKuliah: mataKuliah.text.trim(),
                                 dosen: dosen.text.trim(),
-                                kelas: kelas.text.trim(),
+                                kelas:
+                                    (_kelas ??
+                                            '')
+                                        .trim(),
                                 hari: _hari,
                                 jam: _jam,
                               ),
                               const SizedBox(
                                 height: 18,
                               ),
-
                               Padding(
                                 padding: const EdgeInsets.only(
                                   bottom: 2,
@@ -455,8 +643,6 @@ class _TambahJadwalPageState
                       ),
                     ),
                   ),
-
-                  // spacer biar scroll bawah aman (karena card dinaikkan)
                   const SizedBox(
                     height: 24,
                   ),
@@ -464,6 +650,39 @@ class _TambahJadwalPageState
               ),
             ),
           ),
+          if (_saving) ...[
+            Positioned.fill(
+              child: AbsorbPointer(
+                absorbing: true,
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: 6,
+                    sigmaY: 6,
+                  ),
+                  child: Container(
+                    color: Colors.black.withOpacity(
+                      0.25,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const Center(
+              child: SizedBox(
+                height: 34,
+                width: 34,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor:
+                      AlwaysStoppedAnimation<
+                        Color
+                      >(
+                        Colors.white,
+                      ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -473,141 +692,6 @@ class _TambahJadwalPageState
 /// =======================
 ///   UI WIDGETS (MODERN)
 /// =======================
-
-// ignore: unused_element
-class _TopGradientHeader
-    extends
-        StatelessWidget {
-  final String title;
-  final String subtitle;
-
-  const _TopGradientHeader({
-    required this.title,
-    required this.subtitle,
-  });
-
-  static const Color _primary = Color(
-    0xFF1B3C9E,
-  );
-  static const Color _primary2 = Color(
-    0xFF0E2E72,
-  );
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return Container(
-      height: 230,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _primary,
-            _primary2,
-          ],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            16,
-            14,
-            16,
-            18,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _BackButtonPill(
-                onTap: () => Navigator.pop(
-                  context,
-                ),
-              ),
-              const SizedBox(
-                width: 12,
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 6,
-                    ),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(
-                          0.85,
-                        ),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BackButtonPill
-    extends
-        StatelessWidget {
-  final VoidCallback onTap;
-  const _BackButtonPill({
-    required this.onTap,
-  });
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return Material(
-      color: Colors.white.withOpacity(
-        0.16,
-      ),
-      borderRadius: BorderRadius.circular(
-        16,
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(
-          16,
-        ),
-        onTap: onTap,
-        child: const Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
-          child: Icon(
-            Icons.arrow_back_rounded,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _GlassCard
     extends
@@ -840,12 +924,155 @@ class _ModernField
                 (
                   _,
                 ) {
-                  // biar preview card update realtime
                   (context
                           as Element)
                       .markNeedsBuild();
                 },
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ModernDropdown
+    extends
+        StatelessWidget {
+  final String label;
+  final String hint;
+  final IconData icon;
+  final String? value;
+  final List<
+    String
+  >
+  items;
+  final ValueChanged<
+    String?
+  >
+  onChanged;
+
+  const _ModernDropdown({
+    required this.label,
+    required this.hint,
+    required this.icon,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  static const Color _primary = Color(
+    0xFF1B3C9E,
+  );
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    final String? safeValue =
+        (value !=
+                null &&
+            items.contains(
+              value,
+            ))
+        ? value
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.black.withOpacity(
+              0.72,
+            ),
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(
+          height: 8,
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(
+              0xFFF3F5FF,
+            ),
+            borderRadius: BorderRadius.circular(
+              16,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(
+                  0.04,
+                ),
+                blurRadius: 12,
+                offset: const Offset(
+                  0,
+                  6,
+                ),
+              ),
+            ],
+            border: Border.all(
+              color: Colors.white.withOpacity(
+                0.7,
+              ),
+            ),
+          ),
+          child:
+              DropdownButtonFormField<
+                String
+              >(
+                value: safeValue,
+                isExpanded: true,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                ),
+                validator:
+                    (
+                      v,
+                    ) =>
+                        v ==
+                            null
+                        ? '$label wajib dipilih'
+                        : null,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(
+                    icon,
+                    color: _primary,
+                  ),
+                  border: InputBorder.none,
+                  hintText: hint,
+                  hintStyle: TextStyle(
+                    color: Colors.black.withOpacity(
+                      0.35,
+                    ),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                ),
+                items: items
+                    .map(
+                      (
+                        e,
+                      ) => DropdownMenuItem(
+                        value: e,
+                        child: Text(
+                          e,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: onChanged,
+              ),
         ),
       ],
     );
@@ -1239,12 +1466,11 @@ class _BottomBar
   Widget build(
     BuildContext context,
   ) {
-    const double h = 46; // ✅ tinggi sama
-    const double r = 14; // ✅ radius sama
+    const double h = 46;
+    const double r = 14;
 
     return Row(
       children: [
-        // ✅ Batal
         Expanded(
           flex: 1,
           child: SizedBox(
@@ -1276,12 +1502,9 @@ class _BottomBar
             ),
           ),
         ),
-
         const SizedBox(
           width: 12,
         ),
-
-        // ✅ Simpan
         Expanded(
           flex: 2,
           child: SizedBox(

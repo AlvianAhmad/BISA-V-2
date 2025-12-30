@@ -1,36 +1,64 @@
-// lib/presentation/pages/admin/jadwal/edit_jadwal_page.dart
+// lib/presentation/pages/dosen/jadwal/edit_jadwal_page.dart
+// ignore_for_file: deprecated_member_use
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../domain/entities/jadwal.dart';
 import '../../../viewmodels/admin/jadwal/jadwal_view_model.dart';
+import '../../../viewmodels/admin/kelas/kelas_view_model.dart';
 
-class EditJadwalPage extends StatefulWidget {
+class EditJadwalPage
+    extends
+        StatefulWidget {
   final Jadwal jadwal;
-  const EditJadwalPage({super.key, required this.jadwal});
+  const EditJadwalPage({
+    super.key,
+    required this.jadwal,
+  });
 
   @override
-  State<EditJadwalPage> createState() => _EditJadwalPageState();
+  State<
+    EditJadwalPage
+  >
+  createState() => _EditJadwalPageState();
 }
 
-class _EditJadwalPageState extends State<EditJadwalPage> {
-  final _formKey = GlobalKey<FormState>();
+class _EditJadwalPageState
+    extends
+        State<
+          EditJadwalPage
+        > {
+  final _formKey =
+      GlobalKey<
+        FormState
+      >();
 
   late final TextEditingController mataKuliah;
   late final TextEditingController dosen;
-  late final TextEditingController kelas;
+  String? _kelas;
 
+  late Jadwal _initial;
   String _hari = '';
   String _jam = '';
   bool _saving = false;
 
   // ====== MODERN THEME (samakan dengan Tambah) ======
-  static const Color _bg = Color(0xFFF6F7FB);
-  static const Color _primary = Color(0xFF1B3C9E);
-  static const Color _primary2 = Color(0xFF0E2E72);
+  static const Color _bg = Color(
+    0xFFF6F7FB,
+  );
+  static const Color _primary = Color(
+    0xFF1B3C9E,
+  );
+  static const Color _primary2 = Color(
+    0xFF0E2E72,
+  );
 
-  final List<String> _hariList = const [
+  final List<
+    String
+  >
+  _hariList = const [
     'Senin',
     'Selasa',
     'Rabu',
@@ -42,10 +70,17 @@ class _EditJadwalPageState extends State<EditJadwalPage> {
   @override
   void initState() {
     super.initState();
-    mataKuliah = TextEditingController(text: widget.jadwal.mataKuliah);
-    dosen = TextEditingController(text: widget.jadwal.dosen);
-    kelas = TextEditingController(text: widget.jadwal.kelas);
 
+    _initial = widget.jadwal;
+
+    mataKuliah = TextEditingController(
+      text: widget.jadwal.mataKuliah,
+    );
+    dosen = TextEditingController(
+      text: widget.jadwal.dosen,
+    );
+
+    _kelas = widget.jadwal.kelas;
     _hari = widget.jadwal.hari;
     _jam = widget.jadwal.jam;
   }
@@ -54,119 +89,254 @@ class _EditJadwalPageState extends State<EditJadwalPage> {
   void dispose() {
     mataKuliah.dispose();
     dosen.dispose();
-    kelas.dispose();
     super.dispose();
   }
 
-  Future<void> _pickTime() async {
-    // kalau jam awal sudah ada (HH:mm) => jadikan initialTime
+  Future<
+    void
+  >
+  _pickTime() async {
     TimeOfDay initial = TimeOfDay.now();
-    final parts = _jam.split(':');
-    if (parts.length == 2) {
-      final hh = int.tryParse(parts[0]);
-      final mm = int.tryParse(parts[1]);
-      if (hh != null && mm != null) {
-        initial = TimeOfDay(hour: hh, minute: mm);
+    final parts = _jam.split(
+      ':',
+    );
+    if (parts.length ==
+        2) {
+      final hh = int.tryParse(
+        parts[0],
+      );
+      final mm = int.tryParse(
+        parts[1],
+      );
+      if (hh !=
+              null &&
+          mm !=
+              null) {
+        initial = TimeOfDay(
+          hour: hh,
+          minute: mm,
+        );
       }
     }
 
     final picked = await showTimePicker(
       context: context,
       initialTime: initial,
-      builder: (context, child) {
-        final theme = Theme.of(context);
-        return Theme(
-          data: theme.copyWith(
-            colorScheme: theme.colorScheme.copyWith(
-              primary: _primary,
-              secondary: _primary,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder:
+          (
+            context,
+            child,
+          ) {
+            final theme = Theme.of(
+              context,
+            );
+            return Theme(
+              data: theme.copyWith(
+                colorScheme: theme.colorScheme.copyWith(
+                  primary: _primary,
+                  secondary: _primary,
+                ),
+              ),
+              child: child!,
+            );
+          },
     );
 
-    if (picked == null) return;
+    if (picked ==
+        null)
+      return;
 
-    final hh = picked.hour.toString().padLeft(2, '0');
-    final mm = picked.minute.toString().padLeft(2, '0');
+    final hh = picked.hour.toString().padLeft(
+      2,
+      '0',
+    );
+    final mm = picked.minute.toString().padLeft(
+      2,
+      '0',
+    );
 
-    setState(() => _jam = '$hh:$mm');
+    setState(
+      () => _jam = '$hh:$mm',
+    );
   }
 
-  Future<void> _update(JadwalViewModel vm) async {
+  Future<
+    void
+  >
+  _update(
+    JadwalViewModel vm,
+  ) async {
     if (_saving) return;
 
-    final validForm = _formKey.currentState?.validate() ?? false;
+    final validForm =
+        _formKey.currentState?.validate() ??
+        false;
     if (!validForm) return;
 
     if (_hari.isEmpty) {
-      _toast('Hari wajib dipilih');
+      _toast(
+        'Hari wajib dipilih',
+      );
       return;
     }
 
     if (_jam.isEmpty) {
-      _toast('Jam wajib dipilih');
+      _toast(
+        'Jam wajib dipilih',
+      );
       return;
     }
 
-    setState(() => _saving = true);
+    if (_kelas ==
+            null ||
+        _kelas!.trim().isEmpty) {
+      _toast(
+        'Kelas wajib dipilih',
+      );
+      return;
+    }
+
+    final updated = Jadwal(
+      id: widget.jadwal.id,
+      mataKuliah: mataKuliah.text.trim(),
+      dosen: dosen.text.trim(),
+      kelas:
+          (_kelas ??
+                  '')
+              .trim(),
+      hari: _hari,
+      jam: _jam,
+    );
+
+    final isChanged =
+        updated.mataKuliah !=
+            _initial.mataKuliah ||
+        updated.dosen !=
+            _initial.dosen ||
+        updated.kelas !=
+            _initial.kelas ||
+        updated.hari !=
+            _initial.hari ||
+        updated.jam !=
+            _initial.jam;
+
+    if (!isChanged) {
+      Navigator.pop(
+        context,
+        false,
+      );
+      return;
+    }
+
+    setState(
+      () => _saving = true,
+    );
 
     try {
       await vm.updateJadwal(
-        Jadwal(
-          id: widget.jadwal.id,
-          mataKuliah: mataKuliah.text.trim(),
-          dosen: dosen.text.trim(),
-          kelas: kelas.text.trim(),
-          hari: _hari,
-          jam: _jam,
-        ),
+        updated,
       );
 
       if (!mounted) return;
-      Navigator.pop(context);
-    } catch (_) {
+      Navigator.pop(
+        context,
+        true,
+      );
+    } catch (
+      _
+    ) {
       if (!mounted) return;
-      _toast('Gagal update jadwal. Coba lagi.');
-      setState(() => _saving = false);
+      _toast(
+        'Gagal update jadwal. Coba lagi.',
+      );
+      setState(
+        () => _saving = false,
+      );
     }
   }
 
-  void _toast(String msg) {
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
+  void _toast(
+    String msg,
+  ) {
+    ScaffoldMessenger.of(
+      context,
+    ).clearSnackBars();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(
       SnackBar(
-        content: Text(msg),
+        content: Text(
+          msg,
+        ),
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
+        duration: const Duration(
+          seconds: 2,
+        ),
       ),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
-    final vm = context.read<JadwalViewModel>();
+  Widget build(
+    BuildContext context,
+  ) {
+    final vm = context
+        .read<
+          JadwalViewModel
+        >();
+    final kelasVM = context
+        .watch<
+          KelasViewModel
+        >();
+
+    final kelasList =
+        kelasVM.kelasList
+            .map(
+              (
+                e,
+              ) => e.nama.trim(),
+            )
+            .where(
+              (
+                e,
+              ) => e.isNotEmpty,
+            )
+            .toSet()
+            .toList()
+          ..sort();
+
+    final String? safeKelas =
+        (_kelas !=
+                null &&
+            kelasList.contains(
+              _kelas!.trim(),
+            ))
+        ? _kelas!.trim()
+        : null;
 
     return Scaffold(
       backgroundColor: _bg,
-
       appBar: AppBar(
         elevation: 0,
         backgroundColor: _primary2,
         surfaceTintColor: _primary2,
         foregroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+          ),
+          onPressed: () => Navigator.pop(
+            context,
+            false,
+          ),
         ),
         title: const Text(
           'Edit Jadwal',
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
-
       body: Stack(
         children: [
           SafeArea(
@@ -175,38 +345,50 @@ class _EditJadwalPageState extends State<EditJadwalPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 🔵 biru FULL layar + ikut scroll
                   Container(
                     height: 160,
                     width: double.infinity,
                     decoration: const BoxDecoration(
                       color: _primary2,
                       borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(28),
-                        bottomRight: Radius.circular(28),
+                        bottomLeft: Radius.circular(
+                          28,
+                        ),
+                        bottomRight: Radius.circular(
+                          28,
+                        ),
                       ),
                     ),
                   ),
-
-                  // 🤍 card overlap
                   Transform.translate(
-                    offset: const Offset(0, -120),
+                    offset: const Offset(
+                      0,
+                      -120,
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(
+                        16,
+                        0,
+                        16,
+                        16,
+                      ),
                       child: _GlassCard(
                         child: Form(
                           key: _formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const SizedBox(height: 4),
-
+                              const SizedBox(
+                                height: 4,
+                              ),
                               const _SectionTitle(
                                 icon: Icons.edit_note_rounded,
                                 title: 'Detail Jadwal',
                                 caption: 'Perbarui informasi mata kuliah.',
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(
+                                height: 16,
+                              ),
 
                               _ModernField(
                                 label: 'Mata Kuliah',
@@ -214,9 +396,13 @@ class _EditJadwalPageState extends State<EditJadwalPage> {
                                 controller: mataKuliah,
                                 icon: Icons.menu_book_rounded,
                                 textInputAction: TextInputAction.next,
-                                onChanged: () => setState(() {}),
+                                onChanged: () => setState(
+                                  () {},
+                                ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(
+                                height: 12,
+                              ),
 
                               _ModernField(
                                 label: 'Dosen',
@@ -224,71 +410,117 @@ class _EditJadwalPageState extends State<EditJadwalPage> {
                                 controller: dosen,
                                 icon: Icons.person_rounded,
                                 textInputAction: TextInputAction.next,
-                                onChanged: () => setState(() {}),
+                                onChanged: () => setState(
+                                  () {},
+                                ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(
+                                height: 12,
+                              ),
 
-                              _ModernField(
+                              _ModernDropdown(
                                 label: 'Kelas',
-                                hint: 'Contoh: TI-3A',
-                                controller: kelas,
+                                hint:
+                                    safeKelas ==
+                                            null &&
+                                        (_kelas?.isNotEmpty ??
+                                            false)
+                                    ? 'Kelas sebelumnya sudah dihapus'
+                                    : 'Pilih Kelas',
                                 icon: Icons.class_rounded,
-                                textInputAction: TextInputAction.done,
-                                onChanged: () => setState(() {}),
+                                value: safeKelas,
+                                items: kelasList,
+                                onChanged:
+                                    (
+                                      v,
+                                    ) {
+                                      setState(
+                                        () => _kelas = v?.trim(),
+                                      );
+                                    },
                               ),
 
-                              const SizedBox(height: 22),
+                              const SizedBox(
+                                height: 22,
+                              ),
                               _DividerSoft(),
-                              const SizedBox(height: 18),
+                              const SizedBox(
+                                height: 18,
+                              ),
 
                               const _SectionTitle(
                                 icon: Icons.schedule_rounded,
                                 title: 'Waktu',
                                 caption: 'Pilih hari dan jam perkuliahan.',
                               ),
-                              const SizedBox(height: 14),
+                              const SizedBox(
+                                height: 14,
+                              ),
 
                               Text(
                                 'Hari',
                                 style: TextStyle(
-                                  color: Colors.black.withOpacity(0.72),
+                                  color: Colors.black.withOpacity(
+                                    0.72,
+                                  ),
                                   fontWeight: FontWeight.w700,
                                   fontSize: 12,
                                   letterSpacing: 0.4,
                                 ),
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(
+                                height: 10,
+                              ),
 
                               Wrap(
                                 spacing: 10,
                                 runSpacing: 10,
-                                children: _hariList.map((h) {
-                                  final selected = _hari == h;
-                                  return ChoiceChip(
-                                    label: Text(h),
-                                    selected: selected,
-                                    onSelected: (_) =>
-                                        setState(() => _hari = h),
-                                    showCheckmark: true,
-                                    checkmarkColor: const Color(0xFF22C55E),
-                                    labelStyle: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      color: selected
-                                          ? Colors.white
-                                          : _primary2,
-                                    ),
-                                    selectedColor: _primary,
-                                    backgroundColor: const Color(0xFFEFF2FF),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    materialTapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                  );
-                                }).toList(),
+                                children: _hariList.map(
+                                  (
+                                    h,
+                                  ) {
+                                    final selected =
+                                        _hari ==
+                                        h;
+                                    return ChoiceChip(
+                                      label: Text(
+                                        h,
+                                      ),
+                                      selected: selected,
+                                      onSelected:
+                                          (
+                                            _,
+                                          ) => setState(
+                                            () => _hari = h,
+                                          ),
+                                      showCheckmark: true,
+                                      checkmarkColor: const Color(
+                                        0xFF22C55E,
+                                      ),
+                                      labelStyle: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: selected
+                                            ? Colors.white
+                                            : _primary2,
+                                      ),
+                                      selectedColor: _primary,
+                                      backgroundColor: const Color(
+                                        0xFFEFF2FF,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          14,
+                                        ),
+                                      ),
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    );
+                                  },
+                                ).toList(),
                               ),
 
-                              const SizedBox(height: 16),
+                              const SizedBox(
+                                height: 16,
+                              ),
 
                               _PickerTile(
                                 label: 'Jam',
@@ -300,27 +532,44 @@ class _EditJadwalPageState extends State<EditJadwalPage> {
                                 isFilled: _jam.isNotEmpty,
                               ),
 
-                              const SizedBox(height: 18),
+                              const SizedBox(
+                                height: 18,
+                              ),
 
                               _PreviewCard(
                                 mataKuliah: mataKuliah.text.trim(),
                                 dosen: dosen.text.trim(),
-                                kelas: kelas.text.trim(),
+                                kelas:
+                                    (_kelas ??
+                                            '')
+                                        .trim(),
                                 hari: _hari,
                                 jam: _jam,
                               ),
-                              const SizedBox(height: 18),
+
+                              const SizedBox(
+                                height: 18,
+                              ),
 
                               Padding(
-                                padding: const EdgeInsets.only(bottom: 2),
+                                padding: const EdgeInsets.only(
+                                  bottom: 2,
+                                ),
                                 child: _BottomBar(
                                   saving: _saving,
                                   cancelLabel: 'Batal',
                                   saveLabel: 'Update Jadwal',
                                   onCancel: _saving
                                       ? null
-                                      : () => Navigator.pop(context),
-                                  onSave: _saving ? null : () => _update(vm),
+                                      : () => Navigator.pop(
+                                          context,
+                                          false,
+                                        ),
+                                  onSave: _saving
+                                      ? null
+                                      : () => _update(
+                                          vm,
+                                        ),
                                 ),
                               ),
                             ],
@@ -329,12 +578,48 @@ class _EditJadwalPageState extends State<EditJadwalPage> {
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 24),
+                  const SizedBox(
+                    height: 24,
+                  ),
                 ],
               ),
             ),
           ),
+
+          // ✅ overlay saving (sama admin)
+          if (_saving) ...[
+            Positioned.fill(
+              child: AbsorbPointer(
+                absorbing: true,
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: 6,
+                    sigmaY: 6,
+                  ),
+                  child: Container(
+                    color: Colors.black.withOpacity(
+                      0.25,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const Center(
+              child: SizedBox(
+                height: 34,
+                width: 34,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor:
+                      AlwaysStoppedAnimation<
+                        Color
+                      >(
+                        Colors.white,
+                      ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -342,37 +627,63 @@ class _EditJadwalPageState extends State<EditJadwalPage> {
 }
 
 /// =======================
-///   UI WIDGETS (SAMA SEPERTI TAMBAH)
+///   UI WIDGETS (SAMA SEPERTI ADMIN)
 /// =======================
 
-class _GlassCard extends StatelessWidget {
+class _GlassCard
+    extends
+        StatelessWidget {
   final Widget child;
-  const _GlassCard({required this.child});
+  const _GlassCard({
+    required this.child,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(22),
+        color: Colors.white.withOpacity(
+          0.95,
+        ),
+        borderRadius: BorderRadius.circular(
+          22,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(
+              0.08,
+            ),
             blurRadius: 18,
-            offset: const Offset(0, 10),
+            offset: const Offset(
+              0,
+              10,
+            ),
           ),
         ],
-        border: Border.all(color: Colors.white.withOpacity(0.55)),
+        border: Border.all(
+          color: Colors.white.withOpacity(
+            0.55,
+          ),
+        ),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+        padding: const EdgeInsets.fromLTRB(
+          18,
+          18,
+          18,
+          18,
+        ),
         child: child,
       ),
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
+class _SectionTitle
+    extends
+        StatelessWidget {
   final IconData icon;
   final String title;
   final String caption;
@@ -384,19 +695,32 @@ class _SectionTitle extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Row(
       children: [
         Container(
           height: 38,
           width: 38,
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF2FF),
-            borderRadius: BorderRadius.circular(14),
+            color: const Color(
+              0xFFEFF2FF,
+            ),
+            borderRadius: BorderRadius.circular(
+              14,
+            ),
           ),
-          child: Icon(icon, color: const Color(0xFF0E2E72)),
+          child: Icon(
+            icon,
+            color: const Color(
+              0xFF0E2E72,
+            ),
+          ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(
+          width: 12,
+        ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,12 +733,16 @@ class _SectionTitle extends StatelessWidget {
                   letterSpacing: 0.2,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(
+                height: 2,
+              ),
               Text(
                 caption,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.black.withOpacity(0.55),
+                  color: Colors.black.withOpacity(
+                    0.55,
+                  ),
                   height: 1.2,
                 ),
               ),
@@ -426,7 +754,9 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _ModernField extends StatelessWidget {
+class _ModernField
+    extends
+        StatelessWidget {
   final String label;
   final String hint;
   final TextEditingController controller;
@@ -443,58 +773,96 @@ class _ModernField extends StatelessWidget {
     required this.onChanged,
   });
 
-  static const Color _primary = Color(0xFF1B3C9E);
+  static const Color _primary = Color(
+    0xFF1B3C9E,
+  );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: Colors.black.withOpacity(0.72),
+            color: Colors.black.withOpacity(
+              0.72,
+            ),
             fontWeight: FontWeight.w700,
             fontSize: 12,
             letterSpacing: 0.4,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(
+          height: 8,
+        ),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF3F5FF),
-            borderRadius: BorderRadius.circular(16),
+            color: const Color(
+              0xFFF3F5FF,
+            ),
+            borderRadius: BorderRadius.circular(
+              16,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withOpacity(
+                  0.04,
+                ),
                 blurRadius: 12,
-                offset: const Offset(0, 6),
+                offset: const Offset(
+                  0,
+                  6,
+                ),
               ),
             ],
-            border: Border.all(color: Colors.white.withOpacity(0.7)),
+            border: Border.all(
+              color: Colors.white.withOpacity(
+                0.7,
+              ),
+            ),
           ),
           child: TextFormField(
             controller: controller,
             textInputAction: textInputAction,
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return '$label wajib diisi';
-              return null;
-            },
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            validator:
+                (
+                  v,
+                ) {
+                  if (v ==
+                          null ||
+                      v.trim().isEmpty)
+                    return '$label wajib diisi';
+                  return null;
+                },
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: TextStyle(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withOpacity(
+                  0.35,
+                ),
                 fontWeight: FontWeight.w600,
               ),
-              prefixIcon: Icon(icon, color: _primary),
+              prefixIcon: Icon(
+                icon,
+                color: _primary,
+              ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 14,
                 vertical: 14,
               ),
             ),
-            onChanged: (_) => onChanged(),
+            onChanged:
+                (
+                  _,
+                ) => onChanged(),
           ),
         ),
       ],
@@ -502,7 +870,153 @@ class _ModernField extends StatelessWidget {
   }
 }
 
-class _PickerTile extends StatelessWidget {
+class _ModernDropdown
+    extends
+        StatelessWidget {
+  final String label;
+  final String hint;
+  final IconData icon;
+  final String? value;
+  final List<
+    String
+  >
+  items;
+  final ValueChanged<
+    String?
+  >
+  onChanged;
+
+  const _ModernDropdown({
+    required this.label,
+    required this.hint,
+    required this.icon,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  static const Color _primary = Color(
+    0xFF1B3C9E,
+  );
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    final String? safeValue =
+        (value !=
+                null &&
+            items.contains(
+              value,
+            ))
+        ? value
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.black.withOpacity(
+              0.72,
+            ),
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(
+          height: 8,
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(
+              0xFFF3F5FF,
+            ),
+            borderRadius: BorderRadius.circular(
+              16,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(
+                  0.04,
+                ),
+                blurRadius: 12,
+                offset: const Offset(
+                  0,
+                  6,
+                ),
+              ),
+            ],
+            border: Border.all(
+              color: Colors.white.withOpacity(
+                0.7,
+              ),
+            ),
+          ),
+          child:
+              DropdownButtonFormField<
+                String
+              >(
+                value: safeValue,
+                isExpanded: true,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                ),
+                validator:
+                    (
+                      v,
+                    ) =>
+                        v ==
+                            null
+                        ? '$label wajib dipilih'
+                        : null,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(
+                    icon,
+                    color: _primary,
+                  ),
+                  border: InputBorder.none,
+                  hintText: hint,
+                  hintStyle: TextStyle(
+                    color: Colors.black.withOpacity(
+                      0.35,
+                    ),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                ),
+                items: items
+                    .map(
+                      (
+                        e,
+                      ) => DropdownMenuItem(
+                        value: e,
+                        child: Text(
+                          e,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: onChanged,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PickerTile
+    extends
+        StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
@@ -517,46 +1031,79 @@ class _PickerTile extends StatelessWidget {
     required this.isFilled,
   });
 
-  static const Color _primary = Color(0xFF1B3C9E);
+  static const Color _primary = Color(
+    0xFF1B3C9E,
+  );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: Colors.black.withOpacity(0.72),
+            color: Colors.black.withOpacity(
+              0.72,
+            ),
             fontWeight: FontWeight.w700,
             fontSize: 12,
             letterSpacing: 0.4,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(
+          height: 8,
+        ),
         Material(
-          color: const Color(0xFFF3F5FF),
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(
+            0xFFF3F5FF,
+          ),
+          borderRadius: BorderRadius.circular(
+            16,
+          ),
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(
+              16,
+            ),
             onTap: onTap,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.7)),
+                borderRadius: BorderRadius.circular(
+                  16,
+                ),
+                border: Border.all(
+                  color: Colors.white.withOpacity(
+                    0.7,
+                  ),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withOpacity(
+                      0.04,
+                    ),
                     blurRadius: 12,
-                    offset: const Offset(0, 6),
+                    offset: const Offset(
+                      0,
+                      6,
+                    ),
                   ),
                 ],
               ),
               child: Row(
                 children: [
-                  Icon(icon, color: _primary),
-                  const SizedBox(width: 12),
+                  Icon(
+                    icon,
+                    color: _primary,
+                  ),
+                  const SizedBox(
+                    width: 12,
+                  ),
                   Expanded(
                     child: Text(
                       value,
@@ -564,14 +1111,20 @@ class _PickerTile extends StatelessWidget {
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                         color: isFilled
-                            ? Colors.black.withOpacity(0.86)
-                            : Colors.black.withOpacity(0.45),
+                            ? Colors.black.withOpacity(
+                                0.86,
+                              )
+                            : Colors.black.withOpacity(
+                                0.45,
+                              ),
                       ),
                     ),
                   ),
                   Icon(
                     Icons.keyboard_arrow_right_rounded,
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withOpacity(
+                      0.4,
+                    ),
                   ),
                 ],
               ),
@@ -583,7 +1136,9 @@ class _PickerTile extends StatelessWidget {
   }
 }
 
-class _PreviewCard extends StatelessWidget {
+class _PreviewCard
+    extends
+        StatelessWidget {
   final String mataKuliah;
   final String dosen;
   final String kelas;
@@ -599,7 +1154,9 @@ class _PreviewCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     final mk = mataKuliah.trim();
     final ds = dosen.trim();
     final kl = kelas.trim();
@@ -611,25 +1168,55 @@ class _PreviewCard extends StatelessWidget {
         hari.isNotEmpty ||
         jam.isNotEmpty;
 
-    Widget chip(IconData icon, String text) {
+    Widget chip(
+      IconData icon,
+      String text,
+    ) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 8,
+        ),
         decoration: BoxDecoration(
-          color: const Color(0xFF1B3C9E).withOpacity(0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF0E2E72).withOpacity(0.12)),
+          color:
+              const Color(
+                0xFF1B3C9E,
+              ).withOpacity(
+                0.08,
+              ),
+          borderRadius: BorderRadius.circular(
+            12,
+          ),
+          border: Border.all(
+            color:
+                const Color(
+                  0xFF0E2E72,
+                ).withOpacity(
+                  0.12,
+                ),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: const Color(0xFF0E2E72)),
-            const SizedBox(width: 6),
+            Icon(
+              icon,
+              size: 16,
+              color: const Color(
+                0xFF0E2E72,
+              ),
+            ),
+            const SizedBox(
+              width: 6,
+            ),
             Text(
               text,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: Colors.black.withOpacity(0.78),
+                color: Colors.black.withOpacity(
+                  0.78,
+                ),
               ),
             ),
           ],
@@ -638,18 +1225,34 @@ class _PreviewCard extends StatelessWidget {
     }
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
+      duration: const Duration(
+        milliseconds: 220,
+      ),
       curve: Curves.easeOut,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(
+        14,
+      ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(
+          18,
+        ),
         color: hasAny
-            ? const Color(0xFF0E2E72).withOpacity(0.06)
+            ? const Color(
+                0xFF0E2E72,
+              ).withOpacity(
+                0.06,
+              )
             : Colors.white,
         border: Border.all(
           color: hasAny
-              ? const Color(0xFF0E2E72).withOpacity(0.14)
-              : Colors.black.withOpacity(0.06),
+              ? const Color(
+                  0xFF0E2E72,
+                ).withOpacity(
+                  0.14,
+                )
+              : Colors.black.withOpacity(
+                  0.06,
+                ),
         ),
       ),
       child: Row(
@@ -659,15 +1262,26 @@ class _PreviewCard extends StatelessWidget {
             height: 42,
             width: 42,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: const Color(0xFF1B3C9E).withOpacity(0.10),
+              borderRadius: BorderRadius.circular(
+                16,
+              ),
+              color:
+                  const Color(
+                    0xFF1B3C9E,
+                  ).withOpacity(
+                    0.10,
+                  ),
             ),
             child: const Icon(
               Icons.visibility_rounded,
-              color: Color(0xFF0E2E72),
+              color: Color(
+                0xFF0E2E72,
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(
+            width: 12,
+          ),
           Expanded(
             child: !hasAny
                 ? Text(
@@ -676,46 +1290,70 @@ class _PreviewCard extends StatelessWidget {
                       fontSize: 12.5,
                       height: 1.35,
                       fontWeight: FontWeight.w700,
-                      color: Colors.black.withOpacity(0.45),
+                      color: Colors.black.withOpacity(
+                        0.45,
+                      ),
                     ),
                   )
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        mk.isEmpty ? 'Mata kuliah belum diisi' : mk,
+                        mk.isEmpty
+                            ? 'Mata kuliah belum diisi'
+                            : mk,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
                           color: Colors.black.withOpacity(
-                            mk.isEmpty ? 0.45 : 0.85,
+                            mk.isEmpty
+                                ? 0.45
+                                : 0.85,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
                         children: [
                           if (hari.isNotEmpty)
-                            chip(Icons.calendar_today_rounded, hari),
+                            chip(
+                              Icons.calendar_today_rounded,
+                              hari,
+                            ),
                           if (jam.isNotEmpty)
-                            chip(Icons.access_time_rounded, jam),
-                          if (kl.isNotEmpty) chip(Icons.class_rounded, kl),
+                            chip(
+                              Icons.access_time_rounded,
+                              jam,
+                            ),
+                          if (kl.isNotEmpty)
+                            chip(
+                              Icons.class_rounded,
+                              kl,
+                            ),
                         ],
                       ),
                       if (ds.isNotEmpty) ...[
-                        const SizedBox(height: 10),
+                        const SizedBox(
+                          height: 10,
+                        ),
                         Row(
                           children: [
                             Icon(
                               Icons.person_rounded,
                               size: 16,
-                              color: Colors.black.withOpacity(0.45),
+                              color: Colors.black.withOpacity(
+                                0.45,
+                              ),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(
+                              width: 6,
+                            ),
                             Expanded(
                               child: Text(
                                 ds,
@@ -724,7 +1362,9 @@ class _PreviewCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black.withOpacity(0.62),
+                                  color: Colors.black.withOpacity(
+                                    0.62,
+                                  ),
                                 ),
                               ),
                             ),
@@ -740,7 +1380,9 @@ class _PreviewCard extends StatelessWidget {
   }
 }
 
-class _BottomBar extends StatelessWidget {
+class _BottomBar
+    extends
+        StatelessWidget {
   final bool saving;
   final VoidCallback? onCancel;
   final VoidCallback? onSave;
@@ -755,10 +1397,14 @@ class _BottomBar extends StatelessWidget {
     required this.saveLabel,
   });
 
-  static const Color _primary = Color(0xFF1B3C9E);
+  static const Color _primary = Color(
+    0xFF1B3C9E,
+  );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     const double h = 46;
     const double r = 14;
 
@@ -772,20 +1418,32 @@ class _BottomBar extends StatelessWidget {
               onPressed: onCancel,
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(r),
+                  borderRadius: BorderRadius.circular(
+                    r,
+                  ),
                 ),
-                side: BorderSide(color: Colors.black.withOpacity(0.14)),
-                foregroundColor: Colors.black.withOpacity(0.78),
+                side: BorderSide(
+                  color: Colors.black.withOpacity(
+                    0.14,
+                  ),
+                ),
+                foregroundColor: Colors.black.withOpacity(
+                  0.78,
+                ),
                 textStyle: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 13,
                 ),
               ),
-              child: Text(cancelLabel),
+              child: Text(
+                cancelLabel,
+              ),
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(
+          width: 12,
+        ),
         Expanded(
           flex: 2,
           child: SizedBox(
@@ -797,23 +1455,17 @@ class _BottomBar extends StatelessWidget {
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(r),
+                  borderRadius: BorderRadius.circular(
+                    r,
+                  ),
                 ),
                 textStyle: const TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 13,
                 ),
               ),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: saving
-                    ? const SizedBox(
-                        key: ValueKey('loading'),
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(key: const ValueKey('text'), saveLabel),
+              child: Text(
+                saveLabel,
               ),
             ),
           ),
@@ -823,13 +1475,19 @@ class _BottomBar extends StatelessWidget {
   }
 }
 
-class _DividerSoft extends StatelessWidget {
+class _DividerSoft
+    extends
+        StatelessWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
       height: 1,
       width: double.infinity,
-      color: Colors.black.withOpacity(0.06),
+      color: Colors.black.withOpacity(
+        0.06,
+      ),
     );
   }
 }

@@ -45,6 +45,7 @@ class _EditKelasPageState
   static const Color _bg = Color(
     0xFFF6F7FB,
   );
+  // ignore: unused_field
   static const Color _primary = Color(
     0xFF1B3C9E,
   );

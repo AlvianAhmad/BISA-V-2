@@ -3,38 +3,71 @@ import 'package:provider/provider.dart';
 import '../../../../domain/entities/materi.dart';
 import '../../../viewmodels/admin/materi/materi_view_model.dart';
 
-class EditMateriPage extends StatefulWidget {
+class EditMateriPage
+    extends
+        StatefulWidget {
   final Materi materi;
-  const EditMateriPage({super.key, required this.materi});
+  const EditMateriPage({
+    super.key,
+    required this.materi,
+  });
 
   @override
-  State<EditMateriPage> createState() => _EditMateriPageState();
+  State<
+    EditMateriPage
+  >
+  createState() => _EditMateriPageState();
 }
 
-class _EditMateriPageState extends State<EditMateriPage> {
+class _EditMateriPageState
+    extends
+        State<
+          EditMateriPage
+        > {
   late TextEditingController judul;
   late TextEditingController deskripsi;
 
   @override
   void initState() {
     super.initState();
-    judul = TextEditingController(text: widget.materi.judul);
-    deskripsi = TextEditingController(text: widget.materi.deskripsi);
+    judul = TextEditingController(
+      text: widget.materi.judul,
+    );
+    deskripsi = TextEditingController(
+      text: widget.materi.deskripsi,
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
-    final vm = context.read<MateriViewModel>();
+  Widget build(
+    BuildContext context,
+  ) {
+    final vm = context
+        .read<
+          MateriViewModel
+        >();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Materi')),
+      appBar: AppBar(
+        title: const Text(
+          'Edit Materi',
+        ),
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(
+          16,
+        ),
         child: Column(
           children: [
-            TextField(controller: judul),
-            TextField(controller: deskripsi),
-            const SizedBox(height: 20),
+            TextField(
+              controller: judul,
+            ),
+            TextField(
+              controller: deskripsi,
+            ),
+            const SizedBox(
+              height: 20,
+            ),
             ElevatedButton(
               onPressed: () async {
                 await vm.editMateri(
@@ -49,9 +82,13 @@ class _EditMateriPageState extends State<EditMateriPage> {
                     createdAt: widget.materi.createdAt,
                   ),
                 );
-                Navigator.pop(context);
+                Navigator.pop(
+                  context,
+                );
               },
-              child: const Text('Update'),
+              child: const Text(
+                'Update',
+              ),
             ),
           ],
         ),
