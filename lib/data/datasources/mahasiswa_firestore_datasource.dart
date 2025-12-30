@@ -8,6 +8,7 @@ class MahasiswaFirestoreDatasource {
     required String kodeKelas,
     required String mahasiswaId,
   }) async {
+    // cari kelas berdasarkan kode
     final kelasSnap = await _db
         .collection('kelas')
         .where('kode', isEqualTo: kodeKelas)
@@ -19,8 +20,14 @@ class MahasiswaFirestoreDatasource {
     }
 
     final kelasId = kelasSnap.docs.first.id;
+    final docId = '$mahasiswaId-$kelasId';
 
-    await _db.collection('mahasiswa_kelas').doc('$mahasiswaId-$kelasId').set({
+    // cegah join dobel
+    final existing = await _db.collection('kelas').doc(docId).get();
+
+    if (existing.exists) return;
+
+    await _db.collection('kelas').doc(docId).set({
       'mahasiswaId': mahasiswaId,
       'kelasId': kelasId,
       'joinedAt': Timestamp.now(),
@@ -28,19 +35,19 @@ class MahasiswaFirestoreDatasource {
   }
 
   // ================= KELAS =================
-  Stream<QuerySnapshot> kelasSaya(String mahasiswaId) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> kelasSaya(String mahasiswaId) {
     return _db
-        .collection('mahasiswa_kelas')
+        .collection('kelas')
         .where('mahasiswaId', isEqualTo: mahasiswaId)
         .snapshots();
   }
 
-  Stream<DocumentSnapshot> detailKelas(String kelasId) {
+  Stream<DocumentSnapshot<Map<String, dynamic>>> detailKelas(String kelasId) {
     return _db.collection('kelas').doc(kelasId).snapshots();
   }
 
   // ================= MATERI =================
-  Stream<QuerySnapshot> materi(String kelasId) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> materi(String kelasId) {
     return _db
         .collection('materi')
         .where('kelasId', isEqualTo: kelasId)
@@ -48,7 +55,7 @@ class MahasiswaFirestoreDatasource {
   }
 
   // ================= TUGAS =================
-  Stream<QuerySnapshot> tugas(String kelasId) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> tugas(String kelasId) {
     return _db
         .collection('tugas')
         .where('kelasId', isEqualTo: kelasId)
@@ -64,7 +71,11 @@ class MahasiswaFirestoreDatasource {
         .doc(tugasId)
         .collection('pengumpulan')
         .doc(mahasiswaId)
-        .set({'mahasiswaId': mahasiswaId, 'waktu': Timestamp.now()});
+        .set({
+          'mahasiswaId': mahasiswaId,
+          'submittedAt': Timestamp.now(),
+          'status': 'submitted',
+        });
   }
 
   Future<bool> sudahKumpul({
@@ -82,7 +93,7 @@ class MahasiswaFirestoreDatasource {
   }
 
   // ================= JADWAL =================
-  Stream<QuerySnapshot> jadwal(String kelasId) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> jadwal(String kelasId) {
     return _db
         .collection('jadwal')
         .where('kelasId', isEqualTo: kelasId)
@@ -90,7 +101,7 @@ class MahasiswaFirestoreDatasource {
   }
 
   // ================= ABSENSI =================
-  Stream<QuerySnapshot> absensi(String kelasId) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> absensi(String kelasId) {
     return _db
         .collection('absensi')
         .where('kelasId', isEqualTo: kelasId)
@@ -106,7 +117,11 @@ class MahasiswaFirestoreDatasource {
         .doc(absensiId)
         .collection('hadir')
         .doc(mahasiswaId)
-        .set({'mahasiswaId': mahasiswaId, 'waktu': Timestamp.now()});
+        .set({
+          'mahasiswaId': mahasiswaId,
+          'hadir': true,
+          'waktu': Timestamp.now(),
+        });
   }
 
   Future<bool> sudahAbsen({

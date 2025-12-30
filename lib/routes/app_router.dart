@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
 import 'app_routes.dart';
 
 // AUTH
@@ -13,10 +11,6 @@ import '../presentation/pages/auth/auth_gate_page.dart';
 import '../presentation/pages/admin/admin_page.dart';
 import '../presentation/pages/dosen/dosen_page.dart';
 import '../presentation/pages/mahasiswa/mahasiswa_page.dart';
-
-// MAHASISWA
-import '../data/datasources/mahasiswa_firestore_datasource.dart';
-import '../presentation/viewmodels/mahasiswa/mahasiswa_viewmodel.dart';
 
 class AppRouter {
   AppRouter._();
@@ -38,20 +32,15 @@ class AppRouter {
       case AppRoutes.dosen:
         return _page(const DosenPage());
 
-      // ✅ FIX PALING PENTING
+      // 🔥 MAHASISWA TANPA PROVIDER LAGI
       case AppRoutes.mahasiswa:
-        return MaterialPageRoute(
-          builder: (_) => ChangeNotifierProvider(
-            create: (_) => MahasiswaViewModel(MahasiswaFirestoreDatasource()),
-            child: const MahasiswaPage(),
-          ),
-        );
+        return _page(const MahasiswaPage());
 
       case AppRoutes.authGate:
         return _page(const AuthGatePage());
 
       default:
-        return _unknownRoute(settings.name);
+        return _unknown(settings.name);
     }
   }
 
@@ -59,16 +48,11 @@ class AppRouter {
     return MaterialPageRoute(builder: (_) => page);
   }
 
-  static MaterialPageRoute _unknownRoute(String? routeName) {
+  static MaterialPageRoute _unknown(String? name) {
     return MaterialPageRoute(
       builder: (_) => Scaffold(
         appBar: AppBar(title: const Text('Error')),
-        body: Center(
-          child: Text(
-            'Route tidak ditemukan:\n$routeName',
-            textAlign: TextAlign.center,
-          ),
-        ),
+        body: Center(child: Text('Route tidak ditemukan: $name')),
       ),
     );
   }

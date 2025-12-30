@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../../viewmodels/mahasiswa/tugas_viewmodel.dart';
+import '../../../viewmodels/mahasiswa/mahasiswa_viewmodel.dart';
 import 'kumpul_tugas_page.dart';
 
 class TugasPage extends StatelessWidget {
@@ -12,12 +12,12 @@ class TugasPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<TugasViewModel>();
+    final vm = context.watch<MahasiswaViewModel>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tugas')),
       body: StreamBuilder<QuerySnapshot>(
-        stream: vm.getTugasByKelas(kelasId), // ✅ TIDAK MERAH
+        stream: vm.tugas(kelasId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -36,19 +36,21 @@ class TugasPage extends StatelessWidget {
               return ListTile(
                 title: Text(data['judul']),
                 subtitle: Text(data['deskripsi'] ?? ''),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => KumpulTugasPage(
-                        tugasId: doc.id,
-                        judulTugas: data['judul'],
-                        deskripsi: data['deskripsi'] ?? '',
+                trailing: ElevatedButton(
+                  child: const Text('Kumpul'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => KumpulTugasPage(
+                          tugasId: doc.id,
+                          judulTugas: data['judul'],
+                          deskripsi: data['deskripsi'] ?? '',
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               );
             },
           );
