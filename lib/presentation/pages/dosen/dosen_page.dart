@@ -9,38 +9,68 @@ import '../../widgets/dosen/dosen_sliver_appbar.dart';
 import 'jadwal/jadwal_dosen_page.dart';
 import 'kelas/kelas_dosen_page.dart';
 import 'tugas/tugas_dosen_page.dart';
-import 'materi/materi_dosen_page.dart';
 import 'absensi/absensi_dosen_page.dart';
 import 'lexa/lexa_chat_page.dart';
 
-class DosenPage extends StatelessWidget {
-  const DosenPage({super.key});
+class DosenPage
+    extends
+        StatelessWidget {
+  const DosenPage({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return ChangeNotifierProvider(
-      create: (_) => DosenDashboardViewModel()..init(),
+      create:
+          (
+            _,
+          ) => DosenDashboardViewModel()..init(),
       child: const _DosenPageView(),
     );
   }
 }
 
-class _DosenPageView extends StatelessWidget {
+class _DosenPageView
+    extends
+        StatelessWidget {
   const _DosenPageView();
 
-  static const Color _primary = Color(0xFF0E2E72);
+  static const Color _primary = Color(
+    0xFF0E2E72,
+  );
 
   @override
-  Widget build(BuildContext context) {
-    final vm = context.watch<DosenDashboardViewModel>();
-    final width = MediaQuery.of(context).size.width;
+  Widget build(
+    BuildContext context,
+  ) {
+    final vm = context
+        .watch<
+          DosenDashboardViewModel
+        >();
+    final width = MediaQuery.of(
+      context,
+    ).size.width;
 
-    final crossAxisCount = width >= 900 ? 3 : 2;
-    final ratio = width >= 1200 ? 1.35 : 1.25;
+    final crossAxisCount =
+        width >=
+            900
+        ? 3
+        : 2;
+    final ratio =
+        width >=
+            1200
+        ? 1.35
+        : 1.25;
 
     return Scaffold(
       drawer: DosenDrawer(
-        onTapDashboard: () => vm.snack(context, 'Dashboard'),
+        onTapDashboard: () => vm.snack(
+          context,
+          'Dashboard',
+        ),
         onTapLogout: () => vm.logoutWithConfirm(
           context: context,
           routeBuilder: _fadeRoute,
@@ -51,14 +81,21 @@ class _DosenPageView extends StatelessWidget {
         slivers: [
           // ===== SLIVER APP BAR =====
           DosenSliverAppBar(
-            onTapNotifications: () =>
-                vm.snack(context, 'Notifikasi belum tersedia'),
-            onTapSettings: () => vm.snack(context, 'Pengaturan belum tersedia'),
+            onTapNotifications: () => vm.snack(
+              context,
+              'Notifikasi belum tersedia',
+            ),
+            onTapSettings: () => vm.snack(
+              context,
+              'Pengaturan belum tersedia',
+            ),
           ),
 
           // ===== MENU GRID =====
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(
+              16,
+            ),
             sliver: SliverGrid(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
@@ -66,45 +103,65 @@ class _DosenPageView extends StatelessWidget {
                 mainAxisSpacing: 12,
                 childAspectRatio: ratio,
               ),
-              delegate: SliverChildListDelegate([
-                _MenuTile(
-                  icon: Icons.schedule_rounded,
-                  title: 'Jadwal',
-                  subtitle: 'Kelola jadwal',
-                  onTap: () => _go(context, const JadwalPage()),
-                ),
-                _MenuTile(
-                  icon: Icons.class_outlined,
-                  title: 'Kelas',
-                  subtitle: 'Data kelas',
-                  onTap: () => _go(context, const KelasPage()),
-                ),
-                _MenuTile(
-                  icon: Icons.assignment_outlined,
-                  title: 'Tugas',
-                  subtitle: 'Kelola tugas',
-                  onTap: () => _go(context, const TugasPage()),
-                ),
-                _MenuTile(
-                  icon: Icons.menu_book_outlined,
-                  title: 'Materi',
-                  subtitle: 'Bahan ajar',
-                  onTap: () => _go(context, const KelasPage()),
-                ),
+              delegate: SliverChildListDelegate(
+                [
+                  _MenuTile(
+                    icon: Icons.schedule_rounded,
+                    title: 'Jadwal',
+                    subtitle: 'Kelola jadwal',
+                    onTap: () => _go(
+                      context,
+                      const JadwalPage(),
+                    ),
+                  ),
+                  _MenuTile(
+                    icon: Icons.class_outlined,
+                    title: 'Kelas',
+                    subtitle: 'Data kelas',
+                    onTap: () => _go(
+                      context,
+                      const KelasPage(),
+                    ),
+                  ),
+                  _MenuTile(
+                    icon: Icons.assignment_outlined,
+                    title: 'Tugas',
+                    subtitle: 'Kelola tugas',
+                    onTap: () => _go(
+                      context,
+                      const TugasPage(),
+                    ),
+                  ),
+                  _MenuTile(
+                    icon: Icons.menu_book_outlined,
+                    title: 'Materi',
+                    subtitle: 'Bahan ajar',
+                    onTap: () => _go(
+                      context,
+                      const KelasPage(),
+                    ),
+                  ),
 
-                _MenuTile(
-                  icon: Icons.fact_check_outlined,
-                  title: 'Absensi',
-                  subtitle: 'Kehadiran',
-                  onTap: () => _go(context, const AbsensiPage()),
-                ),
-                _MenuTile(
-                  icon: Icons.smart_toy_outlined,
-                  title: 'LEXA',
-                  subtitle: 'Asisten AI',
-                  onTap: () => _go(context, const LexaChatPage()),
-                ),
-              ]),
+                  _MenuTile(
+                    icon: Icons.fact_check_outlined,
+                    title: 'Absensi',
+                    subtitle: 'Kehadiran',
+                    onTap: () => _go(
+                      context,
+                      const AbsensiPage(),
+                    ),
+                  ),
+                  _MenuTile(
+                    icon: Icons.smart_toy_outlined,
+                    title: 'LEXA',
+                    subtitle: 'Asisten AI',
+                    onTap: () => _go(
+                      context,
+                      const LexaChatPage(),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -112,13 +169,23 @@ class _DosenPageView extends StatelessWidget {
     );
   }
 
-  static void _go(BuildContext context, Widget page) {
-    Navigator.push(context, _fadeRoute(page));
+  static void _go(
+    BuildContext context,
+    Widget page,
+  ) {
+    Navigator.push(
+      context,
+      _fadeRoute(
+        page,
+      ),
+    );
   }
 }
 
 // ===== MENU TILE =====
-class _MenuTile extends StatelessWidget {
+class _MenuTile
+    extends
+        StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
@@ -132,20 +199,33 @@ class _MenuTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(
+        18,
+      ),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(
+          16,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(
+            18,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withOpacity(
+                0.06,
+              ),
               blurRadius: 10,
-              offset: const Offset(0, 4),
+              offset: const Offset(
+                0,
+                4,
+              ),
             ),
           ],
         ),
@@ -156,17 +236,34 @@ class _MenuTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF0E2E72).withOpacity(0.12),
-                borderRadius: BorderRadius.circular(14),
+                color:
+                    const Color(
+                      0xFF0E2E72,
+                    ).withOpacity(
+                      0.12,
+                    ),
+                borderRadius: BorderRadius.circular(
+                  14,
+                ),
               ),
-              child: Icon(icon, color: const Color(0xFF0E2E72)),
+              child: Icon(
+                icon,
+                color: const Color(
+                  0xFF0E2E72,
+                ),
+              ),
             ),
             const Spacer(),
             Text(
               title,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(
+              height: 4,
+            ),
             Text(
               subtitle,
               style: TextStyle(
@@ -183,10 +280,26 @@ class _MenuTile extends StatelessWidget {
 }
 
 // ===== FADE ROUTE =====
-PageRoute _fadeRoute(Widget page) {
+PageRoute
+_fadeRoute(
+  Widget page,
+) {
   return PageRouteBuilder(
-    pageBuilder: (_, __, ___) => page,
-    transitionsBuilder: (_, animation, __, child) =>
-        FadeTransition(opacity: animation, child: child),
+    pageBuilder:
+        (
+          _,
+          __,
+          ___,
+        ) => page,
+    transitionsBuilder:
+        (
+          _,
+          animation,
+          __,
+          child,
+        ) => FadeTransition(
+          opacity: animation,
+          child: child,
+        ),
   );
 }

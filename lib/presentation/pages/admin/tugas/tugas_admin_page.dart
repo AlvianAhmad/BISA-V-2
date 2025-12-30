@@ -374,35 +374,61 @@ class _TugasPageState
               title: tugas.judul,
               subtitle: '${tugas.kelas} • Deadline: ${_fmtDeadline(tugas.deadline)}',
               description: tugas.deskripsi,
+
+              // ================= EDIT =================
               onEdit: () async {
                 Navigator.pop(
                   context,
                 );
 
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (
-                          _,
-                        ) => EditTugasPage(
-                          tugas: tugas,
-                        ),
-                  ),
-                );
+                final ok =
+                    await Navigator.push<
+                      bool
+                    >(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (
+                              _,
+                            ) => EditTugasPage(
+                              tugas: tugas,
+                            ),
+                      ),
+                    );
+
+                if (ok ==
+                        true &&
+                    context.mounted) {
+                  _showTopToast(
+                    context,
+                    message: 'Tugas berhasil diperbarui',
+                  );
+                }
               },
 
+              // ================= DELETE =================
               onDelete: () async {
                 Navigator.pop(
                   context,
                 );
+
                 final ok = await _confirmDelete(
                   context,
                   tugas.judul,
                 );
+
                 if (ok ==
                     true) {
-                  await vm.hapusTugas(
+                  // 🚀 TOAST LANGSUNG MUNCUL
+                  if (context.mounted) {
+                    _showTopToast(
+                      context,
+                      message: 'Tugas berhasil dihapus',
+                    );
+                  }
+
+                  // 🔥 PROSES DELETE DI BELAKANG
+                  vm.hapusTugas(
                     tugas.id,
                   );
                 }
@@ -417,51 +443,504 @@ class _TugasPageState
   >
   _confirmDelete(
     BuildContext context,
-    String judul,
+    String title,
   ) {
-    return showDialog<
+    return showGeneralDialog<
       bool
     >(
       context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black.withOpacity(
+        0.45,
+      ),
+      transitionDuration: const Duration(
+        milliseconds: 220,
+      ),
+      pageBuilder:
+          (
+            context,
+            anim1,
+            anim2,
+          ) => const SizedBox.shrink(),
+      transitionBuilder:
+          (
+            context,
+            anim,
+            _,
+            __,
+          ) {
+            final curved = CurvedAnimation(
+              parent: anim,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            );
+
+            return SafeArea(
+              child: Stack(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(
+                      context,
+                      false,
+                    ),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(
+                        sigmaX:
+                            10 *
+                            curved.value,
+                        sigmaY:
+                            10 *
+                            curved.value,
+                      ),
+                      child: Container(
+                        color: Colors.transparent,
+                      ),
+                    ),
+                  ),
+
+                  Center(
+                    child: FadeTransition(
+                      opacity: curved,
+                      child: ScaleTransition(
+                        scale:
+                            Tween<
+                                  double
+                                >(
+                                  begin: 0.95,
+                                  end: 1.0,
+                                )
+                                .animate(
+                                  curved,
+                                ),
+                        child: SlideTransition(
+                          position:
+                              Tween<
+                                    Offset
+                                  >(
+                                    begin: const Offset(
+                                      0,
+                                      0.03,
+                                    ),
+                                    end: Offset.zero,
+                                  )
+                                  .animate(
+                                    curved,
+                                  ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  22,
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(
+                                          0.22,
+                                        ),
+                                        blurRadius: 34,
+                                        offset: const Offset(
+                                          0,
+                                          18,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.fromLTRB(
+                                          16,
+                                          16,
+                                          16,
+                                          14,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.withOpacity(
+                                            0.08,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 44,
+                                              height: 44,
+                                              decoration: BoxDecoration(
+                                                color: Colors.red.withOpacity(
+                                                  0.14,
+                                                ),
+                                                borderRadius: BorderRadius.circular(
+                                                  14,
+                                                ),
+                                              ),
+                                              child: const Icon(
+                                                Icons.delete_rounded,
+                                                color: Colors.red,
+                                                size: 26,
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              width: 12,
+                                            ),
+                                            const Expanded(
+                                              child: Text(
+                                                'Hapus Sesi?',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w900,
+                                                  color: kTugasTextDark,
+                                                ),
+                                              ),
+                                            ),
+                                            InkWell(
+                                              borderRadius: BorderRadius.circular(
+                                                999,
+                                              ),
+                                              onTap: () => Navigator.pop(
+                                                context,
+                                                false,
+                                              ),
+                                              child: const Padding(
+                                                padding: EdgeInsets.all(
+                                                  6,
+                                                ),
+                                                child: Icon(
+                                                  Icons.close_rounded,
+                                                  color: kTugasMuted,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          16,
+                                          14,
+                                          16,
+                                          2,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Kamu yakin ingin menghapus sesi absensi ini?',
+                                              style: TextStyle(
+                                                color: kTugasMuted,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              height: 10,
+                                            ),
+                                            Container(
+                                              width: double.infinity,
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 10,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: const Color(
+                                                  0xFFF7F8FD,
+                                                ),
+                                                borderRadius: BorderRadius.circular(
+                                                  14,
+                                                ),
+                                                border: Border.all(
+                                                  color: Colors.black.withOpacity(
+                                                    0.06,
+                                                  ),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  const Icon(
+                                                    Icons.fact_check_rounded,
+                                                    size: 18,
+                                                    color: kTugasMuted,
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 8,
+                                                  ),
+                                                  Expanded(
+                                                    child: Text(
+                                                      title,
+                                                      maxLines: 2,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                        color: kTugasTextDark,
+                                                        fontWeight: FontWeight.w900,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              height: 12,
+                                            ),
+                                            const Text(
+                                              'Tindakan ini tidak dapat dibatalkan.',
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 12.5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                        height: 14,
+                                      ),
+
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          16,
+                                          0,
+                                          16,
+                                          16,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: OutlinedButton(
+                                                onPressed: () => Navigator.pop(
+                                                  context,
+                                                  false,
+                                                ),
+                                                style: OutlinedButton.styleFrom(
+                                                  foregroundColor: kTugasTextDark,
+                                                  side: BorderSide(
+                                                    color: Colors.black.withOpacity(
+                                                      0.12,
+                                                    ),
+                                                  ),
+                                                  padding: const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                  ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(
+                                                      14,
+                                                    ),
+                                                  ),
+                                                ),
+                                                child: const Text(
+                                                  'Batal',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              width: 10,
+                                            ),
+                                            Expanded(
+                                              child: ElevatedButton(
+                                                onPressed: () => Navigator.pop(
+                                                  context,
+                                                  true,
+                                                ),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.red,
+                                                  foregroundColor: Colors.white,
+                                                  padding: const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                  ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(
+                                                      14,
+                                                    ),
+                                                  ),
+                                                  elevation: 0,
+                                                ),
+                                                child: const Text(
+                                                  'Hapus',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+    );
+  }
+
+  void _showTopToast(
+    BuildContext context, {
+    required String message,
+    Color bgColor = const Color(
+      0xFF22C55E,
+    ),
+    IconData icon = Icons.check_circle_rounded,
+  }) {
+    final overlay = Overlay.of(
+      context,
+    );
+
+    late OverlayEntry entry;
+
+    entry = OverlayEntry(
       builder:
           (
             _,
-          ) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                16,
-              ),
-            ),
-            title: const Text(
-              'Hapus Tugas',
-            ),
-            content: Text(
-              'Yakin hapus "$judul"?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(
+          ) {
+            final top =
+                MediaQuery.of(
                   context,
-                  false,
-                ),
-                child: const Text(
-                  'Batal',
-                ),
+                ).padding.top +
+                12;
+
+            return Positioned(
+              top: top,
+              left: 16,
+              right: 16,
+              child: Material(
+                color: Colors.transparent,
+                child:
+                    TweenAnimationBuilder<
+                      double
+                    >(
+                      duration: const Duration(
+                        milliseconds: 220,
+                      ),
+                      curve: Curves.easeOutCubic,
+                      tween: Tween(
+                        begin: 0.0,
+                        end: 1.0,
+                      ),
+                      builder:
+                          (
+                            context,
+                            t,
+                            child,
+                          ) {
+                            return Opacity(
+                              opacity: t,
+                              child: Transform.translate(
+                                offset: Offset(
+                                  0,
+                                  (1 -
+                                          t) *
+                                      -14,
+                                ),
+                                child: child,
+                              ),
+                            );
+                          },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(
+                            18,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(
+                                0.25,
+                              ),
+                              blurRadius: 16,
+                              offset: const Offset(
+                                0,
+                                8,
+                              ),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              icon,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Expanded(
+                              child: Text(
+                                message,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 6,
+                            ),
+                            InkWell(
+                              onTap: () => entry.remove(),
+                              borderRadius: BorderRadius.circular(
+                                999,
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(
+                                  6,
+                                ),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
               ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(
-                  context,
-                  true,
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                ),
-                child: const Text(
-                  'Hapus',
-                ),
-              ),
-            ],
-          ),
+            );
+          },
+    );
+
+    overlay.insert(
+      entry,
+    );
+
+    Future.delayed(
+      const Duration(
+        seconds: 2,
+      ),
+      () {
+        try {
+          entry.remove();
+        } catch (
+          _
+        ) {}
+      },
     );
   }
 }
@@ -561,62 +1040,6 @@ class _HeroHeader
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _QuickAddButton
-    extends
-        StatelessWidget {
-  final VoidCallback onTap;
-  const _QuickAddButton({
-    required this.onTap,
-  });
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return Tooltip(
-      message: 'Tambah Tugas',
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(
-          18,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(
-            18,
-          ),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: 10,
-              sigmaY: 10,
-            ),
-            child: Container(
-              height: 44,
-              width: 44,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(
-                  0.16,
-                ),
-                borderRadius: BorderRadius.circular(
-                  18,
-                ),
-                border: Border.all(
-                  color: Colors.white.withOpacity(
-                    0.22,
-                  ),
-                ),
-              ),
-              child: const Icon(
-                Icons.add_rounded,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -809,20 +1232,23 @@ class _TugasCardV2
     );
 
     if (diff.inHours <=
-        0)
+        0) {
       return const Color(
         0xFFEF4444,
       ); // lewat
+    }
     if (diff.inHours <=
-        24)
+        24) {
       return const Color(
         0xFFF59E0B,
       ); // < 1 hari
+    }
     if (diff.inDays <=
-        3)
+        3) {
       return const Color(
         0xFF06B6D4,
       ); // <= 3 hari
+    }
     return const Color(
       0xFF22C55E,
     ); // aman
@@ -1475,7 +1901,6 @@ class _ExpandableText
   final String text;
 
   const _ExpandableText({
-    super.key,
     required this.text,
   });
 

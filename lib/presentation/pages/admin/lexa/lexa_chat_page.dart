@@ -1,250 +1,417 @@
+// ignore: unnecessary_import
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../data/services/gemini_service.dart';
 import '../../../../data/services/lexa_services.dart';
 import '../../../../data/firestore_helper.dart';
 
-class LexaChatPage extends StatefulWidget {
-  const LexaChatPage({super.key});
+class LexaChatPage
+    extends
+        StatefulWidget {
+  const LexaChatPage({
+    super.key,
+  });
 
   @override
-  State<LexaChatPage> createState() => _LexaChatPageState();
+  State<
+    LexaChatPage
+  >
+  createState() => _LexaChatPageState();
 }
 
-class _LexaChatPageState extends State<LexaChatPage> {
+class _LexaChatPageState
+    extends
+        State<
+          LexaChatPage
+        > {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scroll = ScrollController();
 
   late final LexaService lexa;
-
-  final List<_ChatMessage> messages = [];
+  final List<
+    _ChatMessage
+  >
+  messages = [];
   bool isTyping = false;
 
   @override
   void initState() {
     super.initState();
 
-    lexa = LexaService(GroqService(), FirestoreHelper());
+    lexa = LexaService(
+      GroqService(),
+      FirestoreHelper(),
+    );
 
     messages.add(
       _ChatMessage(
         text:
-            'Halo 👋 Aku **LEXA**, asisten akademik kamu.\n\n'
-            'Aku bisa bantu:\n'
-            '📅 Jadwal\n'
-            '🏫 Kelas\n'
-            '📝 Tugas\n'
-            '📚 Materi',
+            "Halo 👋 Aku **LEXA**, asisten akademikmu.\n\n"
+            "Aku bisa bantu:\n"
+            "📚 Materi\n"
+            "📝 Tugas\n"
+            "📅 Jadwal\n"
+            "🏫 Kelas",
         isUser: false,
       ),
     );
   }
 
-  Future<void> _sendMessage() async {
+  Future<
+    void
+  >
+  _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    setState(() {
-      messages.add(_ChatMessage(text: text, isUser: true));
-      isTyping = true;
-    });
+    setState(
+      () {
+        messages.add(
+          _ChatMessage(
+            text: text,
+            isUser: true,
+          ),
+        );
+        isTyping = true;
+      },
+    );
 
     _controller.clear();
-    _scrollToBottom();
+    _scrollDown();
 
     try {
-      final reply = await lexa.reply(text);
-
-      setState(() {
-        messages.add(_ChatMessage(text: reply, isUser: false));
-      });
-    } catch (_) {
-      setState(() {
-        messages.add(
-          _ChatMessage(text: 'LEXA sedang bermasalah 😥', isUser: false),
-        );
-      });
+      final reply = await lexa.reply(
+        text,
+      );
+      setState(
+        () {
+          messages.add(
+            _ChatMessage(
+              text: reply,
+              isUser: false,
+            ),
+          );
+        },
+      );
+    } catch (
+      _
+    ) {
+      messages.add(
+        _ChatMessage(
+          text: 'Maaf, terjadi kesalahan 😥',
+          isUser: false,
+        ),
+      );
     }
 
-    setState(() => isTyping = false);
-    _scrollToBottom();
+    isTyping = false;
+    _scrollDown();
   }
 
-  void _scrollToBottom() {
-    Future.delayed(const Duration(milliseconds: 200), () {
-      if (_scroll.hasClients) {
-        _scroll.animateTo(
-          _scroll.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+  void _scrollDown() {
+    Future.delayed(
+      const Duration(
+        milliseconds: 200,
+      ),
+      () {
+        if (_scroll.hasClients) {
+          _scroll.animateTo(
+            _scroll.position.maxScrollExtent,
+            duration: const Duration(
+              milliseconds: 300,
+            ),
+            curve: Curves.easeOut,
+          );
+        }
+      },
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: const Color(
+        0xFFF5F6FA,
+      ),
       appBar: AppBar(
+        backgroundColor: const Color(
+          0xFF0E2E72,
+        ),
         elevation: 0,
-        title: const Text('LEXA'),
         centerTitle: true,
-        backgroundColor: const Color(0xFF0E2E72),
+        title: const Text(
+          'LEXA',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
               controller: _scroll,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
               itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final msg = messages[index];
-                return _ChatBubble(message: msg);
-              },
+              itemBuilder:
+                  (
+                    _,
+                    i,
+                  ) => _ChatBubble(
+                    message: messages[i],
+                  ),
             ),
           ),
 
           if (isTyping) const _TypingIndicator(),
 
-          _buildInput(),
+          _InputBar(
+            controller: _controller,
+            onSend: _sendMessage,
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildInput() {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F3F6),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: TextField(
-                  controller: _controller,
-                  minLines: 1,
-                  maxLines: 4,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => _sendMessage(),
-                  decoration: const InputDecoration(
-                    hintText: 'Tanya LEXA...',
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            CircleAvatar(
-              backgroundColor: const Color(0xFF0E2E72),
-              child: IconButton(
-                icon: const Icon(Icons.send_rounded, color: Colors.white),
-                onPressed: _sendMessage,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
 }
 
-// ================= UI COMPONENT =================
+/// ===================== CHAT BUBBLE =====================
 
-class _ChatBubble extends StatelessWidget {
+class _ChatBubble
+    extends
+        StatelessWidget {
   final _ChatMessage message;
-
-  const _ChatBubble({required this.message});
+  const _ChatBubble({
+    required this.message,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     final isUser = message.isUser;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(
+        vertical: 6,
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: isUser
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!isUser) _avatarBot(),
-          const SizedBox(width: 8),
+          if (!isUser) _botAvatar(),
+          const SizedBox(
+            width: 8,
+          ),
           Flexible(
             child: Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(
+                14,
+              ),
               decoration: BoxDecoration(
-                color: isUser ? const Color(0xFF0E2E72) : Colors.white,
-                borderRadius: BorderRadius.circular(18),
+                gradient: isUser
+                    ? const LinearGradient(
+                        colors: [
+                          Color(
+                            0xFF1B3C9E,
+                          ),
+                          Color(
+                            0xFF0E2E72,
+                          ),
+                        ],
+                      )
+                    : null,
+                color: isUser
+                    ? null
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(
+                  20,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 6,
+                    color: Colors.black.withOpacity(
+                      0.05,
+                    ),
+                    blurRadius: 8,
                   ),
                 ],
               ),
               child: Text(
                 message.text,
                 style: TextStyle(
-                  color: isUser ? Colors.white : Colors.black87,
-                  height: 1.4,
+                  color: isUser
+                      ? Colors.white
+                      : Colors.black87,
+                  fontSize: 14,
+                  height: 1.45,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          if (isUser) _avatarUser(),
+          const SizedBox(
+            width: 8,
+          ),
+          if (isUser) _userAvatar(),
         ],
       ),
     );
   }
 
-  Widget _avatarBot() {
+  Widget _botAvatar() {
     return const CircleAvatar(
       radius: 18,
-      backgroundColor: Color(0xFF0E2E72),
-      child: Icon(Icons.smart_toy_rounded, color: Colors.white),
+      backgroundColor: Color(
+        0xFF0E2E72,
+      ),
+      child: Icon(
+        Icons.smart_toy_rounded,
+        color: Colors.white,
+      ),
     );
   }
 
-  Widget _avatarUser() {
+  Widget _userAvatar() {
     return const CircleAvatar(
       radius: 18,
       backgroundColor: Colors.grey,
-      child: Icon(Icons.person, color: Colors.white),
+      child: Icon(
+        Icons.person,
+        color: Colors.white,
+      ),
     );
   }
 }
 
-class _TypingIndicator extends StatelessWidget {
+/// ===================== INPUT BAR =====================
+
+class _InputBar
+    extends
+        StatelessWidget {
+  final TextEditingController controller;
+  final VoidCallback onSend;
+
+  const _InputBar({
+    required this.controller,
+    required this.onSend,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          12,
+          8,
+          12,
+          12,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(
+                0.08,
+              ),
+              blurRadius: 12,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(
+                    0xFFF1F3F6,
+                  ),
+                  borderRadius: BorderRadius.circular(
+                    24,
+                  ),
+                ),
+                child: TextField(
+                  controller: controller,
+                  maxLines: 4,
+                  minLines: 1,
+                  decoration: const InputDecoration(
+                    hintText: 'Tulis pesan...',
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(
+              width: 8,
+            ),
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: const Color(
+                0xFF0E2E72,
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                ),
+                onPressed: onSend,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ===================== TYPING =====================
+
+class _TypingIndicator
+    extends
+        StatelessWidget {
   const _TypingIndicator();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Padding(
-      padding: const EdgeInsets.only(left: 16, bottom: 8),
+      padding: const EdgeInsets.only(
+        left: 16,
+        bottom: 8,
+      ),
       child: Row(
         children: const [
           CircleAvatar(
             radius: 14,
-            backgroundColor: Color(0xFF0E2E72),
-            child: Icon(Icons.smart_toy, size: 16, color: Colors.white),
+            backgroundColor: Color(
+              0xFF0E2E72,
+            ),
+            child: Icon(
+              Icons.smart_toy,
+              size: 16,
+              color: Colors.white,
+            ),
           ),
-          SizedBox(width: 8),
+          SizedBox(
+            width: 8,
+          ),
           Text(
             'LEXA sedang mengetik...',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+            ),
           ),
         ],
       ),
@@ -252,11 +419,14 @@ class _TypingIndicator extends StatelessWidget {
   }
 }
 
-// ================= MODEL =================
+/// ===================== MODEL =====================
 
 class _ChatMessage {
   final String text;
   final bool isUser;
 
-  _ChatMessage({required this.text, required this.isUser});
+  _ChatMessage({
+    required this.text,
+    required this.isUser,
+  });
 }

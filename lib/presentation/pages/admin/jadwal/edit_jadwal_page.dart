@@ -1,10 +1,12 @@
-// lib/presentation/pages/admin/jadwal/edit_jadwal_page.dart
+// ignore_for_file: deprecated_member_use
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../domain/entities/jadwal.dart';
 import '../../../viewmodels/admin/jadwal/jadwal_view_model.dart';
+import '../../../viewmodels/admin/kelas/kelas_view_model.dart';
 
 class EditJadwalPage
     extends
@@ -34,8 +36,9 @@ class _EditJadwalPageState
 
   late final TextEditingController mataKuliah;
   late final TextEditingController dosen;
-  late final TextEditingController kelas;
+  String? _kelas;
 
+  late Jadwal _initial;
   String _hari = '';
   String _jam = '';
   bool _saving = false;
@@ -66,15 +69,17 @@ class _EditJadwalPageState
   @override
   void initState() {
     super.initState();
+
+    _initial = widget.jadwal;
+
     mataKuliah = TextEditingController(
       text: widget.jadwal.mataKuliah,
     );
     dosen = TextEditingController(
       text: widget.jadwal.dosen,
     );
-    kelas = TextEditingController(
-      text: widget.jadwal.kelas,
-    );
+
+    _kelas = widget.jadwal.kelas; // ✅ TAMBAHKAN INI
 
     _hari = widget.jadwal.hari;
     _jam = widget.jadwal.jam;
@@ -84,7 +89,6 @@ class _EditJadwalPageState
   void dispose() {
     mataKuliah.dispose();
     dosen.dispose();
-    kelas.dispose();
     super.dispose();
   }
 
@@ -140,8 +144,9 @@ class _EditJadwalPageState
     );
 
     if (picked ==
-        null)
+        null) {
       return;
+    }
 
     final hh = picked.hour.toString().padLeft(
       2,
@@ -183,6 +188,47 @@ class _EditJadwalPageState
       );
       return;
     }
+    if (_kelas ==
+            null ||
+        _kelas!.trim().isEmpty) {
+      _toast(
+        'Kelas wajib dipilih',
+      );
+      return;
+    }
+
+    final updated = Jadwal(
+      id: widget.jadwal.id,
+      mataKuliah: mataKuliah.text.trim(),
+      dosen: dosen.text.trim(),
+      kelas:
+          (_kelas ??
+                  '')
+              .trim(),
+      hari: _hari,
+      jam: _jam,
+    );
+
+    // 🔥 CEK APAKAH ADA PERUBAHAN
+    final isChanged =
+        updated.mataKuliah !=
+            _initial.mataKuliah ||
+        updated.dosen !=
+            _initial.dosen ||
+        updated.kelas !=
+            _initial.kelas ||
+        updated.hari !=
+            _initial.hari ||
+        updated.jam !=
+            _initial.jam;
+
+    if (!isChanged) {
+      Navigator.pop(
+        context,
+        false,
+      );
+      return;
+    }
 
     setState(
       () => _saving = true,
@@ -190,20 +236,14 @@ class _EditJadwalPageState
 
     try {
       await vm.updateJadwal(
-        Jadwal(
-          id: widget.jadwal.id,
-          mataKuliah: mataKuliah.text.trim(),
-          dosen: dosen.text.trim(),
-          kelas: kelas.text.trim(),
-          hari: _hari,
-          jam: _jam,
-        ),
+        updated,
       );
 
       if (!mounted) return;
       Navigator.pop(
         context,
-      );
+        true,
+      ); // ✅ ADA PERUBAHAN
     } catch (
       _
     ) {
@@ -246,6 +286,35 @@ class _EditJadwalPageState
         .read<
           JadwalViewModel
         >();
+    final kelasVM = context
+        .watch<
+          KelasViewModel
+        >();
+
+    final kelasList =
+        kelasVM.kelasList
+            .map(
+              (
+                e,
+              ) => e.nama.trim(),
+            )
+            .where(
+              (
+                e,
+              ) => e.isNotEmpty,
+            )
+            .toSet()
+            .toList()
+          ..sort();
+
+    final String? safeKelas =
+        (_kelas !=
+                null &&
+            kelasList.contains(
+              _kelas!.trim(),
+            ))
+        ? _kelas!.trim()
+        : null;
 
     return Scaffold(
       backgroundColor: _bg,
@@ -261,6 +330,7 @@ class _EditJadwalPageState
           ),
           onPressed: () => Navigator.pop(
             context,
+            false,
           ),
         ),
         title: const Text(
@@ -356,15 +426,28 @@ class _EditJadwalPageState
                                 height: 12,
                               ),
 
-                              _ModernField(
+                              _ModernDropdown(
                                 label: 'Kelas',
-                                hint: 'Contoh: TI-3A',
-                                controller: kelas,
+                                hint:
+                                    safeKelas ==
+                                            null &&
+                                        (_kelas?.isNotEmpty ??
+                                            false)
+                                    ? 'Kelas sebelumnya sudah dihapus'
+                                    : 'Pilih Kelas',
                                 icon: Icons.class_rounded,
-                                textInputAction: TextInputAction.done,
-                                onChanged: () => setState(
-                                  () {},
-                                ),
+                                value: safeKelas,
+                                items: kelasList,
+                                onChanged:
+                                    (
+                                      v,
+                                    ) {
+                                      setState(
+                                        () {
+                                          _kelas = v?.trim();
+                                        },
+                                      );
+                                    },
                               ),
 
                               const SizedBox(
@@ -466,10 +549,14 @@ class _EditJadwalPageState
                               _PreviewCard(
                                 mataKuliah: mataKuliah.text.trim(),
                                 dosen: dosen.text.trim(),
-                                kelas: kelas.text.trim(),
+                                kelas:
+                                    (_kelas ??
+                                            '')
+                                        .trim(),
                                 hari: _hari,
                                 jam: _jam,
                               ),
+
                               const SizedBox(
                                 height: 18,
                               ),
@@ -486,6 +573,7 @@ class _EditJadwalPageState
                                       ? null
                                       : () => Navigator.pop(
                                           context,
+                                          false,
                                         ),
                                   onSave: _saving
                                       ? null
@@ -508,6 +596,39 @@ class _EditJadwalPageState
               ),
             ),
           ),
+          if (_saving) ...[
+            Positioned.fill(
+              child: AbsorbPointer(
+                absorbing: true,
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: 6,
+                    sigmaY: 6,
+                  ),
+                  child: Container(
+                    color: Colors.black.withOpacity(
+                      0.25,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Center(
+              child: SizedBox(
+                height: 34,
+                width: 34,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor:
+                      AlwaysStoppedAnimation<
+                        Color
+                      >(
+                        Colors.white,
+                      ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -721,8 +842,9 @@ class _ModernField
                 ) {
                   if (v ==
                           null ||
-                      v.trim().isEmpty)
+                      v.trim().isEmpty) {
                     return '$label wajib diisi';
+                  }
                   return null;
                 },
             style: const TextStyle(
@@ -1193,7 +1315,7 @@ class _BottomBar
           child: SizedBox(
             height: h,
             child: ElevatedButton(
-              onPressed: onSave,
+              onPressed: onSave, // sudah null kalau saving (dari parent)
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primary,
                 foregroundColor: Colors.white,
@@ -1208,27 +1330,8 @@ class _BottomBar
                   fontSize: 13,
                 ),
               ),
-              child: AnimatedSwitcher(
-                duration: const Duration(
-                  milliseconds: 200,
-                ),
-                child: saving
-                    ? const SizedBox(
-                        key: ValueKey(
-                          'loading',
-                        ),
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Text(
-                        key: const ValueKey(
-                          'text',
-                        ),
-                        saveLabel,
-                      ),
+              child: Text(
+                saveLabel,
               ),
             ),
           ),
@@ -1251,6 +1354,150 @@ class _DividerSoft
       color: Colors.black.withOpacity(
         0.06,
       ),
+    );
+  }
+}
+
+class _ModernDropdown
+    extends
+        StatelessWidget {
+  final String label;
+  final String hint;
+  final IconData icon;
+  final String? value;
+  final List<
+    String
+  >
+  items;
+  final ValueChanged<
+    String?
+  >
+  onChanged;
+
+  const _ModernDropdown({
+    required this.label,
+    required this.hint,
+    required this.icon,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  static const Color _primary = Color(
+    0xFF1B3C9E,
+  );
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    final String? safeValue =
+        (value !=
+                null &&
+            items.contains(
+              value,
+            ))
+        ? value
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.black.withOpacity(
+              0.72,
+            ),
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(
+          height: 8,
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(
+              0xFFF3F5FF,
+            ),
+            borderRadius: BorderRadius.circular(
+              16,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(
+                  0.04,
+                ),
+                blurRadius: 12,
+                offset: const Offset(
+                  0,
+                  6,
+                ),
+              ),
+            ],
+            border: Border.all(
+              color: Colors.white.withOpacity(
+                0.7,
+              ),
+            ),
+          ),
+          child:
+              DropdownButtonFormField<
+                String
+              >(
+                value: safeValue,
+                isExpanded: true,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                ),
+                validator:
+                    (
+                      v,
+                    ) =>
+                        v ==
+                            null
+                        ? '$label wajib dipilih'
+                        : null,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(
+                    icon,
+                    color: _primary,
+                  ),
+                  border: InputBorder.none,
+                  hintText: hint,
+                  hintStyle: TextStyle(
+                    color: Colors.black.withOpacity(
+                      0.35,
+                    ),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                ),
+                items: items
+                    .map(
+                      (
+                        e,
+                      ) => DropdownMenuItem(
+                        value: e,
+                        child: Text(
+                          e,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: onChanged,
+              ),
+        ),
+      ],
     );
   }
 }

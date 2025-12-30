@@ -16,76 +16,161 @@ import '../../widgets/admin/admin_drawer.dart';
 import 'package:bisa/presentation/viewmodels/admin/admin_dashboard_viewmodel.dart';
 import 'lexa/lexa_chat_page.dart';
 
-class AdminPage extends StatelessWidget {
-  const AdminPage({super.key});
+class AdminPage
+    extends
+        StatelessWidget {
+  const AdminPage({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider<AdminDashboardViewModel>(
-      create: (_) => AdminDashboardViewModel()..init(),
+  Widget build(
+    BuildContext context,
+  ) {
+    return ChangeNotifierProvider<
+      AdminDashboardViewModel
+    >(
+      create:
+          (
+            _,
+          ) => AdminDashboardViewModel()..init(),
       child: const _AdminPageView(),
     );
   }
 }
 
-class _AdminPageView extends StatelessWidget {
+class _AdminPageView
+    extends
+        StatelessWidget {
   const _AdminPageView();
 
   // ====== THEME COLORS (Minimalis biru-putih) ======
-  static const Color _bg = Color(0xFFF4F7FF);
-  static const Color _primary = Color(0xFF0E2E72);
-  static const Color _text = Color(0xFF1A2552);
-  static const Color _muted = Color(0xFF6F7AA6);
+  static const Color _bg = Color(
+    0xFFF4F7FF,
+  );
+  static const Color _primary = Color(
+    0xFF0E2E72,
+  );
+  static const Color _text = Color(
+    0xFF1A2552,
+  );
+  static const Color _muted = Color(
+    0xFF6F7AA6,
+  );
 
   // Animasi transisi halaman: fade + sedikit slide
-  static PageRoute _fadeRoute(Widget page) {
+  static PageRoute _fadeRoute(
+    Widget page,
+  ) {
     return PageRouteBuilder(
-      transitionDuration: const Duration(milliseconds: 260),
-      reverseTransitionDuration: const Duration(milliseconds: 220),
-      pageBuilder: (_, __, ___) => page,
-      transitionsBuilder: (_, animation, __, child) {
-        final curved = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-        );
-        final offsetAnim = Tween<Offset>(
-          begin: const Offset(0.02, 0.02),
-          end: Offset.zero,
-        ).animate(curved);
+      transitionDuration: const Duration(
+        milliseconds: 260,
+      ),
+      reverseTransitionDuration: const Duration(
+        milliseconds: 220,
+      ),
+      pageBuilder:
+          (
+            _,
+            __,
+            ___,
+          ) => page,
+      transitionsBuilder:
+          (
+            _,
+            animation,
+            __,
+            child,
+          ) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            );
+            final offsetAnim =
+                Tween<
+                      Offset
+                    >(
+                      begin: const Offset(
+                        0.02,
+                        0.02,
+                      ),
+                      end: Offset.zero,
+                    )
+                    .animate(
+                      curved,
+                    );
 
-        return FadeTransition(
-          opacity: curved,
-          child: SlideTransition(position: offsetAnim, child: child),
-        );
-      },
+            return FadeTransition(
+              opacity: curved,
+              child: SlideTransition(
+                position: offsetAnim,
+                child: child,
+              ),
+            );
+          },
     );
   }
 
-  int _responsiveCrossAxisCount(double width) {
+  int _responsiveCrossAxisCount(
+    double width,
+  ) {
     // kamu bisa ubah rules ini kalau mau
-    if (width >= 1200) return 4;
-    if (width >= 900) return 3;
+    if (width >=
+        1200)
+      return 4;
+    if (width >=
+        900)
+      return 3;
     return 2;
   }
 
   @override
-  Widget build(BuildContext context) {
-    final vm = context.watch<AdminDashboardViewModel>();
-    final width = MediaQuery.of(context).size.width;
+  Widget build(
+    BuildContext context,
+  ) {
+    final vm = context
+        .watch<
+          AdminDashboardViewModel
+        >();
+    final width = MediaQuery.of(
+      context,
+    ).size.width;
 
-    final modulCount = _responsiveCrossAxisCount(width);
-    final ringkasanCount = width >= 900 ? 3 : 2;
+    final modulCount = _responsiveCrossAxisCount(
+      width,
+    );
+    final ringkasanCount =
+        width >=
+            900
+        ? 3
+        : 2;
 
     // biar tinggi card grid tetap enak di desktop
-    final modulRatio = width >= 1200 ? 3.6 : (width >= 900 ? 3.2 : 2.8);
-    final ringkasanRatio = width >= 1200 ? 2.4 : 1.75;
+    final modulRatio =
+        width >=
+            1200
+        ? 3.6
+        : (width >=
+                  900
+              ? 3.2
+              : 2.8);
+    final ringkasanRatio =
+        width >=
+            1200
+        ? 2.4
+        : 1.75;
 
     return Scaffold(
       backgroundColor: _bg,
       drawer: AdminDrawer(
-        onTapDashboard: () => vm.snack(context, 'Dashboard'),
-        onTapManajemenUser: () =>
-            vm.onTapNotImplemented(context, 'Manajemen User'),
+        onTapDashboard: () => vm.snack(
+          context,
+          'Dashboard',
+        ),
+        onTapManajemenUser: () => vm.onTapNotImplemented(
+          context,
+          'Manajemen User',
+        ),
         onTapLogout: () => vm.logoutWithConfirm(
           context: context,
           routeBuilder: _fadeRoute,
@@ -105,45 +190,72 @@ class _AdminPageView extends StatelessWidget {
         centerTitle: false,
         title: const Text(
           'Dashboard Admin',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+          ),
         ),
         actions: [
           IconButton(
             tooltip: 'Notifikasi',
-            onPressed: () => vm.onTapNotifications(context),
-            icon: Icon(Icons.notifications_none_outlined, color: _primary),
+            onPressed: () => vm.onTapNotifications(
+              context,
+            ),
+            icon: Icon(
+              Icons.notifications_none_outlined,
+              color: _primary,
+            ),
           ),
           IconButton(
             tooltip: 'Pengaturan',
-            onPressed: () => vm.onTapSettings(context),
-            icon: Icon(Icons.settings_outlined, color: _primary),
+            onPressed: () => vm.onTapSettings(
+              context,
+            ),
+            icon: Icon(
+              Icons.settings_outlined,
+              color: _primary,
+            ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(
+            width: 6,
+          ),
         ],
       ),
 
       body: SafeArea(
         top: true,
         child: vm.isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
             : CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      padding: const EdgeInsets.fromLTRB(
+                        16,
+                        12,
+                        16,
+                        0,
+                      ),
 
-                      child: _HeroBanner(primary: _primary),
+                      child: _HeroBanner(
+                        primary: _primary,
+                      ),
                     ),
                   ),
 
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                      padding: const EdgeInsets.fromLTRB(
+                        16,
+                        14,
+                        16,
+                        10,
+                      ),
                       child: _SectionTitle(
                         title: 'Ringkasan',
-                        subtitle:
-                            'Pantau aktivitas dan akses cepat fitur utama',
+                        subtitle: 'Pantau aktivitas dan akses cepat fitur utama',
                         text: _text,
                         muted: _muted,
                       ),
@@ -151,7 +263,9 @@ class _AdminPageView extends StatelessWidget {
                   ),
 
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                    ),
                     sliver: SliverGrid(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: ringkasanCount,
@@ -159,33 +273,33 @@ class _AdminPageView extends StatelessWidget {
                         mainAxisSpacing: 12,
                         childAspectRatio: ringkasanRatio,
                       ),
-                      delegate: SliverChildListDelegate([
-                        _StatCardModern(
-                          icon: Icons.school_outlined,
-                          title: 'Mahasiswa',
-                          value: vm.mahasiswaCount.toString(),
-                          subtitle: 'Total akun',
-                        ),
-                        _StatCardModern(
-                          icon: Icons.badge_outlined,
-                          title: 'Dosen',
-                          value: vm.dosenCount.toString(),
-                          subtitle: 'Total akun',
-                        ),
-                        if (ringkasanCount >= 3)
+                      delegate: SliverChildListDelegate(
+                        [
                           _StatCardModern(
-                            icon: Icons.analytics_outlined,
-                            title: 'Ringkasan',
-                            value: '—',
-                            subtitle: 'Stat lainnya',
+                            icon: Icons.school_outlined,
+                            title: 'Mahasiswa',
+                            value: vm.mahasiswaCount.toString(),
+                            subtitle: 'Total akun',
                           ),
-                      ]),
+                          _StatCardModern(
+                            icon: Icons.badge_outlined,
+                            title: 'Dosen',
+                            value: vm.dosenCount.toString(),
+                            subtitle: 'Total akun',
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+                      padding: const EdgeInsets.fromLTRB(
+                        16,
+                        16,
+                        16,
+                        10,
+                      ),
                       child: _SectionTitle(
                         title: 'Menu Utama',
                         subtitle: 'Akses cepat modul admin',
@@ -197,7 +311,9 @@ class _AdminPageView extends StatelessWidget {
 
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
                       child: _PrimaryActionCard(
                         title: 'Buat Akun Mahasiswa / Dosen',
                         subtitle: 'Tambah user baru dengan role yang sesuai',
@@ -205,7 +321,9 @@ class _AdminPageView extends StatelessWidget {
                         primary: _primary,
                         onTap: () => Navigator.push(
                           context,
-                          _fadeRoute(const CreateUserPage()),
+                          _fadeRoute(
+                            const CreateUserPage(),
+                          ),
                         ),
                       ),
                     ),
@@ -213,7 +331,12 @@ class _AdminPageView extends StatelessWidget {
 
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                      padding: const EdgeInsets.fromLTRB(
+                        16,
+                        14,
+                        16,
+                        10,
+                      ),
                       child: _SectionTitle(
                         title: 'Modul',
                         subtitle: 'Pilih modul untuk mengelola data',
@@ -224,7 +347,12 @@ class _AdminPageView extends StatelessWidget {
                   ),
 
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
+                    padding: const EdgeInsets.fromLTRB(
+                      16,
+                      0,
+                      16,
+                      90,
+                    ),
                     sliver: SliverGrid(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: modulCount,
@@ -232,73 +360,88 @@ class _AdminPageView extends StatelessWidget {
                         mainAxisSpacing: 12,
                         childAspectRatio: modulRatio,
                       ),
-                      delegate: SliverChildListDelegate([
-                        _MenuTile(
-                          title: 'Jadwal',
-                          subtitle: 'Kelola jadwal',
-                          icon: Icons.calendar_month_outlined,
-                          primary: _primary,
-                          onTap: () => Navigator.push(
-                            context,
-                            _fadeRoute(const JadwalPage()),
-                          ),
-                        ),
-                        _MenuTile(
-                          title: 'Absensi',
-                          subtitle: 'Kehadiran',
-                          icon: Icons.how_to_reg_outlined,
-                          primary: _primary,
-                          onTap: () => Navigator.push(
-                            context,
-                            _fadeRoute(const AbsensiPage()),
-                          ),
-                        ),
-                        _MenuTile(
-                          title: 'Tugas',
-                          subtitle: 'Penugasan',
-                          icon: Icons.assignment_outlined,
-                          primary: _primary,
-                          onTap: () => Navigator.push(
-                            context,
-                            _fadeRoute(const TugasPage()),
-                          ),
-                        ),
-                        _MenuTile(
-                          title: 'Materi',
-                          subtitle: 'Bahan ajar',
-                          icon: Icons.menu_book_outlined,
-                          primary: _primary,
-                          onTap: () => Navigator.push(
-                            context,
-                            _fadeRoute(const KelasPage()),
-                          ),
-                        ),
-                        _MenuTile(
-                          title: 'Kelas',
-                          subtitle: 'Manajemen kelas',
-                          icon: Icons.class_outlined,
-                          primary: _primary,
-                          onTap: () => Navigator.push(
-                            context,
-                            _fadeRoute(const KelasPage()),
-                          ),
-                        ),
-
-                        _MenuTile(
-                          title: 'LEXA',
-                          subtitle: 'Chat Bot',
-                          icon: Icons.smart_toy_outlined,
-                          primary: _primary,
-                          onTap: () {
-                            Navigator.push(
+                      delegate: SliverChildListDelegate(
+                        [
+                          _MenuTile(
+                            title: 'Jadwal',
+                            subtitle: 'Kelola jadwal',
+                            icon: Icons.calendar_month_outlined,
+                            primary: _primary,
+                            onTap: () => Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) => const LexaChatPage(),
+                              _fadeRoute(
+                                const JadwalPage(),
                               ),
-                            );
-                          },
-                        ),
-                      ]),
+                            ),
+                          ),
+                          _MenuTile(
+                            title: 'Absensi',
+                            subtitle: 'Kehadiran',
+                            icon: Icons.how_to_reg_outlined,
+                            primary: _primary,
+                            onTap: () => Navigator.push(
+                              context,
+                              _fadeRoute(
+                                const AbsensiPage(),
+                              ),
+                            ),
+                          ),
+                          _MenuTile(
+                            title: 'Tugas',
+                            subtitle: 'Penugasan',
+                            icon: Icons.assignment_outlined,
+                            primary: _primary,
+                            onTap: () => Navigator.push(
+                              context,
+                              _fadeRoute(
+                                const TugasPage(),
+                              ),
+                            ),
+                          ),
+                          _MenuTile(
+                            title: 'Materi',
+                            subtitle: 'Bahan ajar',
+                            icon: Icons.menu_book_outlined,
+                            primary: _primary,
+                            onTap: () => Navigator.push(
+                              context,
+                              _fadeRoute(
+                                const KelasPage(),
+                              ),
+                            ),
+                          ),
+                          _MenuTile(
+                            title: 'Kelas',
+                            subtitle: 'Manajemen kelas',
+                            icon: Icons.class_outlined,
+                            primary: _primary,
+                            onTap: () => Navigator.push(
+                              context,
+                              _fadeRoute(
+                                const KelasPage(),
+                              ),
+                            ),
+                          ),
+
+                          _MenuTile(
+                            title: 'LEXA',
+                            subtitle: 'Chat Bot',
+                            icon: Icons.smart_toy_outlined,
+                            primary: _primary,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (
+                                        _,
+                                      ) => const LexaChatPage(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -307,8 +450,12 @@ class _AdminPageView extends StatelessWidget {
 
       floatingActionButton: _FabModern(
         primary: _primary,
-        onTap: () =>
-            Navigator.push(context, _fadeRoute(const CreateUserPage())),
+        onTap: () => Navigator.push(
+          context,
+          _fadeRoute(
+            const CreateUserPage(),
+          ),
+        ),
       ),
     );
   }
@@ -317,147 +464,46 @@ class _AdminPageView extends StatelessWidget {
 // =============================
 // UI COMPONENTS (VIEW ONLY)
 // =============================
-class _Header extends StatelessWidget {
+class _HeroBanner
+    extends
+        StatelessWidget {
   final Color primary;
-  final Color text;
-  final Color muted;
-  final VoidCallback onNotif;
-  final VoidCallback onSetting;
-
-  const _Header({
+  const _HeroBanner({
     required this.primary,
-    required this.text,
-    required this.muted,
-    required this.onNotif,
-    required this.onSetting,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.86),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.black.withOpacity(0.05)),
-          ),
-          child: Row(
-            children: [
-              Builder(
-                builder: (ctx) => _TapScale(
-                  onTap: () => Scaffold.of(ctx).openDrawer(),
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: primary.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(Icons.menu_rounded, color: primary),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dashboard Admin',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: text,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Kelola kelas, absensi, tugas, dan materi',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: muted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              _TapScale(
-                onTap: onNotif,
-                child: _IconChip(
-                  icon: Icons.notifications_none_outlined,
-                  primary: primary,
-                ),
-              ),
-              const SizedBox(width: 8),
-              _TapScale(
-                onTap: onSetting,
-                child: _IconChip(
-                  icon: Icons.settings_outlined,
-                  primary: primary,
-                ),
-              ),
-            ],
-          ),
+  Widget build(
+    BuildContext context,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(
+        16,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(
+          22,
         ),
-      ),
-    );
-  }
-}
-
-class _IconChip extends StatelessWidget {
-  final IconData icon;
-  final Color primary;
-  const _IconChip({required this.icon, required this.primary});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black.withOpacity(0.06)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Icon(icon, color: primary),
-    );
-  }
-}
-
-class _HeroBanner extends StatelessWidget {
-  final Color primary;
-  const _HeroBanner({required this.primary});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [primary, primary.withOpacity(0.88)],
+          colors: [
+            primary,
+            primary.withOpacity(
+              0.88,
+            ),
+          ],
         ),
         boxShadow: [
           BoxShadow(
-            color: primary.withOpacity(0.20),
+            color: primary.withOpacity(
+              0.20,
+            ),
             blurRadius: 18,
-            offset: const Offset(0, 10),
+            offset: const Offset(
+              0,
+              10,
+            ),
           ),
         ],
       ),
@@ -475,7 +521,9 @@ class _HeroBanner extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                SizedBox(height: 6),
+                SizedBox(
+                  height: 6,
+                ),
                 Text(
                   'Kelola aktivitas kampus\nlebih cepat dan rapi.',
                   style: TextStyle(
@@ -485,7 +533,9 @@ class _HeroBanner extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                SizedBox(height: 10),
+                SizedBox(
+                  height: 10,
+                ),
                 Text(
                   'Gunakan menu di bawah untuk mengatur jadwal,\nabsensi, tugas, dan materi.',
                   style: TextStyle(
@@ -497,14 +547,24 @@ class _HeroBanner extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(
+            width: 12,
+          ),
           Container(
             width: 54,
             height: 54,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.16),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withOpacity(0.20)),
+              color: Colors.white.withOpacity(
+                0.16,
+              ),
+              borderRadius: BorderRadius.circular(
+                18,
+              ),
+              border: Border.all(
+                color: Colors.white.withOpacity(
+                  0.20,
+                ),
+              ),
             ),
             child: const Icon(
               Icons.dashboard_outlined,
@@ -518,7 +578,9 @@ class _HeroBanner extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
+class _SectionTitle
+    extends
+        StatelessWidget {
   final String title;
   final String subtitle;
   final Color text;
@@ -532,7 +594,9 @@ class _SectionTitle extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -544,7 +608,9 @@ class _SectionTitle extends StatelessWidget {
             color: text,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(
+          height: 4,
+        ),
         Text(
           subtitle,
           style: TextStyle(
@@ -558,7 +624,9 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _StatCardModern extends StatelessWidget {
+class _StatCardModern
+    extends
+        StatelessWidget {
   final IconData icon;
   final String title;
   final String value;
@@ -572,61 +640,190 @@ class _StatCardModern extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(
+        14,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        borderRadius: BorderRadius.circular(
+          18,
+        ),
+        border: Border.all(
+          color: Colors.black.withOpacity(
+            0.05,
+          ),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(
+              0.05,
+            ),
             blurRadius: 14,
-            offset: const Offset(0, 10),
+            offset: const Offset(
+              0,
+              10,
+            ),
           ),
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // icon box
           Container(
-            width: 46,
-            height: 46,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF0E2E72).withOpacity(0.10),
-              borderRadius: BorderRadius.circular(14),
+              color:
+                  const Color(
+                    0xFF0E2E72,
+                  ).withOpacity(
+                    0.10,
+                  ),
+              borderRadius: BorderRadius.circular(
+                16,
+              ),
+              border: Border.all(
+                color:
+                    const Color(
+                      0xFF0E2E72,
+                    ).withOpacity(
+                      0.10,
+                    ),
+              ),
             ),
-            child: Icon(icon, color: const Color(0xFF0E2E72)),
+            child: Icon(
+              icon,
+              color: const Color(
+                0xFF0E2E72,
+              ),
+              size: 24,
+            ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(
+            width: 12,
+          ),
+
+          // text area
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // title
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF58608B),
+                    color: Color(
+                      0xFF58608B,
+                    ),
+                    height: 1.1,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF1A2552),
+                const SizedBox(
+                  height: 8,
+                ),
+
+                // value + chip
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: Color(
+                            0xFF1A2552,
+                          ),
+                          height: 1.0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            const Color(
+                              0xFF0E2E72,
+                            ).withOpacity(
+                              0.08,
+                            ),
+                        borderRadius: BorderRadius.circular(
+                          999,
+                        ),
+                        border: Border.all(
+                          color:
+                              const Color(
+                                0xFF0E2E72,
+                              ).withOpacity(
+                                0.10,
+                              ),
+                        ),
+                      ),
+                      child: Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(
+                            0xFF0E2E72,
+                          ),
+                          height: 1.0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(
+                  height: 10,
+                ),
+
+                // divider tipis biar rapih
+                Container(
+                  height: 1,
+                  width: double.infinity,
+                  color: Colors.black.withOpacity(
+                    0.05,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
+
+                const SizedBox(
+                  height: 8,
+                ),
+
+                // hint kecil (optional)
+                const Text(
+                  'Terupdate otomatis',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF8B92B2),
+                    color: Color(
+                      0xFF8B92B2,
+                    ),
+                    height: 1.0,
                   ),
                 ),
               ],
@@ -638,7 +835,9 @@ class _StatCardModern extends StatelessWidget {
   }
 }
 
-class _PrimaryActionCard extends StatelessWidget {
+class _PrimaryActionCard
+    extends
+        StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
@@ -654,20 +853,36 @@ class _PrimaryActionCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return _TapScale(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 6,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.black.withOpacity(0.05)),
+          borderRadius: BorderRadius.circular(
+            20,
+          ),
+          border: Border.all(
+            color: Colors.black.withOpacity(
+              0.05,
+            ),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(
+                0.05,
+              ),
               blurRadius: 14,
-              offset: const Offset(0, 10),
+              offset: const Offset(
+                0,
+                10,
+              ),
             ),
           ],
         ),
@@ -678,12 +893,22 @@ class _PrimaryActionCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: primary.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(14),
+                color: primary.withOpacity(
+                  0.10,
+                ),
+                borderRadius: BorderRadius.circular(
+                  14,
+                ),
               ),
-              child: Icon(icon, color: primary, size: 22),
+              child: Icon(
+                icon,
+                color: primary,
+                size: 22,
+              ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(
+              width: 8,
+            ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -696,11 +921,15 @@ class _PrimaryActionCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF1A2552),
+                      color: Color(
+                        0xFF1A2552,
+                      ),
                       height: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(
+                    height: 2,
+                  ),
                   Text(
                     subtitle,
                     maxLines: 1,
@@ -708,14 +937,21 @@ class _PrimaryActionCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF7A83AA),
+                      color: Color(
+                        0xFF7A83AA,
+                      ),
                       height: 1.1,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFFB0B7D5)),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(
+                0xFFB0B7D5,
+              ),
+            ),
           ],
         ),
       ),
@@ -723,7 +959,9 @@ class _PrimaryActionCard extends StatelessWidget {
   }
 }
 
-class _MenuTile extends StatelessWidget {
+class _MenuTile
+    extends
+        StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
@@ -739,20 +977,36 @@ class _MenuTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return _TapScale(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.black.withOpacity(0.05)),
+          borderRadius: BorderRadius.circular(
+            20,
+          ),
+          border: Border.all(
+            color: Colors.black.withOpacity(
+              0.05,
+            ),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(
+                0.05,
+              ),
               blurRadius: 14,
-              offset: const Offset(0, 10),
+              offset: const Offset(
+                0,
+                10,
+              ),
             ),
           ],
         ),
@@ -762,12 +1016,22 @@ class _MenuTile extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: primary.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(14),
+                color: primary.withOpacity(
+                  0.10,
+                ),
+                borderRadius: BorderRadius.circular(
+                  14,
+                ),
               ),
-              child: Icon(icon, color: primary, size: 22),
+              child: Icon(
+                icon,
+                color: primary,
+                size: 22,
+              ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(
+              width: 10,
+            ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -781,11 +1045,15 @@ class _MenuTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF1A2552),
+                      color: Color(
+                        0xFF1A2552,
+                      ),
                       height: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(
+                    height: 3,
+                  ),
                   Text(
                     subtitle,
                     maxLines: 1,
@@ -793,14 +1061,21 @@ class _MenuTile extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF7A83AA),
+                      color: Color(
+                        0xFF7A83AA,
+                      ),
                       height: 1.1,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFFB0B7D5)),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(
+                0xFFB0B7D5,
+              ),
+            ),
           ],
         ),
       ),
@@ -808,34 +1083,55 @@ class _MenuTile extends StatelessWidget {
   }
 }
 
-class _FabModern extends StatelessWidget {
+class _FabModern
+    extends
+        StatelessWidget {
   final Color primary;
   final VoidCallback onTap;
-  const _FabModern({required this.primary, required this.onTap});
+  const _FabModern({
+    required this.primary,
+    required this.onTap,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return _TapScale(
       onTap: onTap,
       child: Container(
         height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+        ),
         decoration: BoxDecoration(
           color: primary,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(
+            16,
+          ),
           boxShadow: [
             BoxShadow(
-              color: primary.withOpacity(0.28),
+              color: primary.withOpacity(
+                0.28,
+              ),
               blurRadius: 18,
-              offset: const Offset(0, 10),
+              offset: const Offset(
+                0,
+                10,
+              ),
             ),
           ],
         ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.person_add_alt_outlined, color: Colors.white),
-            SizedBox(width: 10),
+            Icon(
+              Icons.person_add_alt_outlined,
+              color: Colors.white,
+            ),
+            SizedBox(
+              width: 10,
+            ),
             Text(
               'Buat Akun',
               style: TextStyle(
@@ -850,28 +1146,58 @@ class _FabModern extends StatelessWidget {
   }
 }
 
-class _TapScale extends StatefulWidget {
+class _TapScale
+    extends
+        StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
-  const _TapScale({required this.child, required this.onTap});
+  const _TapScale({
+    required this.child,
+    required this.onTap,
+  });
 
   @override
-  State<_TapScale> createState() => _TapScaleState();
+  State<
+    _TapScale
+  >
+  createState() => _TapScaleState();
 }
 
-class _TapScaleState extends State<_TapScale> {
+class _TapScaleState
+    extends
+        State<
+          _TapScale
+        > {
   bool _down = false;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return GestureDetector(
-      onTapDown: (_) => setState(() => _down = true),
-      onTapCancel: () => setState(() => _down = false),
-      onTapUp: (_) => setState(() => _down = false),
+      onTapDown:
+          (
+            _,
+          ) => setState(
+            () => _down = true,
+          ),
+      onTapCancel: () => setState(
+        () => _down = false,
+      ),
+      onTapUp:
+          (
+            _,
+          ) => setState(
+            () => _down = false,
+          ),
       onTap: widget.onTap,
       child: AnimatedScale(
-        scale: _down ? 0.98 : 1.0,
-        duration: const Duration(milliseconds: 110),
+        scale: _down
+            ? 0.98
+            : 1.0,
+        duration: const Duration(
+          milliseconds: 110,
+        ),
         curve: Curves.easeOut,
         child: widget.child,
       ),
