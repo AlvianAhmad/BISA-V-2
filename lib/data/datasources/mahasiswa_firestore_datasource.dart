@@ -1,3 +1,4 @@
+// ========================= mahasiswa_firestore_datasource.dart =========================
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MahasiswaFirestoreDatasource {
@@ -8,7 +9,6 @@ class MahasiswaFirestoreDatasource {
     required String kodeKelas,
     required String mahasiswaId,
   }) async {
-    // cari kelas berdasarkan kode
     final kelasSnap = await _db
         .collection('kelas')
         .where('kode', isEqualTo: kodeKelas)
@@ -22,22 +22,20 @@ class MahasiswaFirestoreDatasource {
     final kelasId = kelasSnap.docs.first.id;
     final docId = '$mahasiswaId-$kelasId';
 
-    // cegah join dobel
-    final existing = await _db.collection('kelas').doc(docId).get();
-
+    final existing = await _db.collection('kelas_mahasiswa').doc(docId).get();
     if (existing.exists) return;
 
-    await _db.collection('kelas').doc(docId).set({
+    await _db.collection('kelas_mahasiswa').doc(docId).set({
       'mahasiswaId': mahasiswaId,
       'kelasId': kelasId,
-      'joinedAt': Timestamp.now(),
+      'joinedAt': FieldValue.serverTimestamp(),
     });
   }
 
   // ================= KELAS =================
   Stream<QuerySnapshot<Map<String, dynamic>>> kelasSaya(String mahasiswaId) {
     return _db
-        .collection('kelas')
+        .collection('kelas_mahasiswa')
         .where('mahasiswaId', isEqualTo: mahasiswaId)
         .snapshots();
   }
@@ -46,19 +44,29 @@ class MahasiswaFirestoreDatasource {
     return _db.collection('kelas').doc(kelasId).snapshots();
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> semuaKelas() {
+    return _db
+        .collection('kelas')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
   // ================= MATERI =================
   Stream<QuerySnapshot<Map<String, dynamic>>> materi(String kelasId) {
     return _db
         .collection('materi')
         .where('kelasId', isEqualTo: kelasId)
+        .orderBy('createdAt', descending: true)
         .snapshots();
   }
 
   // ================= TUGAS =================
-  Stream<QuerySnapshot<Map<String, dynamic>>> tugas(String kelasId) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> tugasByKelasNama(
+    String kelasNama,
+  ) {
     return _db
         .collection('tugas')
-        .where('kelasId', isEqualTo: kelasId)
+        .where('kelas', isEqualTo: kelasNama)
         .snapshots();
   }
 
@@ -73,9 +81,9 @@ class MahasiswaFirestoreDatasource {
         .doc(mahasiswaId)
         .set({
           'mahasiswaId': mahasiswaId,
-          'submittedAt': Timestamp.now(),
+          'submittedAt': FieldValue.serverTimestamp(),
           'status': 'submitted',
-        });
+        }, SetOptions(merge: true));
   }
 
   Future<bool> sudahKumpul({
@@ -93,18 +101,23 @@ class MahasiswaFirestoreDatasource {
   }
 
   // ================= JADWAL =================
-  Stream<QuerySnapshot<Map<String, dynamic>>> jadwal(String kelasId) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> jadwalByKelasNama(
+    String kelasNama,
+  ) {
     return _db
         .collection('jadwal')
-        .where('kelasId', isEqualTo: kelasId)
+        .where('kelas', isEqualTo: kelasNama)
         .snapshots();
   }
 
   // ================= ABSENSI =================
-  Stream<QuerySnapshot<Map<String, dynamic>>> absensi(String kelasId) {
+  // ✅ FIX: HAPUS orderBy supaya tidak butuh composite index
+  Stream<QuerySnapshot<Map<String, dynamic>>> absensiByKelasNama(
+    String kelasNama,
+  ) {
     return _db
         .collection('absensi')
-        .where('kelasId', isEqualTo: kelasId)
+        .where('kelas', isEqualTo: kelasNama)
         .snapshots();
   }
 
@@ -120,8 +133,8 @@ class MahasiswaFirestoreDatasource {
         .set({
           'mahasiswaId': mahasiswaId,
           'hadir': true,
-          'waktu': Timestamp.now(),
-        });
+          'waktu': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
   }
 
   Future<bool> sudahAbsen({

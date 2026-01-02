@@ -1,5 +1,6 @@
+// ========================= mahasiswa_viewmodel.dart =========================
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // ✅ INI YANG KURANG
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../data/datasources/mahasiswa_firestore_datasource.dart';
 
 class MahasiswaViewModel extends ChangeNotifier {
@@ -7,7 +8,7 @@ class MahasiswaViewModel extends ChangeNotifier {
 
   MahasiswaViewModel(this.ds);
 
-  /// ⚠️ nanti ganti FirebaseAuth
+  /// TODO: ganti FirebaseAuth (uid)
   final String mahasiswaId = 'mhs_001';
 
   // ================= JOIN KELAS =================
@@ -16,16 +17,22 @@ class MahasiswaViewModel extends ChangeNotifier {
   }
 
   // ================= KELAS =================
-  Stream<QuerySnapshot> kelasSaya() => ds.kelasSaya(mahasiswaId);
+  Stream<QuerySnapshot<Map<String, dynamic>>> kelasSaya() =>
+      ds.kelasSaya(mahasiswaId);
 
-  Stream<DocumentSnapshot> detailKelas(String kelasId) =>
+  Stream<DocumentSnapshot<Map<String, dynamic>>> detailKelas(String kelasId) =>
       ds.detailKelas(kelasId);
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> semuaKelas() => ds.semuaKelas();
+
   // ================= MATERI =================
-  Stream<QuerySnapshot> materi(String kelasId) => ds.materi(kelasId);
+  Stream<QuerySnapshot<Map<String, dynamic>>> materi(String kelasId) =>
+      ds.materi(kelasId);
 
   // ================= TUGAS =================
-  Stream<QuerySnapshot> tugas(String kelasId) => ds.tugas(kelasId);
+  Stream<QuerySnapshot<Map<String, dynamic>>> tugasByKelasNama(
+    String kelasNama,
+  ) => ds.tugasByKelasNama(kelasNama);
 
   Future<void> kumpulTugas(String tugasId) {
     return ds.kumpulTugas(tugasId: tugasId, mahasiswaId: mahasiswaId);
@@ -36,10 +43,15 @@ class MahasiswaViewModel extends ChangeNotifier {
   }
 
   // ================= JADWAL =================
-  Stream<QuerySnapshot> jadwal(String kelasId) => ds.jadwal(kelasId);
+  Stream<QuerySnapshot<Map<String, dynamic>>> jadwalByKelasNama(
+    String kelasNama,
+  ) => ds.jadwalByKelasNama(kelasNama);
 
   // ================= ABSENSI =================
-  Stream<QuerySnapshot> absensi(String kelasId) => ds.absensi(kelasId);
+  // ✅ tetap pakai ini, tapi sekarang query firestore-nya tidak orderBy
+  Stream<QuerySnapshot<Map<String, dynamic>>> absensiByKelasNama(
+    String kelasNama,
+  ) => ds.absensiByKelasNama(kelasNama);
 
   Future<void> absen(String absensiId) {
     return ds.absen(absensiId: absensiId, mahasiswaId: mahasiswaId);

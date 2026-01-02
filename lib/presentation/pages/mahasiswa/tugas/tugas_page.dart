@@ -6,9 +6,8 @@ import '../../../viewmodels/mahasiswa/mahasiswa_viewmodel.dart';
 import 'kumpul_tugas_page.dart';
 
 class TugasPage extends StatelessWidget {
-  final String kelasId;
-
-  const TugasPage({super.key, required this.kelasId});
+  final String kelasNama;
+  const TugasPage({super.key, required this.kelasNama});
 
   @override
   Widget build(BuildContext context) {
@@ -16,40 +15,55 @@ class TugasPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tugas')),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: vm.tugas(kelasId),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: vm.tugasByKelasNama(kelasNama),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('Belum ada tugas'));
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
+          final docs = snapshot.data?.docs ?? [];
+
+          if (docs.isEmpty) {
+            return Center(
+              child: Text(
+                'Belum ada tugas\n(kelas="$kelasNama")',
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+
+          return ListView.separated(
+            itemCount: docs.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
-              final doc = snapshot.data!.docs[index];
-              final data = doc.data() as Map<String, dynamic>;
+              final doc = docs[index];
+              final data = doc.data();
+
+              final judul = (data['judul'] ?? '-').toString();
+              final deskripsi = (data['deskripsi'] ?? '').toString();
 
               return ListTile(
-                title: Text(data['judul']),
-                subtitle: Text(data['deskripsi'] ?? ''),
+                title: Text(judul),
+                subtitle: Text(deskripsi),
                 trailing: ElevatedButton(
-                  child: const Text('Kumpul'),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => KumpulTugasPage(
                           tugasId: doc.id,
-                          judulTugas: data['judul'],
-                          deskripsi: data['deskripsi'] ?? '',
+                          judulTugas: judul,
+                          deskripsi: deskripsi,
                         ),
                       ),
                     );
                   },
+                  child: const Text('Kumpul'),
                 ),
               );
             },

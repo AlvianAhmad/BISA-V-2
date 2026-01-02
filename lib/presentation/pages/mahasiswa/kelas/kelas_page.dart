@@ -1,69 +1,87 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../viewmodels/mahasiswa/mahasiswa_viewmodel.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'detail_kelas_page.dart';
-import 'join_kelas_page.dart';
 
 class KelasPage extends StatelessWidget {
   const KelasPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<MahasiswaViewModel>();
+    final db = FirebaseFirestore.instance;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kelas Saya'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const JoinKelasPage()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: StreamBuilder(
-        stream: vm.kelasSaya(),
-        builder: (_, snapshot) {
-          if (!snapshot.hasData) {
+      appBar: AppBar(title: const Text('Daftar Kelas')),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: db
+            .collection('kelas')
+            .snapshots(), // ✅ jangan pakai filter kode
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('Belum join kelas'));
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          return ListView(
-            children: snapshot.data!.docs.map((doc) {
-              final kelasId = doc['kelasId'];
+          final docs = snapshot.data?.docs ?? [];
 
-              return StreamBuilder(
-                stream: vm.detailKelas(kelasId),
-                builder: (_, kelasSnap) {
-                  if (!kelasSnap.hasData) return const SizedBox();
+          // ✅ Filter hanya kelas master:
+          // - punya field 'nama'
+          // - BUKAN dokumen join (yang ada mahasiswaId / joinedAt / type=join)
+          final kelasMaster = docs.where((doc) {
+            final d = doc.data();
+            final hasNama = d['nama'] != null;
 
-                  final data = kelasSnap.data!.data() as Map<String, dynamic>;
+            final isJoinDoc =
+                d['mahasiswaId'] != null ||
+                d['joinedAt'] != null ||
+                d['type'] == 'join';
 
-                  return ListTile(
-                    title: Text(data['nama']),
-                    subtitle: Text(data['kode']),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DetailKelasPage(kelasId: kelasId),
-                        ),
-                      );
-                    },
+            return hasNama && !isJoinDoc;
+          }).toList();
+
+          if (kelasMaster.isEmpty) {
+            return const Center(child: Text('Belum ada kelas'));
+          }
+
+          return ListView.separated(
+            itemCount: kelasMaster.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final doc = kelasMaster[index];
+              final d = doc.data();
+
+              final kelasId = doc.id;
+              final nama = (d['nama'] ?? '-').toString();
+              final jurusan = (d['jurusan'] ?? '').toString();
+              final semester = (d['semester'] ?? '').toString();
+
+              // ✅ kode optional (karena admin belum nyimpen kode)
+              final kode = (d['kode'] ?? '').toString();
+
+              final subtitleParts = <String>[
+                if (kode.isNotEmpty) 'Kode: $kode',
+                if (jurusan.isNotEmpty) jurusan,
+                if (semester.isNotEmpty) 'Semester $semester',
+              ];
+
+              return ListTile(
+                title: Text(nama),
+                subtitle: subtitleParts.isEmpty
+                    ? const Text('-')
+                    : Text(subtitleParts.join(' • ')),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DetailKelasPage(kelasId: kelasId),
+                    ),
                   );
                 },
               );
-            }).toList(),
+            },
           );
         },
       ),
