@@ -1,4 +1,3 @@
-// ========================= mahasiswa_firestore_datasource.dart =========================
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MahasiswaFirestoreDatasource {
@@ -45,6 +44,7 @@ class MahasiswaFirestoreDatasource {
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> semuaKelas() {
+    // kalau error index, hapus orderBy
     return _db
         .collection('kelas')
         .orderBy('createdAt', descending: true)
@@ -52,10 +52,36 @@ class MahasiswaFirestoreDatasource {
   }
 
   // ================= MATERI =================
-  Stream<QuerySnapshot<Map<String, dynamic>>> materi(String kelasId) {
+  // Query by kelasId (kalau materi memang punya field kelasId)
+  Stream<QuerySnapshot<Map<String, dynamic>>> materiByKelasId(String kelasId) {
+    // kalau error index, hapus orderBy
     return _db
         .collection('materi')
         .where('kelasId', isEqualTo: kelasId)
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  // Query by kelasNama (kalau materi admin simpan kelasNama)
+  Stream<QuerySnapshot<Map<String, dynamic>>> materiByKelasNama(
+    String kelasNama,
+  ) {
+    // kalau error index, hapus orderBy
+    return _db
+        .collection('materi')
+        .where('kelasNama', isEqualTo: kelasNama)
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  // Query by kelas (kalau materi admin simpan field "kelas")
+  Stream<QuerySnapshot<Map<String, dynamic>>> materiByKelasField(
+    String kelasNama,
+  ) {
+    // kalau error index, hapus orderBy
+    return _db
+        .collection('materi')
+        .where('kelas', isEqualTo: kelasNama)
         .orderBy('createdAt', descending: true)
         .snapshots();
   }
@@ -111,10 +137,10 @@ class MahasiswaFirestoreDatasource {
   }
 
   // ================= ABSENSI =================
-  // ✅ FIX: HAPUS orderBy supaya tidak butuh composite index
   Stream<QuerySnapshot<Map<String, dynamic>>> absensiByKelasNama(
     String kelasNama,
   ) {
+    // (tanpa orderBy supaya gak butuh composite index)
     return _db
         .collection('absensi')
         .where('kelas', isEqualTo: kelasNama)

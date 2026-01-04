@@ -1,4 +1,3 @@
-// ========================= mahasiswa_viewmodel.dart =========================
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../data/datasources/mahasiswa_firestore_datasource.dart';
@@ -26,8 +25,16 @@ class MahasiswaViewModel extends ChangeNotifier {
   Stream<QuerySnapshot<Map<String, dynamic>>> semuaKelas() => ds.semuaKelas();
 
   // ================= MATERI =================
-  Stream<QuerySnapshot<Map<String, dynamic>>> materi(String kelasId) =>
-      ds.materi(kelasId);
+  Stream<QuerySnapshot<Map<String, dynamic>>> materiByKelasId(String kelasId) =>
+      ds.materiByKelasId(kelasId);
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> materiByKelasNama(
+    String kelasNama,
+  ) => ds.materiByKelasNama(kelasNama);
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> materiByKelasField(
+    String kelasNama,
+  ) => ds.materiByKelasField(kelasNama);
 
   // ================= TUGAS =================
   Stream<QuerySnapshot<Map<String, dynamic>>> tugasByKelasNama(
@@ -48,7 +55,6 @@ class MahasiswaViewModel extends ChangeNotifier {
   ) => ds.jadwalByKelasNama(kelasNama);
 
   // ================= ABSENSI =================
-  // ✅ tetap pakai ini, tapi sekarang query firestore-nya tidak orderBy
   Stream<QuerySnapshot<Map<String, dynamic>>> absensiByKelasNama(
     String kelasNama,
   ) => ds.absensiByKelasNama(kelasNama);

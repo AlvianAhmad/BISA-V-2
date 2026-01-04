@@ -15,9 +15,14 @@ import 'presentation/viewmodels/admin/admin_viewmodel.dart';
 import 'presentation/viewmodels/auth/login_viewmodel.dart';
 import 'presentation/viewmodels/auth/register_viewmodel.dart';
 
-// ===== MAHASISWA (🔥 INI YANG PENTING) =====
+// ===== MAHASISWA (kelas, join, tugas, absensi, dll yang kamu masih pakai) =====
 import 'data/datasources/mahasiswa_firestore_datasource.dart';
 import 'presentation/viewmodels/mahasiswa/mahasiswa_viewmodel.dart';
+
+// ===== MATERI REMOTE DATASOURCE (DIPAKAI MAHASISWA) =====
+import 'data/datasources/materi_remote_datasource.dart';
+// ✅ ViewModel materi mahasiswa (yang aku buat sebelumnya) -> pakai alias biar ga bentrok
+import 'presentation/viewmodels/mahasiswa/materi_viewmodel.dart' as mhs_materi;
 
 // ===== JADWAL (ADMIN) =====
 import 'data/datasources/jadwal_remote_datasource.dart';
@@ -56,7 +61,6 @@ import 'domain/usecases/absensi/delete_absensi.dart';
 import 'presentation/viewmodels/admin/absensi/absensi_view_model.dart';
 
 // ===== MATERI (ADMIN) =====
-import 'data/datasources/materi_remote_datasource.dart';
 import 'data/repositories/materi_repository_impl.dart';
 import 'domain/usecases/materi/get_materi.dart';
 import 'domain/usecases/materi/add_materi.dart';
@@ -82,30 +86,29 @@ class MyApp extends StatelessWidget {
     // ===== MAHASISWA =====
     final mahasiswaDatasource = MahasiswaFirestoreDatasource();
 
-    // ===== JADWAL (ADMIN) =====
+    // ===== ADMIN REPOSITORIES =====
     final jadwalRepository = JadwalRepositoryImpl(
       JadwalRemoteDataSource(FirebaseFirestore.instance),
     );
 
-    // ===== KELAS (ADMIN) =====
     final kelasRepository = KelasRepositoryImpl(
       KelasRemoteDataSource(FirebaseFirestore.instance),
     );
 
-    // ===== TUGAS (ADMIN) =====
     final tugasRepository = TugasRepositoryImpl(
       TugasRemoteDataSource(FirebaseFirestore.instance),
     );
 
-    // ===== ABSENSI (ADMIN) =====
     final absensiRepository = AbsensiRepositoryImpl(
       AbsensiRemoteDatasource(FirebaseFirestore.instance),
     );
 
-    // ===== MATERI (ADMIN) =====
     final materiRepository = MateriRepositoryImpl(
       MateriRemoteDatasource(FirebaseFirestore.instance),
     );
+
+    // ===== MATERI REMOTE (UNTUK MAHASISWA) =====
+    final materiRemoteDs = MateriRemoteDatasource(FirebaseFirestore.instance);
 
     return MultiProvider(
       providers: [
@@ -117,9 +120,14 @@ class MyApp extends StatelessWidget {
           create: (_) => RegisterViewModel(authRepository),
         ),
 
-        // ===== MAHASISWA (🔥 GLOBAL – FIX ERROR) =====
+        // ===== MAHASISWA (GLOBAL) =====
         ChangeNotifierProvider(
           create: (_) => MahasiswaViewModel(mahasiswaDatasource),
+        ),
+
+        // ✅ ===== MATERI MAHASISWA (BARU, PAKAI RemoteDatasource) =====
+        ChangeNotifierProvider(
+          create: (_) => mhs_materi.MateriViewModel(materiRemoteDs),
         ),
 
         // ===== ADMIN JADWAL =====

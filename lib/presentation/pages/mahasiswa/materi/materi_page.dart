@@ -1,46 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../viewmodels/mahasiswa/mahasiswa_viewmodel.dart';
+import '../../../../domain/entities/materi.dart';
+import '../../../viewmodels/mahasiswa/materi_viewmodel.dart';
 
 class MateriPage extends StatelessWidget {
   final String kelasId;
-
   const MateriPage({super.key, required this.kelasId});
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<MahasiswaViewModel>();
+    final vm = context.watch<MateriViewModel>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Materi')),
-      body: StreamBuilder(
-        stream: vm.materi(kelasId), // ✅ FIX
+      body: StreamBuilder<List<Materi>>(
+        stream: vm.getMateriByKelas(kelasId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final list = snapshot.data ?? const <Materi>[];
+
+          if (list.isEmpty) {
             return const Center(child: Text('Belum ada materi'));
           }
 
-          final docs = snapshot.data!.docs;
-
-          return ListView.builder(
-            itemCount: docs.length,
+          return ListView.separated(
+            itemCount: list.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
-              final d = docs[index];
+              final m = list[index];
 
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: ListTile(
-                  leading: const Icon(Icons.menu_book),
-                  title: Text(d['judul']),
-                  subtitle: Text(d['deskripsi']),
-                  trailing: d.data().toString().contains('fileUrl')
-                      ? const Icon(Icons.download)
-                      : null,
-                ),
+              final judul = m.judul.isEmpty ? '-' : m.judul;
+              final deskripsi = m.deskripsi;
+              final hasFile = (m.fileUrl).toString().trim().isNotEmpty;
+
+              return ListTile(
+                leading: const Icon(Icons.menu_book_rounded),
+                title: Text(judul),
+                subtitle: Text(deskripsi),
+                trailing: hasFile ? const Icon(Icons.download_rounded) : null,
+                onTap: () {
+                  // optional: buka detail / download
+                },
               );
             },
           );
