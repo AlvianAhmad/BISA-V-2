@@ -2,7 +2,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'detail_kelas_page.dart';
+import 'join_kelas_page.dart'; // ✅ TAMBAH INI
 
 class KelasPage
     extends
@@ -69,21 +71,44 @@ class _KelasPageState
             fontSize: 22,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.search_rounded,
-            ),
-            color: _textDark,
-          ),
-          const SizedBox(
-            width: 6,
+        actions: const [
+          SizedBox(
+            width: 10,
           ),
         ],
       ),
 
-      /// ✅ Search bar ikut scroll: SearchBar + List jadi 1 scrollable
+      // ✅ TOMBOL AMBIL / GABUNG KELAS BARU
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (
+                    _,
+                  ) => const JoinKelasPage(),
+            ),
+          );
+          // list akan otomatis update karena StreamBuilder
+        },
+        icon: const Icon(
+          Icons.group_add_rounded,
+        ),
+        label: const Text(
+          'Gabung Kelas',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        backgroundColor: const Color(
+          0xFF1B3C9E,
+        ),
+        foregroundColor: Colors.white,
+        elevation: 10,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
       body:
           StreamBuilder<
             QuerySnapshot<
@@ -191,9 +216,7 @@ class _KelasPageState
 
                   return CustomScrollView(
                     slivers: [
-                      // ======================
-                      // SEARCH BAR (IKUT SCROLL)
-                      // ======================
+                      // SEARCH BAR
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(
@@ -214,9 +237,7 @@ class _KelasPageState
                         ),
                       ),
 
-                      // ======================
                       // EMPTY STATE
-                      // ======================
                       if (filtered.isEmpty)
                         SliverFillRemaining(
                           hasScrollBody: false,
@@ -233,9 +254,7 @@ class _KelasPageState
                           ),
                         ),
 
-                      // ======================
-                      // LIST KELAS
-                      // ======================
+                      // LIST
                       if (filtered.isNotEmpty)
                         SliverList(
                           delegate: SliverChildBuilderDelegate(
@@ -279,7 +298,7 @@ class _KelasPageState
                                   16,
                                   14,
                                 ),
-                                child: _KelasGradientCard(
+                                child: _KelasModernCard(
                                   title: nama,
                                   kode: kode.isEmpty
                                       ? null
@@ -292,11 +311,6 @@ class _KelasPageState
                                       : semester,
                                   dosen: dosen,
                                   theme: theme,
-                                  favorite:
-                                      index %
-                                          2 ==
-                                      0,
-                                  onFavoriteTap: () {},
                                   onTap: () {
                                     Navigator.push(
                                       context,
@@ -319,9 +333,9 @@ class _KelasPageState
 
                       const SliverToBoxAdapter(
                         child: SizedBox(
-                          height: 22,
+                          height: 90,
                         ),
-                      ),
+                      ), // ruang utk FAB
                     ],
                   );
                 },
@@ -367,14 +381,14 @@ class _SearchBar
           ),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(
-              0.75,
+              0.78,
             ),
             borderRadius: BorderRadius.circular(
               18,
             ),
             border: Border.all(
               color: const Color(
-                0x12000000,
+                0x14000000,
               ),
             ),
             boxShadow: const [
@@ -447,9 +461,11 @@ class _SearchBar
 }
 
 /// ======================
-/// CARD KELAS GRADIENT (TANPA GAMBAR & TANPA AVATAR)
+/// CARD KELAS MODERN (lebih menarik)
+/// - bagian dosen dibuat chip, bukan kotak
+/// - ada chip semester
 /// ======================
-class _KelasGradientCard
+class _KelasModernCard
     extends
         StatelessWidget {
   final String title;
@@ -459,20 +475,15 @@ class _KelasGradientCard
   final String dosen;
 
   final _CardTheme theme;
-
-  final bool favorite;
-  final VoidCallback onFavoriteTap;
   final VoidCallback onTap;
 
-  const _KelasGradientCard({
+  const _KelasModernCard({
     required this.title,
     required this.kode,
     required this.jurusan,
     required this.semester,
     required this.dosen,
     required this.theme,
-    required this.favorite,
-    required this.onFavoriteTap,
     required this.onTap,
   });
 
@@ -480,35 +491,17 @@ class _KelasGradientCard
   Widget build(
     BuildContext context,
   ) {
-    final infoLine =
-        <
-          String
-        >[
-          if (kode !=
-                  null &&
-              kode!.isNotEmpty)
-            'Kode: $kode',
-          if (jurusan !=
-                  null &&
-              jurusan!.isNotEmpty)
-            jurusan!,
-          if (semester !=
-                  null &&
-              semester!.isNotEmpty)
-            'Semester $semester',
-        ];
-
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(
-        22,
+        26,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(
-          22,
+          26,
         ),
         child: Container(
-          height: 150,
+          height: 176,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -518,83 +511,62 @@ class _KelasGradientCard
             boxShadow: [
               BoxShadow(
                 color: theme.gradient.first.withOpacity(
-                  0.25,
+                  0.22,
                 ),
-                blurRadius: 22,
+                blurRadius: 26,
                 offset: const Offset(
                   0,
-                  14,
+                  18,
                 ),
               ),
             ],
           ),
           child: Stack(
             children: [
-              // soft shapes
+              // soft circles
               Positioned(
-                right: -40,
-                top: -40,
+                right: -60,
+                top: -60,
                 child: _SoftCircle(
                   color: Colors.white.withOpacity(
-                    0.14,
+                    0.12,
                   ),
-                  size: 170,
+                  size: 210,
                 ),
               ),
               Positioned(
-                right: -10,
-                bottom: -55,
-                child: _SoftCircle(
-                  color: Colors.white.withOpacity(
-                    0.10,
-                  ),
-                  size: 220,
-                ),
-              ),
-              Positioned(
-                left: 120,
-                bottom: -60,
+                left: -40,
+                bottom: -70,
                 child: _SoftCircle(
                   color: Colors.white.withOpacity(
                     0.08,
                   ),
-                  size: 200,
+                  size: 240,
                 ),
               ),
 
-              // star (top-right)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: GestureDetector(
-                  onTap: onFavoriteTap,
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(
-                        0.24,
-                      ),
-                      borderRadius: BorderRadius.circular(
-                        14,
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(
-                          0.20,
+              // subtle gloss
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withOpacity(
+                          0.10,
                         ),
-                      ),
-                    ),
-                    child: Icon(
-                      favorite
-                          ? Icons.star_rounded
-                          : Icons.star_border_rounded,
-                      color: Colors.white,
+                        Colors.transparent,
+                        Colors.black.withOpacity(
+                          0.06,
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
 
-              // teks (full width)
+              // content
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   16,
@@ -605,61 +577,105 @@ class _KelasGradientCard
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 20,
-                      ),
+                    // Title + badge kode
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 20.5,
+                              height: 1.12,
+                            ),
+                          ),
+                        ),
+                        if (kode !=
+                                null &&
+                            kode!.isNotEmpty) ...[
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          _Badge(
+                            text: kode!,
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(
-                      height: 8,
+                      height: 10,
                     ),
-                    Text(
-                      infoLine.isEmpty
-                          ? '-'
-                          : infoLine.join(
-                              ' • ',
-                            ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(
-                          0.90,
-                        ),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13.5,
-                      ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.person_rounded,
+
+                    // ✅ Prodi / Jurusan (baris sendiri)
+                    if (jurusan !=
+                            null &&
+                        jurusan!.isNotEmpty)
+                      Text(
+                        jurusan!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
                           color: Colors.white.withOpacity(
                             0.92,
                           ),
-                          size: 18,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13.6,
+                        ),
+                      )
+                    else
+                      Text(
+                        '-',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(
+                            0.85,
+                          ),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.6,
+                        ),
+                      ),
+
+                    const SizedBox(
+                      height: 6,
+                    ),
+
+                    // ✅ Semester (baris bawahnya)
+                    if (semester !=
+                            null &&
+                        semester!.isNotEmpty)
+                      Text(
+                        'Semester $semester',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(
+                            0.90,
+                          ),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.2,
+                        ),
+                      ),
+
+                    const Spacer(),
+
+                    // ✅ Chips dosen + semester (lebih menarik)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _InfoChip(
+                            icon: Icons.person_rounded,
+                            text: dosen,
+                          ),
                         ),
                         const SizedBox(
-                          width: 8,
+                          width: 10,
                         ),
-                        Expanded(
-                          child: Text(
-                            dosen,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(
-                                0.95,
-                              ),
-                              fontWeight: FontWeight.w800,
-                              fontSize: 13.5,
-                            ),
-                          ),
+                        _MiniActionChip(
+                          icon: Icons.chevron_right_rounded,
+                          onTap: onTap,
                         ),
                       ],
                     ),
@@ -668,6 +684,166 @@ class _KelasGradientCard
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoChip
+    extends
+        StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _InfoChip({
+    required this.icon,
+    required this.text,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(
+          0.16,
+        ),
+        borderRadius: BorderRadius.circular(
+          18,
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(
+            0.18,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: Colors.white.withOpacity(
+              0.92,
+            ),
+          ),
+          const SizedBox(
+            width: 8,
+          ),
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withOpacity(
+                  0.95,
+                ),
+                fontWeight: FontWeight.w900,
+                fontSize: 13.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniActionChip
+    extends
+        StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _MiniActionChip({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Material(
+      color: Colors.white.withOpacity(
+        0.18,
+      ),
+      borderRadius: BorderRadius.circular(
+        16,
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(
+          16,
+        ),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(
+              16,
+            ),
+            border: Border.all(
+              color: Colors.white.withOpacity(
+                0.18,
+              ),
+            ),
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white.withOpacity(
+              0.92,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Badge
+    extends
+        StatelessWidget {
+  final String text;
+  const _Badge({
+    required this.text,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(
+          0.18,
+        ),
+        borderRadius: BorderRadius.circular(
+          14,
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(
+            0.18,
+          ),
+        ),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w900,
+          fontSize: 12.5,
+          letterSpacing: 0.2,
         ),
       ),
     );
@@ -708,8 +884,6 @@ class _CardTheme {
     Color
   >
   gradient;
-
-  // masih disimpan untuk kompatibilitas struktur, tapi tidak dipakai lagi di card
   final String? illustrationAsset;
   final IconData fallbackIcon;
 
