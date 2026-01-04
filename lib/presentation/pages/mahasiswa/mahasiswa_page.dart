@@ -9,51 +9,101 @@ import 'tugas/tugas_page.dart';
 import 'jadwal/jadwal_page.dart';
 import 'lexa/lexa_chat_page.dart';
 
-class MahasiswaPage extends StatefulWidget {
-  const MahasiswaPage({super.key});
+class MahasiswaPage
+    extends
+        StatefulWidget {
+  const MahasiswaPage({
+    super.key,
+  });
 
   @override
-  State<MahasiswaPage> createState() => _MahasiswaPageState();
+  State<
+    MahasiswaPage
+  >
+  createState() => _MahasiswaPageState();
 }
 
-class _MahasiswaPageState extends State<MahasiswaPage> {
+class _MahasiswaPageState
+    extends
+        State<
+          MahasiswaPage
+        > {
   // ⚠️ sementara hardcode, nanti ambil dari kelas yang di-join
   static const String kelasId = 'kelas_1';
 
   int _tab = 0;
 
   @override
-  Widget build(BuildContext context) {
-    final pages = <Widget>[
-      _HomeDashboard(
-        kelasId: kelasId,
-        onOpenKelas: () => _push(const KelasPage()),
-        onOpenJadwal: () => _push(const KelasPage()), // ✅ pilih kelas dulu
-        onOpenTugas: () => _push(const KelasPage()), // ✅ pilih kelas dulu
-        onOpenNilai: () => _push(const _PlaceholderPage(title: 'Nilai')),
-      ),
-      const KelasPage(), // ✅ tab 2 jadi kelas (biar aman)
-      const LexaChatPage(),
-      const _PlaceholderPage(title: 'Akun'),
-    ];
+  Widget build(
+    BuildContext context,
+  ) {
+    final pages =
+        <
+          Widget
+        >[
+          _HomeDashboard(
+            kelasId: kelasId,
+            onOpenKelas: () => _push(
+              const KelasPage(),
+            ),
+            onOpenJadwal: () => _push(
+              const KelasPage(),
+            ), // ✅ pilih kelas dulu
+            onOpenTugas: () => _push(
+              const KelasPage(),
+            ), // ✅ pilih kelas dulu
+            onOpenNilai: () => _push(
+              const _PlaceholderPage(
+                title: 'Nilai',
+              ),
+            ),
+          ),
+          const KelasPage(), // ✅ tab 2 jadi kelas (biar aman)
+          const LexaChatPage(),
+          const _PlaceholderPage(
+            title: 'Akun',
+          ),
+        ];
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: const Color(0xFFF5F6FA),
-      body: SafeArea(top: false, child: pages[_tab]),
+      backgroundColor: const Color(
+        0xFFF5F6FA,
+      ),
+      body: SafeArea(
+        top: false,
+        child: pages[_tab],
+      ),
       bottomNavigationBar: _BottomNav(
         index: _tab,
-        onChanged: (i) => setState(() => _tab = i),
+        onChanged:
+            (
+              i,
+            ) => setState(
+              () => _tab = i,
+            ),
       ),
     );
   }
 
-  void _push(Widget page) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+  void _push(
+    Widget page,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (
+              _,
+            ) => page,
+      ),
+    );
   }
 }
 
-class _HomeDashboard extends StatelessWidget {
+class _HomeDashboard
+    extends
+        StatelessWidget {
   final String kelasId;
   final VoidCallback onOpenKelas;
   final VoidCallback onOpenJadwal;
@@ -68,11 +118,17 @@ class _HomeDashboard extends StatelessWidget {
     required this.onOpenNilai,
   });
 
-  static const Color _primary = Color(0xFF0E2E72);
-  static const Color _primary2 = Color(0xFF1B3C9E);
+  static const Color _primary = Color(
+    0xFF0E2E72,
+  );
+  static const Color _primary2 = Color(
+    0xFF1B3C9E,
+  );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
@@ -86,16 +142,29 @@ class _HomeDashboard extends StatelessWidget {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+              16,
+              20,
+              16,
+              0,
+            ),
             child: _SectionTitle(
               title: 'Jadwal Hari Ini',
-              trailing: _PillButton(label: 'Lihat', onTap: onOpenJadwal),
+              trailing: _PillButton(
+                label: 'Lihat',
+                onTap: onOpenJadwal,
+              ),
             ),
           ),
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+              16,
+              10,
+              16,
+              0,
+            ),
             child: _ScheduleCard(
               time: '10:00 - 12:00',
               subject: 'Pemrograman Web',
@@ -107,27 +176,49 @@ class _HomeDashboard extends StatelessWidget {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-            child: _SectionTitle(title: 'Aktivitas Terbaru'),
+            padding: const EdgeInsets.fromLTRB(
+              16,
+              18,
+              16,
+              0,
+            ),
+            child: _SectionTitle(
+              title: 'Aktivitas Terbaru',
+            ),
           ),
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+              16,
+              10,
+              16,
+              0,
+            ),
             child: Column(
               children: const [
                 _ActivityTile(
                   icon: Icons.assignment_turned_in_rounded,
-                  iconBg: Color(0xFFFFE1D6),
-                  iconColor: Color(0xFFFB6B4A),
+                  iconBg: Color(
+                    0xFFFFE1D6,
+                  ),
+                  iconColor: Color(
+                    0xFFFB6B4A,
+                  ),
                   title: 'Tugas: “Essai tentang AI”',
                   subtitle: 'Dikumpulkan 2 jam yang lalu',
                 ),
-                SizedBox(height: 10),
+                SizedBox(
+                  height: 10,
+                ),
                 _ActivityTile(
                   icon: Icons.quiz_rounded,
-                  iconBg: Color(0xFFDFF6EA),
-                  iconColor: Color(0xFF2E9E67),
+                  iconBg: Color(
+                    0xFFDFF6EA,
+                  ),
+                  iconColor: Color(
+                    0xFF2E9E67,
+                  ),
                   title: 'Kuis: “Quiz Bab 3”',
                   subtitle: 'Nilai: 85 • Diposting kemarin',
                 ),
@@ -137,7 +228,12 @@ class _HomeDashboard extends StatelessWidget {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+              16,
+              18,
+              16,
+              0,
+            ),
             child: _SectionTitle(
               title: 'Kelas Saya',
               subtitle: 'Mata kuliah aktif',
@@ -146,7 +242,12 @@ class _HomeDashboard extends StatelessWidget {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+            padding: const EdgeInsets.fromLTRB(
+              16,
+              10,
+              16,
+              20,
+            ),
             child: _CourseCard(
               title: 'Pemrograman Web',
               meta1: '6 Modul',
@@ -161,7 +262,9 @@ class _HomeDashboard extends StatelessWidget {
   }
 }
 
-class _HeaderWithQuickMenu extends StatelessWidget {
+class _HeaderWithQuickMenu
+    extends
+        StatelessWidget {
   final VoidCallback onKelas;
   final VoidCallback onJadwal;
   final VoidCallback onTugas;
@@ -175,7 +278,9 @@ class _HeaderWithQuickMenu extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     // tinggi header + ruang untuk quick menu
     return SizedBox(
       height: 280,
@@ -183,7 +288,9 @@ class _HeaderWithQuickMenu extends StatelessWidget {
         clipBehavior: Clip.none, // penting: biar ga kepotong
         children: [
           // background biru (header)
-          Positioned.fill(child: _Header()),
+          Positioned.fill(
+            child: _Header(),
+          ),
 
           // ✅ "white sheet" di atas grid/menu, kiri-kanan rounded (cekung)
           Positioned(
@@ -192,18 +299,29 @@ class _HeaderWithQuickMenu extends StatelessWidget {
             bottom: 0,
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(28),
-                topRight: Radius.circular(28),
+                topLeft: Radius.circular(
+                  28,
+                ),
+                topRight: Radius.circular(
+                  28,
+                ),
               ),
               child: Container(
                 height: 120,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFF5F6FA),
+                  color: Color(
+                    0xFFF5F6FA,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0x14000000),
+                      color: Color(
+                        0x14000000,
+                      ),
                       blurRadius: 18,
-                      offset: Offset(0, -6),
+                      offset: Offset(
+                        0,
+                        -6,
+                      ),
                     ),
                   ],
                 ),
@@ -217,7 +335,9 @@ class _HeaderWithQuickMenu extends StatelessWidget {
             right: 16,
             bottom: 10,
             child: Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.only(
+                top: 8,
+              ),
               child: _QuickMenuRow(
                 onKelas: onKelas,
                 onJadwal: onJadwal,
@@ -232,19 +352,30 @@ class _HeaderWithQuickMenu extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  static const Color _primary = Color(0xFF0E2E72);
-  static const Color _primary2 = Color(0xFF1B3C9E);
+class _Header
+    extends
+        StatelessWidget {
+  static const Color _primary = Color(
+    0xFF0E2E72,
+  );
+  static const Color _primary2 = Color(
+    0xFF1B3C9E,
+  );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
       height: 210,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [_primary2, _primary],
+          colors: [
+            _primary2,
+            _primary,
+          ],
         ),
       ),
       child: Stack(
@@ -257,7 +388,9 @@ class _Header extends StatelessWidget {
               width: 260,
               height: 260,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withOpacity(
+                  0.08,
+                ),
                 shape: BoxShape.circle,
               ),
             ),
@@ -269,14 +402,21 @@ class _Header extends StatelessWidget {
               width: 280,
               height: 280,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withOpacity(
+                  0.08,
+                ),
                 shape: BoxShape.circle,
               ),
             ),
           ),
 
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 56, 18, 16),
+            padding: const EdgeInsets.fromLTRB(
+              18,
+              56,
+              18,
+              16,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -292,7 +432,9 @@ class _Header extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      SizedBox(height: 6),
+                      SizedBox(
+                        height: 6,
+                      ),
                       Text(
                         'Selamat datang di LMS',
                         style: TextStyle(
@@ -314,27 +456,44 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
+class _Avatar
+    extends
+        StatelessWidget {
   const _Avatar();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
       width: 64, // ⬅️ lebih besar
       height: 64,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(0.15),
-        border: Border.all(color: Colors.white.withOpacity(0.8), width: 2.5),
+        color: Colors.white.withOpacity(
+          0.15,
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(
+            0.8,
+          ),
+          width: 2.5,
+        ),
       ),
       child: const Center(
-        child: Icon(Icons.person_rounded, size: 36, color: Colors.white),
+        child: Icon(
+          Icons.person_rounded,
+          size: 36,
+          color: Colors.white,
+        ),
       ),
     );
   }
 }
 
-class _QuickMenuRow extends StatelessWidget {
+class _QuickMenuRow
+    extends
+        StatelessWidget {
   final VoidCallback onKelas;
   final VoidCallback onJadwal;
   final VoidCallback onTugas;
@@ -348,41 +507,57 @@ class _QuickMenuRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Row(
       children: [
         Expanded(
           child: _QuickMenuCard(
             title: 'Kelas Saya',
             icon: Icons.menu_book_rounded,
-            color: const Color(0xFFFB6B4A),
+            color: const Color(
+              0xFFFB6B4A,
+            ),
             onTap: onKelas,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(
+          width: 12,
+        ),
         Expanded(
           child: _QuickMenuCard(
             title: 'Jadwal',
             icon: Icons.event_available_rounded,
-            color: const Color(0xFF2D7FF9),
+            color: const Color(
+              0xFF2D7FF9,
+            ),
             onTap: onJadwal,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(
+          width: 12,
+        ),
         Expanded(
           child: _QuickMenuCard(
             title: 'Tugas',
             icon: Icons.assignment_rounded,
-            color: const Color(0xFFFF9F2E),
+            color: const Color(
+              0xFFFF9F2E,
+            ),
             onTap: onTugas,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(
+          width: 12,
+        ),
         Expanded(
           child: _QuickMenuCard(
             title: 'Nilai',
             icon: Icons.school_rounded,
-            color: const Color(0xFF2E9E67),
+            color: const Color(
+              0xFF2E9E67,
+            ),
             onTap: onNilai,
           ),
         ),
@@ -391,7 +566,9 @@ class _QuickMenuRow extends StatelessWidget {
   }
 }
 
-class _QuickMenuCard extends StatelessWidget {
+class _QuickMenuCard
+    extends
+        StatelessWidget {
   final String title;
   final IconData icon;
   final Color color;
@@ -405,30 +582,47 @@ class _QuickMenuCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(
+          16,
+        ),
         onTap: onTap,
         child: Ink(
           height: 92,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(
+              16,
+            ),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.25),
+                color: color.withOpacity(
+                  0.25,
+                ),
                 blurRadius: 14,
-                offset: const Offset(0, 8),
+                offset: const Offset(
+                  0,
+                  8,
+                ),
               ),
             ],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: 30),
-              const SizedBox(height: 8),
+              Icon(
+                icon,
+                color: Colors.white,
+                size: 30,
+              ),
+              const SizedBox(
+                height: 8,
+              ),
               Text(
                 title,
                 textAlign: TextAlign.center,
@@ -446,15 +640,23 @@ class _QuickMenuCard extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
+class _SectionTitle
+    extends
+        StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
 
-  const _SectionTitle({required this.title, this.subtitle, this.trailing});
+  const _SectionTitle({
+    required this.title,
+    this.subtitle,
+    this.trailing,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -466,45 +668,70 @@ class _SectionTitle extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A2552),
+                  color: Color(
+                    0xFF1A2552,
+                  ),
                 ),
               ),
-              if (subtitle != null) ...[
-                const SizedBox(height: 2),
+              if (subtitle !=
+                  null) ...[
+                const SizedBox(
+                  height: 2,
+                ),
                 Text(
                   subtitle!,
                   style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF6F7AA6),
+                    color: Color(
+                      0xFF6F7AA6,
+                    ),
                   ),
                 ),
               ],
             ],
           ),
         ),
-        if (trailing != null) trailing!,
+        if (trailing !=
+            null)
+          trailing!,
       ],
     );
   }
 }
 
-class _PillButton extends StatelessWidget {
+class _PillButton
+    extends
+        StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _PillButton({required this.label, required this.onTap});
+  const _PillButton({
+    required this.label,
+    required this.onTap,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(
+        999,
+      ),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 7,
+        ),
         decoration: BoxDecoration(
-          color: const Color(0xFFEAF0FF),
-          borderRadius: BorderRadius.circular(999),
+          color: const Color(
+            0xFFEAF0FF,
+          ),
+          borderRadius: BorderRadius.circular(
+            999,
+          ),
         ),
         child: Row(
           children: [
@@ -512,14 +739,20 @@ class _PillButton extends StatelessWidget {
               label,
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF1B3C9E),
+                color: Color(
+                  0xFF1B3C9E,
+                ),
                 fontSize: 12.5,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(
+              width: 6,
+            ),
             const Icon(
               Icons.chevron_right_rounded,
-              color: Color(0xFF1B3C9E),
+              color: Color(
+                0xFF1B3C9E,
+              ),
               size: 18,
             ),
           ],
@@ -529,7 +762,9 @@ class _PillButton extends StatelessWidget {
   }
 }
 
-class _ScheduleCard extends StatelessWidget {
+class _ScheduleCard
+    extends
+        StatelessWidget {
   final String time;
   final String subject;
   final String room;
@@ -545,21 +780,35 @@ class _ScheduleCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(
+        16,
+      ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(
+          18,
+        ),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [gradientA, gradientB],
+          colors: [
+            gradientA,
+            gradientB,
+          ],
         ),
         boxShadow: [
           BoxShadow(
-            color: gradientA.withOpacity(0.25),
+            color: gradientA.withOpacity(
+              0.25,
+            ),
             blurRadius: 16,
-            offset: const Offset(0, 10),
+            offset: const Offset(
+              0,
+              10,
+            ),
           ),
         ],
       ),
@@ -574,7 +823,9 @@ class _ScheduleCard extends StatelessWidget {
               fontSize: 14,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(
+            height: 10,
+          ),
           Text(
             subject,
             style: const TextStyle(
@@ -583,7 +834,9 @@ class _ScheduleCard extends StatelessWidget {
               fontSize: 18,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(
+            height: 6,
+          ),
           Text(
             room,
             style: const TextStyle(
@@ -598,7 +851,9 @@ class _ScheduleCard extends StatelessWidget {
   }
 }
 
-class _ActivityTile extends StatelessWidget {
+class _ActivityTile
+    extends
+        StatelessWidget {
   final IconData icon;
   final Color iconBg;
   final Color iconColor;
@@ -614,17 +869,28 @@ class _ActivityTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(
+        14,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(
+          16,
+        ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x11000000),
+            color: Color(
+              0x11000000,
+            ),
             blurRadius: 18,
-            offset: Offset(0, 10),
+            offset: Offset(
+              0,
+              10,
+            ),
           ),
         ],
       ),
@@ -635,11 +901,19 @@ class _ActivityTile extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: iconBg,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(
+                14,
+              ),
             ),
-            child: Icon(icon, color: iconColor, size: 24),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: 24,
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(
+            width: 12,
+          ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,29 +922,42 @@ class _ActivityTile extends StatelessWidget {
                   title,
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF1A2552),
+                    color: Color(
+                      0xFF1A2552,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(
+                  height: 4,
+                ),
                 Text(
                   subtitle,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF6F7AA6),
+                    color: Color(
+                      0xFF6F7AA6,
+                    ),
                     fontSize: 12.5,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: Color(0xFF9AA6D1)),
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: Color(
+              0xFF9AA6D1,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _CourseCard extends StatelessWidget {
+class _CourseCard
+    extends
+        StatelessWidget {
   final String title;
   final String meta1;
   final String meta2;
@@ -686,86 +973,218 @@ class _CourseCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
+    final pct =
+        (progress.clamp(
+                  0,
+                  1,
+                ) *
+                100)
+            .round();
+
     return InkWell(
       onTap: onOpen,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x11000000),
-              blurRadius: 18,
-              offset: Offset(0, 10),
-            ),
-          ],
+      borderRadius: BorderRadius.circular(
+        18,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(
+          18,
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                      color: Color(0xFF1A2552),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    meta1,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF6F7AA6),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    meta2,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF6F7AA6),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _ProgressBar(value: progress),
-                ],
+        child: Container(
+          height: 132,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: const [
+              BoxShadow(
+                color: Color(
+                  0x11000000,
+                ),
+                blurRadius: 18,
+                offset: Offset(
+                  0,
+                  10,
+                ),
+              ),
+            ],
+            border: Border.all(
+              color: Color(
+                0x0D000000,
               ),
             ),
-            const SizedBox(width: 12),
-            Container(
-              width: 92,
-              height: 78,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF2F4FF),
-                borderRadius: BorderRadius.circular(14),
+          ),
+          child: Stack(
+            children: [
+              // ✅ background soft shape (biar kaya contoh)
+              Positioned(
+                right: -40,
+                top: -30,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color:
+                        const Color(
+                          0xFF1B3C9E,
+                        ).withOpacity(
+                          0.08,
+                        ),
+                    shape: BoxShape.circle,
+                  ),
+                ),
               ),
-              child: const Icon(
-                Icons.laptop_mac_rounded,
-                size: 34,
-                color: Color(0xFF1B3C9E),
+              Positioned(
+                right: -10,
+                bottom: -35,
+                child: Container(
+                  width: 190,
+                  height: 190,
+                  decoration: BoxDecoration(
+                    color:
+                        const Color(
+                          0xFF1B3C9E,
+                        ).withOpacity(
+                          0.06,
+                        ),
+                    shape: BoxShape.circle,
+                  ),
+                ),
               ),
-            ),
-          ],
+
+              // ✅ gambar ilustrasi di kanan (sesuaikan file asset kamu)
+              Positioned(
+                right: 10,
+                bottom: 0,
+                top: 0,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Image.asset(
+                    'assets/images/course.png',
+                    width: 200,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+
+              // ✅ konten kiri
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  14,
+                  14,
+                  140,
+                  14,
+                ), // kanan dibuat lega buat gambar
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15.5,
+                        color: Color(
+                          0xFF1A2552,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 6,
+                    ),
+                    Text(
+                      meta1,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                        color: Color(
+                          0xFF6F7AA6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 3,
+                    ),
+                    Text(
+                      meta2,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                        color: Color(
+                          0xFF6F7AA6,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+
+                    // ✅ progress bar seperti contoh
+                    Text(
+                      'Progress: $pct%',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12.5,
+                        color: Color(
+                          0xFF1B3C9E,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        999,
+                      ),
+                      child: LinearProgressIndicator(
+                        value: progress.clamp(
+                          0,
+                          1,
+                        ),
+                        minHeight: 8,
+                        backgroundColor: const Color(
+                          0xFFE9EDFF,
+                        ),
+                        valueColor: const AlwaysStoppedAnimation(
+                          Color(
+                            0xFF1B3C9E,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _ProgressBar extends StatelessWidget {
+class _ProgressBar
+    extends
+        StatelessWidget {
   final double value; // 0..1
-  const _ProgressBar({required this.value});
+  const _ProgressBar({
+    required this.value,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    final pct = (value.clamp(0, 1) * 100).round();
+  Widget build(
+    BuildContext context,
+  ) {
+    final pct =
+        (value.clamp(
+                  0,
+                  1,
+                ) *
+                100)
+            .round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -773,17 +1192,32 @@ class _ProgressBar extends StatelessWidget {
           'Progress: $pct%',
           style: const TextStyle(
             fontWeight: FontWeight.w900,
-            color: Color(0xFF1B3C9E),
+            color: Color(
+              0xFF1B3C9E,
+            ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(
+          height: 8,
+        ),
         ClipRRect(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(
+            999,
+          ),
           child: LinearProgressIndicator(
-            value: value.clamp(0, 1),
+            value: value.clamp(
+              0,
+              1,
+            ),
             minHeight: 10,
-            backgroundColor: const Color(0xFFE9EDFF),
-            valueColor: const AlwaysStoppedAnimation(Color(0xFF1B3C9E)),
+            backgroundColor: const Color(
+              0xFFE9EDFF,
+            ),
+            valueColor: const AlwaysStoppedAnimation(
+              Color(
+                0xFF1B3C9E,
+              ),
+            ),
           ),
         ),
       ],
@@ -791,34 +1225,60 @@ class _ProgressBar extends StatelessWidget {
   }
 }
 
-class _BottomNav extends StatelessWidget {
+class _BottomNav
+    extends
+        StatelessWidget {
   final int index;
-  final ValueChanged<int> onChanged;
+  final ValueChanged<
+    int
+  >
+  onChanged;
 
-  const _BottomNav({required this.index, required this.onChanged});
+  const _BottomNav({
+    required this.index,
+    required this.onChanged,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+        padding: const EdgeInsets.fromLTRB(
+          14,
+          0,
+          14,
+          14,
+        ),
         child: Container(
           height: 68,
           decoration: BoxDecoration(
             // 🔵 WARNA BIRU SESUAI HEADER
-            color: const Color(0xFF1B3C9E),
-            borderRadius: BorderRadius.circular(26),
+            color: const Color(
+              0xFF1B3C9E,
+            ),
+            borderRadius: BorderRadius.circular(
+              26,
+            ),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x22000000),
+                color: Color(
+                  0x22000000,
+                ),
                 blurRadius: 24,
-                offset: Offset(0, 12),
+                offset: Offset(
+                  0,
+                  12,
+                ),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(
+              26,
+            ),
             child: BottomNavigationBar(
               currentIndex: index,
               onTap: onChanged,
@@ -843,23 +1303,33 @@ class _BottomNav extends StatelessWidget {
 
               items: const [
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.home_rounded),
+                  icon: Icon(
+                    Icons.home_rounded,
+                  ),
                   label: 'Beranda',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.menu_book_rounded),
+                  icon: Icon(
+                    Icons.menu_book_rounded,
+                  ),
                   label: 'Materi',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.calendar_month_rounded),
+                  icon: Icon(
+                    Icons.calendar_month_rounded,
+                  ),
                   label: 'Jadwal',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.chat_bubble_rounded),
+                  icon: Icon(
+                    Icons.chat_bubble_rounded,
+                  ),
                   label: 'Chat',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.person_rounded),
+                  icon: Icon(
+                    Icons.person_rounded,
+                  ),
                   label: 'Akun',
                 ),
               ],
@@ -871,15 +1341,29 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
-class _PlaceholderPage extends StatelessWidget {
+class _PlaceholderPage
+    extends
+        StatelessWidget {
   final String title;
-  const _PlaceholderPage({required this.title});
+  const _PlaceholderPage({
+    required this.title,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: const Center(child: Text('Halaman belum dibuat')),
+      appBar: AppBar(
+        title: Text(
+          title,
+        ),
+      ),
+      body: const Center(
+        child: Text(
+          'Halaman belum dibuat',
+        ),
+      ),
     );
   }
 }
