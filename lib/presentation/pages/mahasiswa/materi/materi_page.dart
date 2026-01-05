@@ -1,10 +1,12 @@
+// lib/presentation/pages/mahasiswa/materi/materi_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../domain/entities/materi.dart';
 import '../../../viewmodels/mahasiswa/materi_viewmodel.dart';
 
-// ===== THEME (samakan dengan halaman lain) =====
+// ===================== THEME (elegan + kampus/LMS) =====================
 const Color
 kBg = Color(
   0xFFF5F6FA,
@@ -22,14 +24,144 @@ kPrimary = Color(
   0xFF1B3C9E,
 );
 
+const double
+s8 = 8;
+const double
+s12 = 12;
+const double
+s16 = 16;
+const double
+s24 = 24;
+
+enum MateriFilter {
+  semua,
+  denganFile,
+  tanpaFile,
+}
+
 class MateriPage
     extends
-        StatelessWidget {
+        StatefulWidget {
   final String kelasId;
   const MateriPage({
     super.key,
     required this.kelasId,
   });
+
+  @override
+  State<
+    MateriPage
+  >
+  createState() => _MateriPageState();
+}
+
+class _MateriPageState
+    extends
+        State<
+          MateriPage
+        > {
+  final TextEditingController _search = TextEditingController();
+  MateriFilter _filter = MateriFilter.semua;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  bool
+  _hasFile(
+    Materi m,
+  ) =>
+      (m.fileUrl?.trim().isNotEmpty ??
+      false);
+
+  // Badge type (heuristik aman: berdasarkan judul/deskripsi/url)
+  String _guessType(
+    Materi m,
+  ) {
+    final t = '${m.judul} ${m.deskripsi} ${m.fileUrl ?? ''}'.toLowerCase();
+    if (t.contains(
+          '.pdf',
+        ) ||
+        t.contains(
+          'pdf',
+        ))
+      return 'PDF';
+    if (t.contains(
+          '.mp4',
+        ) ||
+        t.contains(
+          'video',
+        ) ||
+        t.contains(
+          'youtube',
+        )) {
+      return 'VIDEO';
+    }
+    if (t.contains(
+          '.doc',
+        ) ||
+        t.contains(
+          '.docx',
+        ) ||
+        t.contains(
+          'doc',
+        )) {
+      return 'DOC';
+    }
+    return 'MATERI';
+  }
+
+  List<
+    Materi
+  >
+  _applyUiFilter(
+    List<
+      Materi
+    >
+    list,
+  ) {
+    final q = _search.text.trim().toLowerCase();
+
+    Iterable<
+      Materi
+    >
+    out = list;
+
+    // filter chips
+    if (_filter ==
+        MateriFilter.denganFile) {
+      out = out.where(
+        _hasFile,
+      );
+    } else if (_filter ==
+        MateriFilter.tanpaFile) {
+      out = out.where(
+        (
+          m,
+        ) => !_hasFile(
+          m,
+        ),
+      );
+    }
+
+    // search dummy UI (tanpa ubah stream / logic utama)
+    if (q.isNotEmpty) {
+      out = out.where(
+        (
+          m,
+        ) {
+          final s = '${m.judul} ${m.deskripsi}'.toLowerCase();
+          return s.contains(
+            q,
+          );
+        },
+      );
+    }
+
+    return out.toList();
+  }
 
   @override
   Widget build(
@@ -43,15 +175,17 @@ class MateriPage
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
-        title: const Text(
-          'Materi',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+        elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: kTextDark,
-        elevation: 0,
+        centerTitle: false,
+        title: Text(
+          'Materi',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.2,
+          ),
+        ),
       ),
       body:
           StreamBuilder<
@@ -60,81 +194,158 @@ class MateriPage
             >
           >(
             stream: vm.getMateriByKelas(
-              kelasId,
+              widget.kelasId,
             ),
             builder:
                 (
                   context,
                   snapshot,
                 ) {
+                  // ============ LOADING ============
                   if (snapshot.connectionState ==
                       ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                    return const _MateriLoading();
                   }
 
+                  // ============ ERROR ============
                   if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        'Error: ${snapshot.error}',
+                    return _MateriError(
+                      message: '${snapshot.error}',
+                      onRetry: () => setState(
+                        () {},
                       ),
                     );
                   }
 
-                  final list =
+                  final rawList =
                       snapshot.data ??
                       const <
                         Materi
                       >[];
+                  final uiList = _applyUiFilter(
+                    rawList,
+                  );
 
-                  // ===== EMPTY STATE =====
-                  if (list.isEmpty) {
-                    return const _EmptyMateri();
-                  }
-
-                  // ===== LIST MATERI =====
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(
-                      16,
-                      16,
-                      16,
-                      20,
-                    ),
-                    itemCount: list.length,
-                    separatorBuilder:
-                        (
-                          _,
-                          __,
-                        ) => const SizedBox(
-                          height: 12,
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      // Refresh UI (stream akan update sendiri jika sumber berubah)
+                      setState(
+                        () {},
+                      );
+                    },
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        s16,
+                        s16,
+                        s16,
+                        24,
+                      ),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        // ===================== HEADER =====================
+                        MateriHeader(
+                          total: rawList.length,
                         ),
-                    itemBuilder:
-                        (
-                          context,
-                          index,
-                        ) {
-                          final m = list[index];
+                        const SizedBox(
+                          height: s16,
+                        ),
 
-                          final judul = m.judul.isEmpty
-                              ? '-'
-                              : m.judul;
-                          final deskripsi = m.deskripsi.isEmpty
-                              ? 'Tidak ada deskripsi'
-                              : m.deskripsi;
-                          final hasFile =
-                              (m.fileUrl?.trim().isNotEmpty ??
-                              false);
+                        // ===================== SEARCH BAR =====================
+                        MateriSearchBar(
+                          controller: _search,
+                          onChanged:
+                              (
+                                _,
+                              ) => setState(
+                                () {},
+                              ),
+                          onClear: () {
+                            _search.clear();
+                            setState(
+                              () {},
+                            );
+                          },
+                        ),
+                        const SizedBox(
+                          height: s12,
+                        ),
 
-                          return _MateriCard(
-                            judul: judul,
-                            deskripsi: deskripsi,
-                            hasFile: hasFile,
-                            onTap: () {
-                              // TODO: buka detail / preview / download
+                        // ===================== FILTER CHIPS =====================
+                        _FilterChips(
+                          value: _filter,
+                          onChanged:
+                              (
+                                v,
+                              ) => setState(
+                                () => _filter = v,
+                              ),
+                        ),
+                        const SizedBox(
+                          height: s16,
+                        ),
+
+                        // ===================== EMPTY STATE (premium) =====================
+                        if (rawList.isEmpty)
+                          MateriEmptyState(
+                            onRefresh: () => setState(
+                              () {},
+                            ),
+                          )
+                        else if (uiList.isEmpty)
+                          _NoResultState(
+                            onReset: () {
+                              _search.clear();
+                              setState(
+                                () => _filter = MateriFilter.semua,
+                              );
                             },
-                          );
-                        },
+                          )
+                        else
+                          // ===================== LIST =====================
+                          ...List.generate(
+                            uiList.length,
+                            (
+                              index,
+                            ) {
+                              final m = uiList[index];
+                              final judul = (m.judul.isEmpty)
+                                  ? '-'
+                                  : m.judul;
+                              final deskripsi = (m.deskripsi.isEmpty)
+                                  ? 'Tidak ada deskripsi'
+                                  : m.deskripsi;
+
+                              final hasFile = _hasFile(
+                                m,
+                              );
+                              final type = _guessType(
+                                m,
+                              );
+
+                              return Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: s12,
+                                ),
+                                child: MateriCardModern(
+                                  index: index,
+                                  title: judul,
+                                  subtitle: deskripsi,
+                                  hasFile: hasFile,
+                                  typeLabel: type,
+                                  onTap: () {
+                                    // TODO: buka detail / preview / download
+                                  },
+                                  onPrimaryAction: hasFile
+                                      ? () {
+                                          // TODO: download / lihat file
+                                        }
+                                      : null,
+                                ),
+                              );
+                            },
+                          ),
+                      ],
+                    ),
                   );
                 },
           ),
@@ -142,130 +353,605 @@ class MateriPage
   }
 }
 
-/// =========================
-/// CARD MATERI (1 BARIS)
-/// =========================
-class _MateriCard
+// ======================================================================
+// HEADER
+// ======================================================================
+class MateriHeader
     extends
         StatelessWidget {
-  final String judul;
-  final String deskripsi;
-  final bool hasFile;
-  final VoidCallback onTap;
-
-  const _MateriCard({
-    required this.judul,
-    required this.deskripsi,
-    required this.hasFile,
-    required this.onTap,
+  final int total;
+  const MateriHeader({
+    super.key,
+    required this.total,
   });
 
   @override
   Widget build(
     BuildContext context,
   ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
+    return Container(
+      padding: const EdgeInsets.all(
+        s16,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(
+          20,
+        ),
+        gradient: LinearGradient(
+          colors: [
+            kPrimary.withOpacity(
+              0.10,
+            ),
+            Colors.white,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: kPrimary.withOpacity(
+            0.08,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(
+              0.05,
+            ),
+            blurRadius: 18,
+            offset: const Offset(
+              0,
+              10,
+            ),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Icon premium (simple)
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: kPrimary.withOpacity(
+                0.12,
+              ),
+              borderRadius: BorderRadius.circular(
+                16,
+              ),
+            ),
+            child: const Icon(
+              Icons.menu_book_rounded,
+              color: kPrimary,
+            ),
+          ),
+          const SizedBox(
+            width: s12,
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Materi Pembelajaran',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: kTextDark,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(
+                  height: 4,
+                ),
+                Text(
+                  '$total materi tersedia',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: kMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.auto_awesome_rounded,
+            color: kPrimary,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ======================================================================
+// SEARCH BAR (UI only)
+// ======================================================================
+class MateriSearchBar
+    extends
+        StatefulWidget {
+  final TextEditingController controller;
+  final ValueChanged<
+    String
+  >
+  onChanged;
+  final VoidCallback onClear;
+
+  const MateriSearchBar({
+    super.key,
+    required this.controller,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  @override
+  State<
+    MateriSearchBar
+  >
+  createState() => _MateriSearchBarState();
+}
+
+class _MateriSearchBarState
+    extends
+        State<
+          MateriSearchBar
+        > {
+  bool _focus = false;
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return AnimatedContainer(
+      duration: const Duration(
+        milliseconds: 180,
+      ),
+      curve: Curves.easeOut,
+      padding: const EdgeInsets.symmetric(
+        horizontal: s12,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(
           18,
         ),
-        child: Container(
-          padding: const EdgeInsets.all(
-            14,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(
-              18,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(
-                  0x11000000,
-                ),
-                blurRadius: 18,
-                offset: Offset(
-                  0,
-                  10,
-                ),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // ICON KIRI
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(
-                    0.12,
-                  ),
-                  borderRadius: BorderRadius.circular(
-                    14,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.menu_book_rounded,
-                  color: kPrimary,
-                  size: 26,
-                ),
-              ),
-
-              const SizedBox(
-                width: 14,
-              ),
-
-              // TEXT
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      judul,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 15.5,
-                        color: kTextDark,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 4,
-                    ),
-                    Text(
-                      deskripsi,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12.5,
-                        color: kMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(
-                width: 12,
-              ),
-
-              // ICON KANAN
-              if (hasFile)
-                const Icon(
-                  Icons.download_rounded,
-                  color: kPrimary,
+        border: Border.all(
+          color: _focus
+              ? kPrimary.withOpacity(
+                  0.35,
                 )
-              else
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: kMuted,
+              : Colors.black12,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(
+              _focus
+                  ? 0.07
+                  : 0.04,
+            ),
+            blurRadius: 18,
+            offset: const Offset(
+              0,
+              10,
+            ),
+          ),
+        ],
+      ),
+      child: Focus(
+        onFocusChange:
+            (
+              v,
+            ) => setState(
+              () => _focus = v,
+            ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.search_rounded,
+              color: _focus
+                  ? kPrimary
+                  : kMuted,
+            ),
+            const SizedBox(
+              width: s8,
+            ),
+            Expanded(
+              child: TextField(
+                controller: widget.controller,
+                onChanged: widget.onChanged,
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w600,
+                  color: kTextDark,
                 ),
-            ],
+                decoration: InputDecoration(
+                  hintText: 'Cari materi...',
+                  hintStyle: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w600,
+                    color: kMuted.withOpacity(
+                      0.9,
+                    ),
+                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+              ),
+            ),
+            AnimatedOpacity(
+              opacity: widget.controller.text.trim().isEmpty
+                  ? 0.0
+                  : 1.0,
+              duration: const Duration(
+                milliseconds: 160,
+              ),
+              child: IconButton(
+                tooltip: 'Hapus',
+                onPressed: widget.controller.text.trim().isEmpty
+                    ? null
+                    : widget.onClear,
+                icon: const Icon(
+                  Icons.close_rounded,
+                ),
+                color: kMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ======================================================================
+// FILTER CHIPS
+// ======================================================================
+class _FilterChips
+    extends
+        StatelessWidget {
+  final MateriFilter value;
+  final ValueChanged<
+    MateriFilter
+  >
+  onChanged;
+
+  const _FilterChips({
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Wrap(
+      spacing: s8,
+      runSpacing: s8,
+      children: [
+        _chip(
+          label: 'Semua',
+          selected:
+              value ==
+              MateriFilter.semua,
+          onTap: () => onChanged(
+            MateriFilter.semua,
+          ),
+          icon: Icons.apps_rounded,
+        ),
+        _chip(
+          label: 'Dengan File',
+          selected:
+              value ==
+              MateriFilter.denganFile,
+          onTap: () => onChanged(
+            MateriFilter.denganFile,
+          ),
+          icon: Icons.attach_file_rounded,
+        ),
+        _chip(
+          label: 'Tanpa File',
+          selected:
+              value ==
+              MateriFilter.tanpaFile,
+          onTap: () => onChanged(
+            MateriFilter.tanpaFile,
+          ),
+          icon: Icons.text_snippet_rounded,
+        ),
+      ],
+    );
+  }
+
+  Widget _chip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+    required IconData icon,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(
+        999,
+      ),
+      child: AnimatedContainer(
+        duration: const Duration(
+          milliseconds: 160,
+        ),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? kPrimary.withOpacity(
+                  0.12,
+                )
+              : Colors.white,
+          borderRadius: BorderRadius.circular(
+            999,
+          ),
+          border: Border.all(
+            color: selected
+                ? kPrimary.withOpacity(
+                    0.35,
+                  )
+                : Colors.black12,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(
+                selected
+                    ? 0.06
+                    : 0.03,
+              ),
+              blurRadius: 14,
+              offset: const Offset(
+                0,
+                8,
+              ),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: selected
+                  ? kPrimary
+                  : kMuted,
+            ),
+            const SizedBox(
+              width: 8,
+            ),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: selected
+                    ? kPrimary
+                    : kTextDark,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ======================================================================
+// CARD MODERN (premium)
+// ======================================================================
+class MateriCardModern
+    extends
+        StatefulWidget {
+  final int index;
+  final String title;
+  final String subtitle;
+  final bool hasFile;
+  final String typeLabel;
+  final VoidCallback onTap;
+  final VoidCallback? onPrimaryAction;
+
+  const MateriCardModern({
+    super.key,
+    required this.index,
+    required this.title,
+    required this.subtitle,
+    required this.hasFile,
+    required this.typeLabel,
+    required this.onTap,
+    this.onPrimaryAction,
+  });
+
+  @override
+  State<
+    MateriCardModern
+  >
+  createState() => _MateriCardModernState();
+}
+
+class _MateriCardModernState
+    extends
+        State<
+          MateriCardModern
+        > {
+  bool _pressed = false;
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    final radius = BorderRadius.circular(
+      20,
+    );
+
+    // animasi ringan: saat ditekan, card sedikit "mengecil"
+    return AnimatedScale(
+      scale: _pressed
+          ? 0.985
+          : 1.0,
+      duration: const Duration(
+        milliseconds: 120,
+      ),
+      curve: Curves.easeOut,
+      child: Material(
+        color: Colors.white,
+        borderRadius: radius,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: widget.onTap,
+          onHighlightChanged:
+              (
+                v,
+              ) => setState(
+                () => _pressed = v,
+              ),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(
+                    0.05,
+                  ),
+                  blurRadius: 18,
+                  offset: const Offset(
+                    0,
+                    10,
+                  ),
+                ),
+              ],
+              border: Border.all(
+                color: Colors.black.withOpacity(
+                  0.06,
+                ),
+              ),
+              gradient: LinearGradient(
+                colors: [
+                  kPrimary.withOpacity(
+                    0.06,
+                  ),
+                  Colors.white,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(
+                s16,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Leading icon
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: kPrimary.withOpacity(
+                        0.12,
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        16,
+                      ),
+                    ),
+                    child: Icon(
+                      widget.hasFile
+                          ? Icons.picture_as_pdf_rounded
+                          : Icons.menu_book_rounded,
+                      color: kPrimary,
+                    ),
+                  ),
+                  const SizedBox(
+                    width: s12,
+                  ),
+
+                  // Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // title + type badge
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15.5,
+                                  color: kTextDark,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            _TypeBadge(
+                              label: widget.typeLabel,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 6,
+                        ),
+                        Text(
+                          widget.subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12.8,
+                            color: kMuted,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: s12,
+                        ),
+
+                        // footer: status + CTA
+                        Row(
+                          children: [
+                            if (!widget.hasFile)
+                              const _MiniBadge(
+                                label: 'Text Only',
+                                icon: Icons.text_snippet_rounded,
+                              )
+                            else
+                              const _MiniBadge(
+                                label: 'Ada File',
+                                icon: Icons.attach_file_rounded,
+                              ),
+                            const Spacer(),
+                            if (widget.hasFile)
+                              _PrimaryButton(
+                                label: 'Lihat',
+                                onPressed: widget.onPrimaryAction,
+                              )
+                            else
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: kMuted.withOpacity(
+                                  0.9,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -273,47 +959,624 @@ class _MateriCard
   }
 }
 
-/// =========================
-/// EMPTY STATE
-/// =========================
-class _EmptyMateri
+class _TypeBadge
     extends
         StatelessWidget {
-  const _EmptyMateri();
+  final String label;
+  const _TypeBadge({
+    required this.label,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    final isVideo =
+        label.toUpperCase() ==
+        'VIDEO';
+    final isPdf =
+        label.toUpperCase() ==
+        'PDF';
+    final isDoc =
+        label.toUpperCase() ==
+        'DOC';
+
+    Color c = kPrimary;
+    if (isVideo)
+      c = const Color(
+        0xFF7C3AED,
+      ); // ungu elegan
+    if (isPdf)
+      c = const Color(
+        0xFF0EA5E9,
+      ); // biru muda
+    if (isDoc)
+      c = const Color(
+        0xFF22C55E,
+      ); // hijau
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: c.withOpacity(
+          0.10,
+        ),
+        borderRadius: BorderRadius.circular(
+          999,
+        ),
+        border: Border.all(
+          color: c.withOpacity(
+            0.20,
+          ),
+        ),
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: GoogleFonts.plusJakartaSans(
+          fontWeight: FontWeight.w800,
+          fontSize: 10.8,
+          letterSpacing: 0.4,
+          color: c,
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniBadge
+    extends
+        StatelessWidget {
+  final String label;
+  final IconData icon;
+  const _MiniBadge({
+    required this.label,
+    required this.icon,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(
+          999,
+        ),
+        border: Border.all(
+          color: Colors.black12,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: kMuted,
+          ),
+          const SizedBox(
+            width: 6,
+          ),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              color: kTextDark,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrimaryButton
+    extends
+        StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+
+  const _PrimaryButton({
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(
+        14,
+      ),
+      child: Ink(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: kPrimary,
+          borderRadius: BorderRadius.circular(
+            14,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: kPrimary.withOpacity(
+                0.25,
+              ),
+              blurRadius: 14,
+              offset: const Offset(
+                0,
+                10,
+              ),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.visibility_rounded,
+              size: 18,
+              color: Colors.white,
+            ),
+            const SizedBox(
+              width: 8,
+            ),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w800,
+                fontSize: 12.5,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ======================================================================
+// EMPTY STATE PREMIUM
+// ======================================================================
+class MateriEmptyState
+    extends
+        StatelessWidget {
+  final VoidCallback onRefresh;
+  const MateriEmptyState({
+    super.key,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(
+        s24,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(
+          22,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(
+              0.05,
+            ),
+            blurRadius: 18,
+            offset: const Offset(
+              0,
+              10,
+            ),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.black.withOpacity(
+            0.06,
+          ),
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 92,
+            height: 92,
+            decoration: BoxDecoration(
+              color: kPrimary.withOpacity(
+                0.10,
+              ),
+              borderRadius: BorderRadius.circular(
+                28,
+              ),
+            ),
+            child: const Icon(
+              Icons.menu_book_outlined,
+              size: 48,
+              color: kPrimary,
+            ),
+          ),
+          const SizedBox(
+            height: s16,
+          ),
+          Text(
+            'Belum ada materi',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w900,
+              fontSize: 18,
+              color: kTextDark,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(
+            height: 6,
+          ),
+          Text(
+            'Materi akan muncul setelah dosen mengunggah.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: kMuted,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(
+            height: s16,
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onRefresh,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    16,
+                  ),
+                ),
+              ),
+              icon: const Icon(
+                Icons.refresh_rounded,
+              ),
+              label: Text(
+                'Refresh',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ======================================================================
+// LOADING + ERROR + NO RESULT
+// ======================================================================
+class _MateriLoading
+    extends
+        StatelessWidget {
+  const _MateriLoading();
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    // skeleton simpel + premium feel
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        s16,
+        s16,
+        s16,
+        24,
+      ),
+      children: [
+        Container(
+          height: 86,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(
+              20,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(
+                  0.04,
+                ),
+                blurRadius: 18,
+                offset: const Offset(
+                  0,
+                  10,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(
+          height: s16,
+        ),
+        Container(
+          height: 54,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(
+              18,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(
+                  0.04,
+                ),
+                blurRadius: 18,
+                offset: const Offset(
+                  0,
+                  10,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(
+          height: s16,
+        ),
+        ...List.generate(
+          4,
+          (
+            _,
+          ) => Padding(
+            padding: const EdgeInsets.only(
+              bottom: s12,
+            ),
+            child: Container(
+              height: 104,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(
+                  20,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(
+                      0.04,
+                    ),
+                    blurRadius: 18,
+                    offset: const Offset(
+                      0,
+                      10,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(
+          height: s8,
+        ),
+        const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ],
+    );
+  }
+}
+
+class _MateriError
+    extends
+        StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  const _MateriError({
+    required this.message,
+    required this.onRetry,
+  });
 
   @override
   Widget build(
     BuildContext context,
   ) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(
-            Icons.menu_book_outlined,
-            size: 64,
-            color: kMuted,
+      child: Padding(
+        padding: const EdgeInsets.all(
+          s24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: kMuted,
+            ),
+            const SizedBox(
+              height: 12,
+            ),
+            Text(
+              'Terjadi kesalahan',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
+                color: kTextDark,
+              ),
+            ),
+            const SizedBox(
+              height: 6,
+            ),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600,
+                fontSize: 12.5,
+                color: kMuted,
+              ),
+            ),
+            const SizedBox(
+              height: s16,
+            ),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    16,
+                  ),
+                ),
+              ),
+              icon: const Icon(
+                Icons.refresh_rounded,
+              ),
+              label: Text(
+                'Coba lagi',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NoResultState
+    extends
+        StatelessWidget {
+  final VoidCallback onReset;
+  const _NoResultState({
+    required this.onReset,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(
+        s24,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(
+          22,
+        ),
+        border: Border.all(
+          color: Colors.black.withOpacity(
+            0.06,
           ),
-          SizedBox(
-            height: 12,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(
+              0.05,
+            ),
+            blurRadius: 18,
+            offset: const Offset(
+              0,
+              10,
+            ),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 92,
+            height: 92,
+            decoration: BoxDecoration(
+              color: kPrimary.withOpacity(
+                0.10,
+              ),
+              borderRadius: BorderRadius.circular(
+                28,
+              ),
+            ),
+            child: const Icon(
+              Icons.search_off_rounded,
+              size: 44,
+              color: kPrimary,
+            ),
+          ),
+          const SizedBox(
+            height: s16,
           ),
           Text(
-            'Belum ada materi',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
+            'Materi tidak ditemukan',
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w900,
+              fontSize: 18,
               color: kTextDark,
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 6,
           ),
           Text(
-            'Materi akan muncul di sini',
-            style: TextStyle(
+            'Coba ubah kata kunci atau reset filter.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
               fontWeight: FontWeight.w600,
               fontSize: 13,
               color: kMuted,
+            ),
+          ),
+          const SizedBox(
+            height: s16,
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onReset,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: kPrimary,
+                side: BorderSide(
+                  color: kPrimary.withOpacity(
+                    0.35,
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    16,
+                  ),
+                ),
+              ),
+              icon: const Icon(
+                Icons.restart_alt_rounded,
+              ),
+              label: Text(
+                'Reset',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ),
         ],
