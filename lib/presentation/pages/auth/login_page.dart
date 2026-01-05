@@ -5,34 +5,16 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../viewmodels/auth/login_viewmodel.dart';
 import '../../../routes/app_routes.dart';
 
-class LoginPage
-    extends
-        StatelessWidget {
-  const LoginPage({
-    super.key,
-  });
+class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
 
-  void _redirect(
-    BuildContext context,
-    String role,
-  ) {
-    if (role ==
-        'admin') {
-      Navigator.pushReplacementNamed(
-        context,
-        AppRoutes.admin,
-      );
-    } else if (role ==
-        'dosen') {
-      Navigator.pushReplacementNamed(
-        context,
-        AppRoutes.dosen,
-      );
+  void _redirect(BuildContext context, String role) {
+    if (role == 'admin') {
+      Navigator.pushReplacementNamed(context, AppRoutes.admin);
+    } else if (role == 'dosen') {
+      Navigator.pushReplacementNamed(context, AppRoutes.dosen);
     } else {
-      Navigator.pushReplacementNamed(
-        context,
-        AppRoutes.mahasiswa,
-      );
+      Navigator.pushReplacementNamed(context, AppRoutes.mahasiswa);
     }
   }
 
@@ -43,29 +25,19 @@ class LoginPage
     Widget? suffix,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: const TextStyle(
-          color: Colors.white,
-        ),
+        style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-            color: Colors.white70,
-          ),
+          hintStyle: const TextStyle(color: Colors.white70),
           filled: true,
-          fillColor: const Color(
-            0xFF204D9C,
-          ),
+          fillColor: const Color(0xFF204D9C),
           suffixIcon: suffix,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
+            borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide.none,
           ),
         ),
@@ -74,13 +46,8 @@ class LoginPage
   }
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    final vm = context
-        .watch<
-          LoginViewModel
-        >();
+  Widget build(BuildContext context) {
+    final vm = context.watch<LoginViewModel>();
 
     return Scaffold(
       body: Stack(
@@ -89,14 +56,7 @@ class LoginPage
             width: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(
-                    0xFF89A7C2,
-                  ),
-                  Color(
-                    0xFF1E3C72,
-                  ),
-                ],
+                colors: [Color(0xFF89A7C2), Color(0xFF1E3C72)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -109,9 +69,7 @@ class LoginPage
                 ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(
-                      context,
-                    ).size.height,
+                    minHeight: MediaQuery.of(context).size.height,
                   ),
                   child: IntrinsicHeight(
                     child: Column(
@@ -133,25 +91,19 @@ class LoginPage
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 10,
-                        ),
+                        const SizedBox(height: 10),
 
                         // LOGO
                         CircleAvatar(
                           radius: 65,
-                          backgroundColor: const Color(
-                            0xFF002F6C,
-                          ),
+                          backgroundColor: const Color(0xFF002F6C),
                           child: Image.asset(
                             'assets/images/bisaa.png',
                             height: 60,
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 40,
-                        ),
+                        const SizedBox(height: 40),
 
                         Text(
                           "Masuk",
@@ -162,9 +114,7 @@ class LoginPage
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 25,
-                        ),
+                        const SizedBox(height: 25),
 
                         _input(
                           hint: "Masukkan Email atau Username",
@@ -186,17 +136,12 @@ class LoginPage
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 8,
-                        ),
+                        const SizedBox(height: 8),
 
                         // ERROR
-                        if (vm.errorMessage !=
-                            null)
+                        if (vm.errorMessage != null)
                           Padding(
-                            padding: const EdgeInsets.only(
-                              top: 8,
-                            ),
+                            padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               vm.errorMessage!,
                               style: GoogleFonts.poppins(
@@ -206,9 +151,7 @@ class LoginPage
                             ),
                           ),
 
-                        const SizedBox(
-                          height: 16,
-                        ),
+                        const SizedBox(height: 16),
 
                         // LOGIN EMAIL/USERNAME
                         SizedBox(
@@ -218,66 +161,38 @@ class LoginPage
                                 ? null
                                 : () async {
                                     final uid = await vm.login();
-                                    if (uid !=
-                                        null) {
-                                      final role = await vm.getRole(
-                                        uid,
-                                      );
-                                      if (role !=
-                                              null &&
-                                          context.mounted) {
-                                        _redirect(
-                                          context,
-                                          role,
-                                        );
+                                    if (uid != null) {
+                                      final role = await vm.getRole(uid);
+                                      if (role != null && context.mounted) {
+                                        _redirect(context, role);
                                       }
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(
-                                0xFF0E2E72,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 14,
-                              ),
+                              backgroundColor: const Color(0xFF0E2E72),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: Text(
                               "Sign In",
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                              ),
+                              style: GoogleFonts.poppins(color: Colors.white),
                             ),
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
 
                         Row(
                           children: [
-                            const Expanded(
-                              child: Divider(
-                                color: Colors.white,
-                              ),
-                            ),
+                            const Expanded(child: Divider(color: Colors.white)),
                             Text(
                               "  atau  ",
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                              ),
+                              style: GoogleFonts.poppins(color: Colors.white),
                             ),
-                            const Expanded(
-                              child: Divider(
-                                color: Colors.white,
-                              ),
-                            ),
+                            const Expanded(child: Divider(color: Colors.white)),
                           ],
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
 
                         // LOGIN GOOGLE
                         OutlinedButton.icon(
@@ -285,25 +200,15 @@ class LoginPage
                               ? null
                               : () async {
                                   final uid = await vm.loginWithGoogle();
-                                  if (uid !=
-                                      null) {
-                                    final role = await vm.getRole(
-                                      uid,
-                                    );
-                                    if (role !=
-                                            null &&
-                                        context.mounted) {
-                                      _redirect(
-                                        context,
-                                        role,
-                                      );
+                                  if (uid != null) {
+                                    final role = await vm.getRole(uid);
+                                    if (role != null && context.mounted) {
+                                      _redirect(context, role);
                                     }
                                   }
                                 },
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Colors.white,
-                            ),
+                            side: const BorderSide(color: Colors.white),
                             padding: const EdgeInsets.symmetric(
                               vertical: 12,
                               horizontal: 16,
@@ -322,9 +227,7 @@ class LoginPage
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 12,
-                        ),
+                        const SizedBox(height: 12),
 
                         // RESET PASSWORD
                         TextButton(
@@ -332,12 +235,9 @@ class LoginPage
                               ? null
                               : () async {
                                   await vm.resetPassword();
-                                  if (vm.errorMessage ==
-                                          null &&
+                                  if (vm.errorMessage == null &&
                                       context.mounted) {
-                                    ScaffoldMessenger.of(
-                                      context,
-                                    ).showSnackBar(
+                                    ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
                                           'Link reset password dikirim ke email',
@@ -348,15 +248,11 @@ class LoginPage
                                 },
                           child: Text(
                             "Lupa Password?",
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                            ),
+                            style: GoogleFonts.poppins(color: Colors.white),
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 8,
-                        ),
+                        const SizedBox(height: 8),
 
                         // KE REGISTER
                         Row(
@@ -364,9 +260,7 @@ class LoginPage
                           children: [
                             Text(
                               "Anda belum punya akun? ",
-                              style: GoogleFonts.poppins(
-                                color: Colors.white70,
-                              ),
+                              style: GoogleFonts.poppins(color: Colors.white70),
                             ),
                             GestureDetector(
                               onTap: () {
@@ -387,9 +281,7 @@ class LoginPage
                           ],
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -405,9 +297,7 @@ class LoginPage
               height: double.infinity,
               color: Colors.black54,
               child: const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                ),
+                child: CircularProgressIndicator(color: Colors.white),
               ),
             ),
         ],

@@ -4,8 +4,12 @@ class Materi {
   final String kelasNama;
   final String judul;
   final String deskripsi;
+
   final String? fileUrl;
-  final String? fileType;
+  final String? fileType; // pdf / docx / xlsx ...
+  final String? fileName; // nama asli file
+  final int? fileSize; // bytes (opsional)
+
   final DateTime createdAt;
 
   Materi({
@@ -16,6 +20,8 @@ class Materi {
     required this.deskripsi,
     this.fileUrl,
     this.fileType,
+    this.fileName,
+    this.fileSize,
     required this.createdAt,
   });
 }

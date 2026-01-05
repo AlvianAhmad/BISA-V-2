@@ -13,15 +13,28 @@ class MateriRemoteDatasource {
         .map((snapshot) {
           return snapshot.docs.map((doc) {
             final d = doc.data();
+
+            // ✅ null-safe + type-safe
+            final createdRaw = d['createdAt'];
+            DateTime createdAt;
+
+            if (createdRaw is Timestamp) {
+              createdAt = createdRaw.toDate();
+            } else if (createdRaw is DateTime) {
+              createdAt = createdRaw;
+            } else {
+              createdAt = DateTime.now(); // fallback aman
+            }
+
             return Materi(
               id: doc.id,
-              kelasId: d['kelasId'],
-              kelasNama: d['kelasNama'],
-              judul: d['judul'],
-              deskripsi: d['deskripsi'],
-              fileUrl: d['fileUrl'],
-              fileType: d['fileType'],
-              createdAt: (d['createdAt'] as Timestamp).toDate(),
+              kelasId: (d['kelasId'] ?? '').toString(),
+              kelasNama: (d['kelasNama'] ?? '').toString(),
+              judul: (d['judul'] ?? '').toString(),
+              deskripsi: (d['deskripsi'] ?? '').toString(),
+              fileUrl: d['fileUrl']?.toString(),
+              fileType: d['fileType']?.toString(),
+              createdAt: createdAt,
             );
           }).toList();
         });
@@ -35,6 +48,7 @@ class MateriRemoteDatasource {
       'deskripsi': m.deskripsi,
       'fileUrl': m.fileUrl,
       'fileType': m.fileType,
+      // ✅ pastikan selalu Timestamp
       'createdAt': Timestamp.fromDate(m.createdAt),
     });
   }
