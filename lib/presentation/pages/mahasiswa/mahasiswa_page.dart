@@ -6,6 +6,8 @@ import 'kelas/kelas_page.dart';
 import 'materi/materi_page.dart';
 import 'tugas/tugas_page.dart';
 // import 'absensi/absensi_page.dart';
+import 'akun/akun_page.dart';
+
 import 'jadwal/jadwal_page.dart';
 import 'lexa/lexa_chat_page.dart';
 
@@ -28,13 +30,15 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
       _HomeDashboard(
         kelasId: kelasId,
         onOpenKelas: () => _push(const KelasPage()),
-        onOpenJadwal: () => _push(const KelasPage()), // ✅ pilih kelas dulu
-        onOpenTugas: () => _push(const KelasPage()), // ✅ pilih kelas dulu
+        onOpenJadwal: () => _push(const KelasPage()),
+        onOpenTugas: () => _push(const KelasPage()),
         onOpenNilai: () => _push(const _PlaceholderPage(title: 'Nilai')),
       ),
-      const KelasPage(), // ✅ tab 2 jadi kelas (biar aman)
-      const LexaChatPage(),
-      const _PlaceholderPage(title: 'Akun'),
+
+      const KelasPage(), // index 1 => Materi (pilih kelas dulu)
+      const KelasPage(), // index 2 => Jadwal (pilih kelas dulu)
+      const LexaChatPage(), // index 3 => Chat
+      const AkunPage(), // index 4 => Akun (buat file baru)
     ];
 
     return Scaffold(

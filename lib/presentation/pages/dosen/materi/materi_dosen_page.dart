@@ -1,9 +1,11 @@
-// lib/presentation/pages/dosen/materi/materi_dosen_page.dart
+// lib/presentation/pages//materi/materi__page.dart
 // ignore_for_file: deprecated_member_use, unused_element
 
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../domain/entities/materi.dart';
@@ -11,61 +13,28 @@ import '../../../viewmodels/admin/materi/materi_view_model.dart';
 import 'tambah_materi_page.dart';
 import 'edit_materi_page.dart';
 
-// ================== GLOBAL THEME (samain vibe Admin Materi) ==================
-const Color
-kMateriPrimary = Color(
-  0xFF0E2E72,
-);
-const Color
-kMateriPrimary2 = Color(
-  0xFF1B3C9E,
-);
-const Color
-kMateriBg = Color(
-  0xFFF5F6FA,
-);
-const Color
-kMateriTextDark = Color(
-  0xFF1A2552,
-);
-const Color
-kMateriMuted = Color(
-  0xFF6F7AA6,
-);
+// ================== GLOBAL THEME (samain vibe Kelas) ==================
+const Color kMateriPrimary = Color(0xFF0E2E72);
+const Color kMateriPrimary2 = Color(0xFF1B3C9E);
+const Color kMateriBg = Color(0xFFF5F6FA);
+const Color kMateriTextDark = Color(0xFF1A2552);
+const Color kMateriMuted = Color(0xFF6F7AA6);
 
-class MateriPage
-    extends
-        StatefulWidget {
+class MateriPage extends StatefulWidget {
   final String kelasId;
   final String kelasNama;
 
-  const MateriPage({
-    super.key,
-    required this.kelasId,
-    required this.kelasNama,
-  });
+  const MateriPage({super.key, required this.kelasId, required this.kelasNama});
 
   @override
-  State<
-    MateriPage
-  >
-  createState() => _MateriPageState();
+  State<MateriPage> createState() => _MateriPageState();
 }
 
-class _MateriPageState
-    extends
-        State<
-          MateriPage
-        > {
+class _MateriPageState extends State<MateriPage> {
   final TextEditingController _search = TextEditingController();
   String _query = '';
 
-  // ✅ untuk TambahMateriPage (kalau versi dosen kamu butuh pertemuanList juga)
-  static const List<
-    String
-  >
-  // ignore: unused_field
-  _pertemuanList = [
+  static const List<String> _pertemuanList = [
     'Pertemuan 1',
     'Pertemuan 2',
     'Pertemuan 3',
@@ -90,309 +59,271 @@ class _MateriPageState
     super.dispose();
   }
 
-  List<
-    Materi
-  >
-  _applySearch(
-    List<
-      Materi
-    >
-    data,
-  ) {
+  List<Materi> _applySearch(List<Materi> data) {
     final q = _query.toLowerCase().trim();
     if (q.isEmpty) return data;
 
-    return data.where(
-      (
-        m,
-      ) {
-        final judul = (m.judul).toString().toLowerCase();
-        final desk = (m.deskripsi).toString().toLowerCase();
-        return judul.contains(
-              q,
-            ) ||
-            desk.contains(
-              q,
-            );
-      },
-    ).toList();
+    return data.where((m) {
+      final judul = (m.judul).toString().toLowerCase();
+      final desk = (m.deskripsi).toString().toLowerCase();
+      final fileName = (m.fileName ?? '').toLowerCase();
+      return judul.contains(q) || desk.contains(q) || fileName.contains(q);
+    }).toList();
   }
 
-  Future<
-    void
-  >
-  _openFileUrl(
-    Materi materi,
-  ) async {
-    final url = materi.fileUrl;
-    if (url ==
-            null ||
-        url.trim().isEmpty)
-      return;
-
-    final uri = Uri.tryParse(
-      url,
-    );
-    if (uri ==
-        null) {
-      if (!mounted) return;
+  // ================== OPEN URL (Download / Open) ==================
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) {
       _showTopToast(
         context,
-        message: 'URL file tidak valid',
+        message: 'Link file tidak valid',
         bgColor: Colors.red,
         icon: Icons.error_rounded,
       );
       return;
     }
-
-    final ok = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
-    if (!ok &&
-        mounted) {
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
       _showTopToast(
         context,
-        message: 'Gagal membuka file',
+        message: 'Tidak bisa membuka file',
         bgColor: Colors.red,
         icon: Icons.error_rounded,
       );
     }
   }
 
-  Future<
-    void
-  >
-  _openDetailDialog(
-    BuildContext context,
-    Materi materi,
-  ) async {
+  // ================== DELETE STORAGE FILE (optional) ==================
+  Future<void> _deleteStorageByUrl(String? fileUrl) async {
+    if (fileUrl == null || fileUrl.trim().isEmpty) return;
+    try {
+      final ref = FirebaseStorage.instance.refFromURL(fileUrl);
+      await ref.delete();
+    } catch (_) {
+      // kalau gagal (misal url bukan storage), kita abaikan
+    }
+  }
+
+  // ================== DETAIL DIALOG ==================
+  Future<void> _openDetailDialog(BuildContext context, Materi materi) async {
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder:
-          (
-            _,
-          ) {
-            return DraggableScrollableSheet(
-              initialChildSize: 0.62,
-              minChildSize: 0.35,
-              maxChildSize: 0.92,
-              builder:
-                  (
-                    context,
-                    scrollController,
-                  ) {
-                    return Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(
-                            22,
+      builder: (_) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.62,
+          minChildSize: 0.35,
+          maxChildSize: 0.92,
+          builder: (context, scrollController) {
+            final hasFile = (materi.fileUrl ?? '').trim().isNotEmpty;
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 46,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: kMateriPrimary.withOpacity(0.10),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            _fileIcon(materi.fileType),
+                            color: kMateriPrimary,
                           ),
                         ),
-                      ),
-                      child: Column(
-                        children: [
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Container(
-                            width: 46,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(
-                                0.12,
-                              ),
-                              borderRadius: BorderRadius.circular(
-                                999,
-                              ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            materi.judul,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 16.5,
+                              fontWeight: FontWeight.w900,
+                              color: kMateriTextDark,
                             ),
                           ),
-                          const SizedBox(
-                            height: 12,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
+                        ),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(999),
+                          onTap: () => Navigator.pop(context),
+                          child: const Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: kMateriMuted,
                             ),
-                            child: Row(
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                      children: [
+                        _DetailSection(
+                          title: 'Deskripsi Materi',
+                          icon: Icons.description_rounded,
+                          child: Text(
+                            (materi.deskripsi).toString().trim().isEmpty
+                                ? 'Tidak ada deskripsi.'
+                                : materi.deskripsi,
+                            style: const TextStyle(
+                              fontSize: 13.6,
+                              height: 1.35,
+                              color: kMateriTextDark,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+
+                        if (hasFile) ...[
+                          const SizedBox(height: 12),
+                          _DetailSection(
+                            title: 'File Materi',
+                            icon: Icons.attach_file_rounded,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
-                                  width: 44,
-                                  height: 44,
+                                  padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: kMateriPrimary.withOpacity(
-                                      0.10,
-                                    ),
-                                    borderRadius: BorderRadius.circular(
-                                      14,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    materi.fileType ==
-                                            'pdf'
-                                        ? Icons.picture_as_pdf_rounded
-                                        : Icons.menu_book_rounded,
-                                    color: kMateriPrimary,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 12,
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    materi.judul,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 16.5,
-                                      fontWeight: FontWeight.w900,
-                                      color: kMateriTextDark,
+                                    color: const Color(0xFFF7F8FD),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: Colors.black.withOpacity(0.06),
                                     ),
                                   ),
-                                ),
-                                InkWell(
-                                  borderRadius: BorderRadius.circular(
-                                    999,
-                                  ),
-                                  onTap: () => Navigator.pop(
-                                    context,
-                                  ),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(
-                                      6,
-                                    ),
-                                    child: Icon(
-                                      Icons.close_rounded,
-                                      color: kMateriMuted,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 12,
-                          ),
-                          const Divider(
-                            height: 1,
-                          ),
-
-                          Expanded(
-                            child: ListView(
-                              controller: scrollController,
-                              padding: const EdgeInsets.fromLTRB(
-                                16,
-                                14,
-                                16,
-                                16,
-                              ),
-                              children: [
-                                _DetailSection(
-                                  title: 'Deskripsi Materi',
-                                  icon: Icons.description_rounded,
-                                  child: Text(
-                                    (materi.deskripsi).toString().trim().isEmpty
-                                        ? 'Tidak ada deskripsi.'
-                                        : materi.deskripsi,
-                                    style: const TextStyle(
-                                      fontSize: 13.6,
-                                      height: 1.35,
-                                      color: kMateriTextDark,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 12,
-                                ),
-
-                                if ((materi.fileUrl ??
-                                        '')
-                                    .trim()
-                                    .isNotEmpty) ...[
-                                  _DetailSection(
-                                    title: 'Lampiran',
-                                    icon: Icons.link_rounded,
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          materi.fileType ==
-                                                  'pdf'
-                                              ? 'File: PDF'
-                                              : 'File: Lampiran',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            color: kMateriTextDark,
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          height: 10,
-                                        ),
-                                        SizedBox(
-                                          width: double.infinity,
-                                          child: ElevatedButton.icon(
-                                            onPressed: () => _openFileUrl(
-                                              materi,
-                                            ),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: kMateriPrimary,
-                                              foregroundColor: Colors.white,
-                                              elevation: 0,
-                                              padding: const EdgeInsets.symmetric(
-                                                vertical: 12,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        _fileIcon(materi.fileType),
+                                        color: kMateriPrimary,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              materi.fileName ?? 'File Materi',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w900,
+                                                color: kMateriTextDark,
                                               ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(
-                                                  14,
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              _fileMeta(
+                                                materi.fileType,
+                                                materi.fileSize,
+                                              ),
+                                              style: const TextStyle(
+                                                fontSize: 12.2,
+                                                fontWeight: FontWeight.w700,
+                                                color: kMateriMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () => _openUrl(materi.fileUrl!),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                kMateriPrimary2,
+                                                kMateriPrimary,
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.download_rounded,
+                                                color: Colors.white,
+                                                size: 18,
+                                              ),
+                                              SizedBox(width: 8),
+                                              Text(
+                                                'Download',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w900,
                                                 ),
                                               ),
-                                            ),
-                                            icon: const Icon(
-                                              Icons.open_in_new_rounded,
-                                            ),
-                                            label: const Text(
-                                              'Buka Lampiran',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w900,
-                                              ),
-                                            ),
+                                            ],
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(
-                                    height: 12,
-                                  ),
-                                ],
-
-                                _HintBox(
-                                  text: 'Untuk Edit / Hapus, gunakan tombol (⋯) pada kartu materi.',
                                 ),
                               ],
                             ),
                           ),
                         ],
-                      ),
-                    );
-                  },
+
+                        const SizedBox(height: 12),
+                        _HintBox(
+                          text:
+                              'Untuk Edit / Hapus, gunakan tombol (⋯) pada kartu materi.',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             );
           },
+        );
+      },
     );
   }
 
+  // ================== BUILD ==================
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    final vm = context
-        .watch<
-          MateriViewModel
-        >();
+  Widget build(BuildContext context) {
+    final vm = context.watch<MateriViewModel>();
 
     return Scaffold(
       backgroundColor: kMateriBg,
@@ -401,113 +332,73 @@ class _MateriPageState
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-          ),
-          onPressed: () => Navigator.pop(
-            context,
-            true,
-          ),
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context, true),
         ),
         title: Text(
           'Materi ${widget.kelasNama}',
-          style: const TextStyle(
-            fontWeight: FontWeight.w900,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
       body: SafeArea(
-        child:
-            StreamBuilder<
-              List<
-                Materi
-              >
-            >(
-              stream: vm.materiStream(
-                widget.kelasId,
-              ),
-              builder:
-                  (
-                    context,
-                    snap,
-                  ) {
-                    if (snap.connectionState ==
-                        ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
+        child: StreamBuilder<List<Materi>>(
+          stream: vm.materiStream(widget.kelasId),
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snap.hasError) {
+              return const Center(
+                child: _ModernInfo(
+                  icon: Icons.error_outline_rounded,
+                  title: 'Gagal memuat materi',
+                  subtitle: 'Coba cek koneksi / backend.',
+                ),
+              );
+            }
+
+            final all = snap.data ?? [];
+            final data = _applySearch(all);
+
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: _HeroHeaderMateri(
+                    controller: _search,
+                    query: _query,
+                    total: all.length,
+                    shown: data.length,
+                    onChanged: (v) => setState(() => _query = v),
+                    onAdd: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TambahMateriPage(
+                            kelasId: widget.kelasId,
+                            kelasNama: widget.kelasNama,
+                            pertemuanList: _pertemuanList,
+                          ),
+                        ),
                       );
-                    }
-
-                    if (snap.hasError) {
-                      return const Center(
-                        child: _ModernInfo(
-                          icon: Icons.error_outline_rounded,
-                          title: 'Gagal memuat materi',
-                          subtitle: 'Coba cek koneksi / backend.',
-                        ),
-                      );
-                    }
-
-                    final all =
-                        snap.data ??
-                        [];
-                    final data = _applySearch(
-                      all,
-                    );
-
-                    return CustomScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      slivers: [
-                        SliverToBoxAdapter(
-                          child: _HeroHeaderMateri(
-                            controller: _search,
-                            query: _query,
-                            total: all.length,
-                            shown: data.length,
-                            onChanged:
-                                (
-                                  v,
-                                ) => setState(
-                                  () => _query = v,
-                                ),
-                            onAdd: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (
-                                        _,
-                                      ) => TambahMateriPage(
-                                        kelasId: widget.kelasId,
-                                        kelasNama: widget.kelasNama,
-                                      ),
-                                ),
-                              );
-                              if (mounted)
-                                setState(
-                                  () {},
-                                );
-                            },
-                          ),
-                        ),
-                        SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(
-                            16,
-                            16,
-                            16,
-                            120,
-                          ),
-                          sliver: _buildContentSliver(
-                            context: context,
-                            vm: vm,
-                            all: all,
-                            data: data,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-            ),
+                      if (mounted) setState(() {});
+                    },
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+                  sliver: _buildContentSliver(
+                    context: context,
+                    vm: vm,
+                    all: all,
+                    data: data,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: kMateriPrimary,
@@ -517,23 +408,16 @@ class _MateriPageState
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (
-                    _,
-                  ) => TambahMateriPage(
-                    kelasId: widget.kelasId,
-                    kelasNama: widget.kelasNama,
-                  ),
+              builder: (_) => TambahMateriPage(
+                kelasId: widget.kelasId,
+                kelasNama: widget.kelasNama,
+                pertemuanList: _pertemuanList,
+              ),
             ),
           );
-          if (mounted)
-            setState(
-              () {},
-            );
+          if (mounted) setState(() {});
         },
-        child: const Icon(
-          Icons.add_rounded,
-        ),
+        child: const Icon(Icons.add_rounded),
       ),
     );
   }
@@ -541,112 +425,72 @@ class _MateriPageState
   SliverList _buildContentSliver({
     required BuildContext context,
     required MateriViewModel vm,
-    required List<
-      Materi
-    >
-    all,
-    required List<
-      Materi
-    >
-    data,
+    required List<Materi> all,
+    required List<Materi> data,
   }) {
     if (all.isEmpty) {
       return SliverList(
-        delegate: SliverChildListDelegate(
-          [
-            const SizedBox(
-              height: 18,
-            ),
-            _ModernInfo(
-              icon: Icons.menu_book_rounded,
-              title: 'Belum ada materi',
-              subtitle: 'Tambah materi pertama untuk kelas ini.',
-              actionLabel: 'Tambah Materi',
-              onAction: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (
-                          _,
-                        ) => TambahMateriPage(
-                          kelasId: widget.kelasId,
-                          kelasNama: widget.kelasNama,
-                        ),
+        delegate: SliverChildListDelegate([
+          const SizedBox(height: 18),
+          _ModernInfo(
+            icon: Icons.menu_book_rounded,
+            title: 'Belum ada materi',
+            subtitle: 'Tambah materi pertama untuk kelas ini.',
+            actionLabel: 'Tambah Materi',
+            onAction: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TambahMateriPage(
+                    kelasId: widget.kelasId,
+                    kelasNama: widget.kelasNama,
+                    pertemuanList: _pertemuanList,
                   ),
-                );
-                if (mounted)
-                  setState(
-                    () {},
-                  );
-              },
-            ),
-          ],
-        ),
+                ),
+              );
+              if (mounted) setState(() {});
+            },
+          ),
+        ]),
       );
     }
 
     if (data.isEmpty) {
       return SliverList(
-        delegate: SliverChildListDelegate(
-          const [
-            SizedBox(
-              height: 18,
-            ),
-            _ModernInfo(
-              icon: Icons.search_off_rounded,
-              title: 'Tidak ditemukan',
-              subtitle: 'Coba kata kunci lain ya.',
-            ),
-          ],
-        ),
+        delegate: SliverChildListDelegate(const [
+          SizedBox(height: 18),
+          _ModernInfo(
+            icon: Icons.search_off_rounded,
+            title: 'Tidak ditemukan',
+            subtitle: 'Coba kata kunci lain ya.',
+          ),
+        ]),
       );
     }
 
     return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (
-          context,
-          index,
-        ) {
-          final materi = data[index];
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final materi = data[index];
+        final hasFile = (materi.fileUrl ?? '').trim().isNotEmpty;
 
-          return Padding(
-            padding: const EdgeInsets.only(
-              bottom: 12,
-            ),
-            child: _MateriCardV2(
-              materi: materi,
-              onOpen: () => _openDetailDialog(
-                context,
-                materi,
-              ),
-              onOpenFile:
-                  (materi.fileUrl ??
-                          '')
-                      .trim()
-                      .isEmpty
-                  ? null
-                  : () => _openFileUrl(
-                      materi,
-                    ),
-              onMore: () => _openActionsSheet(
-                context: context,
-                materi: materi,
-                vm: vm,
-              ),
-            ),
-          );
-        },
-        childCount: data.length,
-      ),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _MateriCardV2(
+            judul: materi.judul,
+            deskripsi: materi.deskripsi,
+            fileName: materi.fileName,
+            fileType: materi.fileType,
+            showFileChip: hasFile,
+            onOpen: () => _openDetailDialog(context, materi),
+            onMore: () =>
+                _openActionsSheet(context: context, materi: materi, vm: vm),
+          ),
+        );
+      }, childCount: data.length),
     );
   }
 
-  Future<
-    void
-  >
-  _openActionsSheet({
+  Future<void> _openActionsSheet({
     required BuildContext context,
     required Materi materi,
     required MateriViewModel vm,
@@ -654,558 +498,398 @@ class _MateriPageState
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder:
-          (
-            _,
-          ) {
-            return _ActionSheet(
-              title: materi.judul,
-              subtitle: 'Pilih aksi untuk materi ini',
-              onEdit: () async {
-                Navigator.pop(
-                  context,
-                );
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (
-                          _,
-                        ) => EditMateriPage(
-                          materi: materi,
-                        ),
-                  ),
-                );
-                if (context.mounted)
-                  setState(
-                    () {},
-                  );
-              },
-              onDelete: () async {
-                Navigator.pop(
-                  context,
-                );
-                final ok = await _confirmDelete(
-                  context,
-                  materi.judul,
-                );
-                if (ok ==
-                    true) {
-                  await vm.hapusMateri(
-                    materi.id,
-                  );
-                  if (context.mounted) {
-                    _showTopToast(
-                      context,
-                      message: 'Materi berhasil dihapus',
-                    );
-                  }
-                }
-              },
+      builder: (_) {
+        return _ActionSheet(
+          title: materi.judul,
+          subtitle: 'Pilih aksi untuk materi ini',
+          onEdit: () async {
+            Navigator.pop(context);
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => EditMateriPage(materi: materi)),
             );
+            if (context.mounted) setState(() {});
           },
+          onDelete: () async {
+            Navigator.pop(context);
+            final ok = await _confirmDelete(context, materi.judul);
+            if (ok == true) {
+              // ✅ hapus file storage dulu (kalau ada)
+              await _deleteStorageByUrl(materi.fileUrl);
+
+              // ✅ hapus firestore
+              await vm.hapusMateri(materi.id);
+
+              if (context.mounted) {
+                _showTopToast(context, message: 'Materi berhasil dihapus');
+              }
+            }
+          },
+        );
+      },
     );
   }
 
-  static Future<
-    bool?
-  >
-  _confirmDelete(
-    BuildContext context,
-    String title,
-  ) {
-    return showGeneralDialog<
-      bool
-    >(
+  // ================== CONFIRM DELETE ==================
+  static Future<bool?> _confirmDelete(BuildContext context, String title) {
+    return showGeneralDialog<bool>(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withOpacity(
-        0.45,
-      ),
-      transitionDuration: const Duration(
-        milliseconds: 220,
-      ),
-      pageBuilder:
-          (
-            context,
-            anim1,
-            anim2,
-          ) => const SizedBox.shrink(),
-      transitionBuilder:
-          (
-            context,
-            anim,
-            _,
-            __,
-          ) {
-            final curved = CurvedAnimation(
-              parent: anim,
-              curve: Curves.easeOutCubic,
-              reverseCurve: Curves.easeInCubic,
-            );
+      barrierColor: Colors.black.withOpacity(0.45),
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (context, anim1, anim2) => const SizedBox.shrink(),
+      transitionBuilder: (context, anim, _, __) {
+        final curved = CurvedAnimation(
+          parent: anim,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
 
-            return SafeArea(
-              child: Stack(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(
-                      context,
-                      false,
-                    ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(
-                        sigmaX:
-                            10 *
-                            curved.value,
-                        sigmaY:
-                            10 *
-                            curved.value,
-                      ),
-                      child: Container(
-                        color: Colors.transparent,
-                      ),
-                    ),
+        return SafeArea(
+          child: Stack(
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(context, false),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: 10 * curved.value,
+                    sigmaY: 10 * curved.value,
                   ),
-                  Center(
-                    child: FadeTransition(
-                      opacity: curved,
-                      child: ScaleTransition(
-                        scale:
-                            Tween<
-                                  double
-                                >(
-                                  begin: 0.95,
-                                  end: 1.0,
-                                )
-                                .animate(
-                                  curved,
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+              Center(
+                child: FadeTransition(
+                  opacity: curved,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.95, end: 1.0).animate(curved),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(22),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.22),
+                                  blurRadius: 34,
+                                  offset: const Offset(0, 18),
                                 ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                22,
-                              ),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(
-                                        0.22,
-                                      ),
-                                      blurRadius: 34,
-                                      offset: const Offset(
-                                        0,
-                                        18,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.fromLTRB(
-                                        16,
-                                        16,
-                                        16,
-                                        14,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red.withOpacity(
-                                          0.08,
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    16,
+                                    16,
+                                    14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.08),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.withOpacity(0.14),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.delete_rounded,
+                                          color: Colors.red,
+                                          size: 26,
                                         ),
                                       ),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 44,
-                                            height: 44,
-                                            decoration: BoxDecoration(
-                                              color: Colors.red.withOpacity(
-                                                0.14,
-                                              ),
-                                              borderRadius: BorderRadius.circular(
-                                                14,
-                                              ),
-                                            ),
-                                            child: const Icon(
-                                              Icons.delete_rounded,
-                                              color: Colors.red,
-                                              size: 26,
-                                            ),
+                                      const SizedBox(width: 12),
+                                      const Expanded(
+                                        child: Text(
+                                          'Hapus Materi?',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w900,
+                                            color: kMateriTextDark,
                                           ),
-                                          const SizedBox(
-                                            width: 12,
-                                          ),
-                                          const Expanded(
-                                            child: Text(
-                                              'Hapus Materi?',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w900,
-                                                color: kMateriTextDark,
-                                              ),
-                                            ),
-                                          ),
-                                          InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              999,
-                                            ),
-                                            onTap: () => Navigator.pop(
-                                              context,
-                                              false,
-                                            ),
-                                            child: const Padding(
-                                              padding: EdgeInsets.all(
-                                                6,
-                                              ),
-                                              child: Icon(
-                                                Icons.close_rounded,
-                                                color: kMateriMuted,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        16,
-                                        14,
-                                        16,
-                                        2,
+                                      InkWell(
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
+                                        onTap: () =>
+                                            Navigator.pop(context, false),
+                                        child: const Padding(
+                                          padding: EdgeInsets.all(6),
+                                          child: Icon(
+                                            Icons.close_rounded,
+                                            color: kMateriMuted,
+                                          ),
+                                        ),
                                       ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Kamu yakin ingin menghapus materi ini?',
-                                            style: TextStyle(
-                                              color: kMateriMuted,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            height: 10,
-                                          ),
-                                          Container(
-                                            width: double.infinity,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 10,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(
-                                                0xFFF7F8FD,
-                                              ),
-                                              borderRadius: BorderRadius.circular(
-                                                14,
-                                              ),
-                                              border: Border.all(
-                                                color: Colors.black.withOpacity(
-                                                  0.06,
-                                                ),
-                                              ),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                const Icon(
-                                                  Icons.menu_book_rounded,
-                                                  size: 18,
-                                                  color: kMateriMuted,
-                                                ),
-                                                const SizedBox(
-                                                  width: 8,
-                                                ),
-                                                Expanded(
-                                                  child: Text(
-                                                    title,
-                                                    maxLines: 2,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                      color: kMateriTextDark,
-                                                      fontWeight: FontWeight.w900,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            height: 12,
-                                          ),
-                                          const Text(
-                                            'Tindakan ini tidak dapat dibatalkan.',
-                                            style: TextStyle(
-                                              color: Colors.red,
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 12.5,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 14,
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        16,
-                                        0,
-                                        16,
-                                        16,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: OutlinedButton(
-                                              onPressed: () => Navigator.pop(
-                                                context,
-                                                false,
-                                              ),
-                                              style: OutlinedButton.styleFrom(
-                                                foregroundColor: kMateriTextDark,
-                                                side: BorderSide(
-                                                  color: Colors.black.withOpacity(
-                                                    0.12,
-                                                  ),
-                                                ),
-                                                padding: const EdgeInsets.symmetric(
-                                                  vertical: 12,
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(
-                                                    14,
-                                                  ),
-                                                ),
-                                              ),
-                                              child: const Text(
-                                                'Batal',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w900,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            width: 10,
-                                          ),
-                                          Expanded(
-                                            child: ElevatedButton(
-                                              onPressed: () => Navigator.pop(
-                                                context,
-                                                true,
-                                              ),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.red,
-                                                foregroundColor: Colors.white,
-                                                padding: const EdgeInsets.symmetric(
-                                                  vertical: 12,
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(
-                                                    14,
-                                                  ),
-                                                ),
-                                                elevation: 0,
-                                              ),
-                                              child: const Text(
-                                                'Hapus',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w900,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    14,
+                                    16,
+                                    2,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Kamu yakin ingin menghapus materi ini?',
+                                        style: TextStyle(
+                                          color: kMateriMuted,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF7F8FD),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.black.withOpacity(
+                                              0.06,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.menu_book_rounded,
+                                              size: 18,
+                                              color: kMateriMuted,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                title,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  color: kMateriTextDark,
+                                                  fontWeight: FontWeight.w900,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      const Text(
+                                        'Tindakan ini tidak dapat dibatalkan.',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 12.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    0,
+                                    16,
+                                    16,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: kMateriTextDark,
+                                            side: BorderSide(
+                                              color: Colors.black.withOpacity(
+                                                0.12,
+                                              ),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Batal',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                            ),
+                                            elevation: 0,
+                                          ),
+                                          child: const Text(
+                                            'Hapus',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
-            );
-          },
+            ],
+          ),
+        );
+      },
     );
   }
 
+  // ================== TOAST ==================
   void _showTopToast(
     BuildContext context, {
     required String message,
-    Color bgColor = const Color(
-      0xFF22C55E,
-    ),
+    Color bgColor = const Color(0xFF22C55E),
     IconData icon = Icons.check_circle_rounded,
   }) {
-    final overlay = Overlay.of(
-      context,
-    );
+    final overlay = Overlay.of(context);
     late OverlayEntry entry;
 
     entry = OverlayEntry(
-      builder:
-          (
-            _,
-          ) {
-            final top =
-                MediaQuery.of(
-                  context,
-                ).padding.top +
-                12;
-            return Positioned(
-              top: top,
-              left: 16,
-              right: 16,
-              child: Material(
-                color: Colors.transparent,
-                child:
-                    TweenAnimationBuilder<
-                      double
-                    >(
-                      duration: const Duration(
-                        milliseconds: 220,
-                      ),
-                      curve: Curves.easeOutCubic,
-                      tween: Tween(
-                        begin: 0.0,
-                        end: 1.0,
-                      ),
-                      builder:
-                          (
-                            context,
-                            t,
-                            child,
-                          ) {
-                            return Opacity(
-                              opacity: t,
-                              child: Transform.translate(
-                                offset: Offset(
-                                  0,
-                                  (1 -
-                                          t) *
-                                      -14,
-                                ),
-                                child: child,
-                              ),
-                            );
-                          },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: bgColor,
-                          borderRadius: BorderRadius.circular(
-                            18,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(
-                                0.25,
-                              ),
-                              blurRadius: 16,
-                              offset: const Offset(
-                                0,
-                                8,
-                              ),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              icon,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            Expanded(
-                              child: Text(
-                                message,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 6,
-                            ),
-                            InkWell(
-                              onTap: () => entry.remove(),
-                              borderRadius: BorderRadius.circular(
-                                999,
-                              ),
-                              child: const Padding(
-                                padding: EdgeInsets.all(
-                                  6,
-                                ),
-                                child: Icon(
-                                  Icons.close_rounded,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
+      builder: (_) {
+        final top = MediaQuery.of(context).padding.top + 12;
+        return Positioned(
+          top: top,
+          left: 16,
+          right: 16,
+          child: Material(
+            color: Colors.transparent,
+            child: TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              tween: Tween(begin: 0.0, end: 1.0),
+              builder: (context, t, child) {
+                return Opacity(
+                  opacity: t,
+                  child: Transform.translate(
+                    offset: Offset(0, (1 - t) * -14),
+                    child: child,
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.25),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(icon, color: Colors.white),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        message,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
+                    const SizedBox(width: 6),
+                    InkWell(
+                      onTap: () => entry.remove(),
+                      borderRadius: BorderRadius.circular(999),
+                      child: const Padding(
+                        padding: EdgeInsets.all(6),
+                        child: Icon(Icons.close_rounded, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
-    );
-
-    overlay.insert(
-      entry,
-    );
-
-    Future.delayed(
-      const Duration(
-        seconds: 2,
-      ),
-      () {
-        try {
-          entry.remove();
-        } catch (
-          _
-        ) {}
+            ),
+          ),
+        );
       },
     );
+
+    overlay.insert(entry);
+
+    Future.delayed(const Duration(seconds: 2), () {
+      try {
+        entry.remove();
+      } catch (_) {}
+    });
   }
 }
 
 // ================== HERO HEADER (MATERI) ==================
 
-class _HeroHeaderMateri
-    extends
-        StatelessWidget {
+class _HeroHeaderMateri extends StatelessWidget {
   final TextEditingController controller;
   final String query;
   final int total;
   final int shown;
-  final ValueChanged<
-    String
-  >
-  onChanged;
+  final ValueChanged<String> onChanged;
   final VoidCallback onAdd;
 
   const _HeroHeaderMateri({
@@ -1218,19 +902,10 @@ class _HeroHeaderMateri
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        16,
-        16,
-        16,
-        24,
-      ),
-      decoration: const BoxDecoration(
-        color: kMateriPrimary,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      decoration: const BoxDecoration(color: kMateriPrimary),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1243,9 +918,7 @@ class _HeroHeaderMateri
               letterSpacing: 0.2,
             ),
           ),
-          const SizedBox(
-            height: 6,
-          ),
+          const SizedBox(height: 6),
           const Text(
             'Kelola materi untuk kelas ini',
             style: TextStyle(
@@ -1254,18 +927,14 @@ class _HeroHeaderMateri
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(
-            height: 14,
-          ),
+          const SizedBox(height: 14),
           _GlassSearch(
             controller: controller,
-            hint: 'Cari judul / deskripsi materi...',
+            hint: 'Cari judul / deskripsi / nama file...',
             onChanged: onChanged,
             onAdd: onAdd,
           ),
-          const SizedBox(
-            height: 12,
-          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -1275,9 +944,7 @@ class _HeroHeaderMateri
                   icon: Icons.list_alt_rounded,
                 ),
               ),
-              const SizedBox(
-                width: 10,
-              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: _StatPill(
                   label: 'Ditampilkan',
@@ -1293,15 +960,10 @@ class _HeroHeaderMateri
   }
 }
 
-class _GlassSearch
-    extends
-        StatelessWidget {
+class _GlassSearch extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
-  final ValueChanged<
-    String
-  >
-  onChanged;
+  final ValueChanged<String> onChanged;
   final VoidCallback onAdd;
 
   const _GlassSearch({
@@ -1312,45 +974,23 @@ class _GlassSearch
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(
-        18,
-      ),
+      borderRadius: BorderRadius.circular(18),
       child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: 10,
-          sigmaY: 10,
-        ),
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           height: 50,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(
-              0.16,
-            ),
-            borderRadius: BorderRadius.circular(
-              18,
-            ),
-            border: Border.all(
-              color: Colors.white.withOpacity(
-                0.22,
-              ),
-            ),
+            color: Colors.white.withOpacity(0.16),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withOpacity(0.22)),
           ),
           child: Row(
             children: [
-              const Icon(
-                Icons.search_rounded,
-                color: Colors.white70,
-              ),
-              const SizedBox(
-                width: 10,
-              ),
+              const Icon(Icons.search_rounded, color: Colors.white70),
+              const SizedBox(width: 10),
               Expanded(
                 child: TextField(
                   controller: controller,
@@ -1361,26 +1001,17 @@ class _GlassSearch
                   ),
                   decoration: InputDecoration(
                     hintText: hint,
-                    hintStyle: const TextStyle(
-                      color: Colors.white70,
-                    ),
+                    hintStyle: const TextStyle(color: Colors.white70),
                     border: InputBorder.none,
                   ),
                 ),
               ),
               InkWell(
                 onTap: onAdd,
-                borderRadius: BorderRadius.circular(
-                  12,
-                ),
+                borderRadius: BorderRadius.circular(12),
                 child: const Padding(
-                  padding: EdgeInsets.all(
-                    6,
-                  ),
-                  child: Icon(
-                    Icons.add_rounded,
-                    color: Colors.white,
-                  ),
+                  padding: EdgeInsets.all(6),
+                  child: Icon(Icons.add_rounded, color: Colors.white),
                 ),
               ),
             ],
@@ -1391,9 +1022,7 @@ class _GlassSearch
   }
 }
 
-class _StatPill
-    extends
-        StatelessWidget {
+class _StatPill extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
@@ -1405,46 +1034,22 @@ class _StatPill
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(
-        18,
-      ),
+      borderRadius: BorderRadius.circular(18),
       child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: 10,
-          sigmaY: 10,
-        ),
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(
-              0.14,
-            ),
-            borderRadius: BorderRadius.circular(
-              18,
-            ),
-            border: Border.all(
-              color: Colors.white.withOpacity(
-                0.18,
-              ),
-            ),
+            color: Colors.white.withOpacity(0.14),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withOpacity(0.18)),
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: Colors.white70,
-                size: 18,
-              ),
-              const SizedBox(
-                width: 8,
-              ),
+              Icon(icon, color: Colors.white70, size: 18),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   label,
@@ -1473,42 +1078,40 @@ class _StatPill
 
 // ================== CARD (MATERI) ==================
 
-class _MateriCardV2
-    extends
-        StatelessWidget {
-  final Materi materi;
-  final VoidCallback onOpen; // buka detail
-  final VoidCallback? onOpenFile; // buka lampiran (kalau ada)
+class _MateriCardV2 extends StatelessWidget {
+  final String judul;
+  final String deskripsi;
+
+  final String? fileName;
+  final String? fileType;
+  final bool showFileChip;
+
+  final VoidCallback onOpen;
   final VoidCallback onMore;
 
   const _MateriCardV2({
-    required this.materi,
+    required this.judul,
+    required this.deskripsi,
     required this.onOpen,
-    required this.onOpenFile,
     required this.onMore,
+    this.fileName,
+    this.fileType,
+    this.showFileChip = false,
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    final desc = (materi.deskripsi).toString().trim();
+  Widget build(BuildContext context) {
+    final desc = deskripsi.toString().trim();
+    final ext = (fileType ?? '').toUpperCase();
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(
-          20,
-        ),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(
-              0.06,
-            ),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 22,
-            offset: const Offset(
-              0,
-              10,
-            ),
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -1516,26 +1119,13 @@ class _MateriCardV2
         children: [
           InkWell(
             onTap: onOpen,
-            borderRadius: BorderRadius.circular(
-              20,
-            ),
+            borderRadius: BorderRadius.circular(20),
             child: Container(
-              padding: const EdgeInsets.fromLTRB(
-                14,
-                14,
-                14,
-                12,
-              ),
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(
-                  20,
-                ),
-                border: Border.all(
-                  color: Colors.black.withOpacity(
-                    0.05,
-                  ),
-                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.black.withOpacity(0.05)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1546,7 +1136,7 @@ class _MateriCardV2
                     children: [
                       Expanded(
                         child: Text(
-                          materi.judul,
+                          judul,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -1556,80 +1146,103 @@ class _MateriCardV2
                           ),
                         ),
                       ),
-                      const SizedBox(
-                        width: 8,
-                      ),
+                      const SizedBox(width: 8),
                       InkWell(
                         onTap: onMore,
-                        borderRadius: BorderRadius.circular(
-                          12,
-                        ),
+                        borderRadius: BorderRadius.circular(12),
                         child: Padding(
-                          padding: const EdgeInsets.all(
-                            6,
-                          ),
+                          padding: const EdgeInsets.all(6),
                           child: Icon(
                             Icons.more_horiz_rounded,
-                            color: kMateriMuted.withOpacity(
-                              0.9,
-                            ),
+                            color: kMateriMuted.withOpacity(0.9),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
+                  const SizedBox(height: 10),
 
+                  // CHIP ROW
                   Row(
                     children: [
-                      _MetaChip(
-                        icon:
-                            materi.fileType ==
-                                'pdf'
-                            ? Icons.picture_as_pdf_rounded
-                            : Icons.menu_book_rounded,
-                        text:
-                            (materi.fileType ??
-                                    '')
-                                .toString()
-                                .trim()
-                                .isEmpty
-                            ? 'Materi'
-                            : (materi.fileType ==
-                                      'pdf'
-                                  ? 'PDF'
-                                  : 'Lampiran'),
+                      const _MetaChip(
+                        icon: Icons.menu_book_rounded,
+                        text: 'Materi',
                       ),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                      Expanded(
+                      const SizedBox(width: 8),
+                      const Expanded(
                         child: _MetaChip(
                           icon: Icons.visibility_rounded,
                           text: 'Tap untuk lihat detail',
                         ),
                       ),
+                      if (showFileChip) ...[
+                        const SizedBox(width: 8),
+                        _MetaChip(
+                          icon: _fileIcon(fileType),
+                          text: ext.isEmpty ? 'FILE' : ext,
+                        ),
+                      ],
                     ],
                   ),
 
-                  const SizedBox(
-                    height: 10,
-                  ),
+                  // FILE NAME PREVIEW
+                  if (showFileChip && (fileName ?? '').trim().isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F8FD),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.black.withOpacity(0.05),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _fileIcon(fileType),
+                            size: 18,
+                            color: kMateriMuted,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              fileName!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: kMateriTextDark,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12.8,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.download_rounded,
+                            color: kMateriMuted,
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
+                  const SizedBox(height: 10),
+
+                  // DESKRIPSI BOX
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(
-                        0xFFF3F5FB,
-                      ),
-                      borderRadius: BorderRadius.circular(
-                        14,
-                      ),
+                      color: const Color(0xFFF3F5FB),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1639,14 +1252,10 @@ class _MateriCardV2
                           size: 18,
                           color: kMateriMuted,
                         ),
-                        const SizedBox(
-                          width: 8,
-                        ),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            desc.isEmpty
-                                ? 'Belum ada deskripsi materi.'
-                                : desc,
+                            desc.isEmpty ? 'Belum ada deskripsi materi.' : desc,
                             maxLines: 4,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -1657,31 +1266,11 @@ class _MateriCardV2
                             ),
                           ),
                         ),
-                        const SizedBox(
-                          width: 6,
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: kMateriMuted,
                         ),
-                        if (onOpenFile !=
-                            null)
-                          InkWell(
-                            onTap: onOpenFile,
-                            borderRadius: BorderRadius.circular(
-                              12,
-                            ),
-                            child: const Padding(
-                              padding: EdgeInsets.all(
-                                6,
-                              ),
-                              child: Icon(
-                                Icons.open_in_new_rounded,
-                                color: kMateriMuted,
-                              ),
-                            ),
-                          )
-                        else
-                          const Icon(
-                            Icons.chevron_right_rounded,
-                            color: kMateriMuted,
-                          ),
                       ],
                     ),
                   ),
@@ -1699,9 +1288,7 @@ class _MateriCardV2
               width: 5,
               decoration: BoxDecoration(
                 color: kMateriPrimary2,
-                borderRadius: BorderRadius.circular(
-                  999,
-                ),
+                borderRadius: BorderRadius.circular(999),
               ),
             ),
           ),
@@ -1711,50 +1298,26 @@ class _MateriCardV2
   }
 }
 
-class _MetaChip
-    extends
-        StatelessWidget {
+class _MetaChip extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _MetaChip({
-    required this.icon,
-    required this.text,
-  });
+  const _MetaChip({required this.icon, required this.text});
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(
-          0xFFF7F8FD,
-        ),
-        borderRadius: BorderRadius.circular(
-          14,
-        ),
-        border: Border.all(
-          color: Colors.black.withOpacity(
-            0.05,
-          ),
-        ),
+        color: const Color(0xFFF7F8FD),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.black.withOpacity(0.05)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 16,
-            color: kMateriMuted,
-          ),
-          const SizedBox(
-            width: 6,
-          ),
+          Icon(icon, size: 16, color: kMateriMuted),
+          const SizedBox(width: 6),
           Flexible(
             child: Text(
               text,
@@ -1775,9 +1338,7 @@ class _MetaChip
 
 // ================== ACTION SHEET ==================
 
-class _ActionSheet
-    extends
-        StatelessWidget {
+class _ActionSheet extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onEdit;
@@ -1791,50 +1352,28 @@ class _ActionSheet
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        14,
-        0,
-        14,
-        14,
-      ),
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(
-          22,
-        ),
+        borderRadius: BorderRadius.circular(22),
         child: Container(
           color: Colors.white,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 10),
               Container(
                 width: 46,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(
-                    0.12,
-                  ),
-                  borderRadius: BorderRadius.circular(
-                    999,
-                  ),
+                  color: Colors.black.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
-              const SizedBox(
-                height: 12,
-              ),
+              const SizedBox(height: 12),
               Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  16,
-                  0,
-                  16,
-                  8,
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -1849,9 +1388,7 @@ class _ActionSheet
                         color: kMateriTextDark,
                       ),
                     ),
-                    const SizedBox(
-                      height: 4,
-                    ),
+                    const SizedBox(height: 4),
                     Text(
                       subtitle,
                       textAlign: TextAlign.center,
@@ -1863,23 +1400,14 @@ class _ActionSheet
                   ],
                 ),
               ),
-              const Divider(
-                height: 1,
-              ),
+              const Divider(height: 1),
               ListTile(
-                leading: const Icon(
-                  Icons.edit_rounded,
-                ),
-                title: const Text(
-                  'Edit',
-                ),
+                leading: const Icon(Icons.edit_rounded),
+                title: const Text('Edit'),
                 onTap: onEdit,
               ),
               ListTile(
-                leading: const Icon(
-                  Icons.delete_rounded,
-                  color: Colors.red,
-                ),
+                leading: const Icon(Icons.delete_rounded, color: Colors.red),
                 title: const Text(
                   'Hapus',
                   style: TextStyle(
@@ -1889,9 +1417,7 @@ class _ActionSheet
                 ),
                 onTap: onDelete,
               ),
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 10),
             ],
           ),
         ),
@@ -1902,9 +1428,7 @@ class _ActionSheet
 
 // ================== EMPTY / INFO ==================
 
-class _ModernInfo
-    extends
-        StatelessWidget {
+class _ModernInfo extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
@@ -1920,39 +1444,21 @@ class _ModernInfo
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.fromLTRB(
-          16,
-          18,
-          16,
-          16,
-        ),
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(
-            22,
-          ),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(
-                0.06,
-              ),
+              color: Colors.black.withOpacity(0.06),
               blurRadius: 20,
-              offset: const Offset(
-                0,
-                10,
-              ),
+              offset: const Offset(0, 10),
             ),
           ],
-          border: Border.all(
-            color: Colors.black.withOpacity(
-              0.05,
-            ),
-          ),
+          border: Border.all(color: Colors.black.withOpacity(0.05)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1961,22 +1467,12 @@ class _ModernInfo
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: kMateriPrimary.withOpacity(
-                  0.10,
-                ),
-                borderRadius: BorderRadius.circular(
-                  18,
-                ),
+                color: kMateriPrimary.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(18),
               ),
-              child: Icon(
-                icon,
-                color: kMateriPrimary,
-                size: 28,
-              ),
+              child: Icon(icon, color: kMateriPrimary, size: 28),
             ),
-            const SizedBox(
-              height: 12,
-            ),
+            const SizedBox(height: 12),
             Text(
               title,
               textAlign: TextAlign.center,
@@ -1986,9 +1482,7 @@ class _ModernInfo
                 color: kMateriTextDark,
               ),
             ),
-            const SizedBox(
-              height: 6,
-            ),
+            const SizedBox(height: 6),
             Text(
               subtitle,
               textAlign: TextAlign.center,
@@ -1997,13 +1491,8 @@ class _ModernInfo
                 fontWeight: FontWeight.w600,
               ),
             ),
-            if (actionLabel !=
-                    null &&
-                onAction !=
-                    null) ...[
-              const SizedBox(
-                height: 14,
-              ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 14),
               ElevatedButton(
                 onPressed: onAction,
                 style: ElevatedButton.styleFrom(
@@ -2014,17 +1503,13 @@ class _ModernInfo
                     vertical: 12,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      14,
-                    ),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   elevation: 0,
                 ),
                 child: Text(
                   actionLabel!,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
             ],
@@ -2037,9 +1522,7 @@ class _ModernInfo
 
 // ================== MINI UI COMPONENTS (DETAIL) ==================
 
-class _DetailSection
-    extends
-        StatelessWidget {
+class _DetailSection extends StatelessWidget {
   final String title;
   final IconData icon;
   final Widget child;
@@ -2051,42 +1534,21 @@ class _DetailSection
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        12,
-        12,
-        12,
-        12,
-      ),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       decoration: BoxDecoration(
-        color: const Color(
-          0xFFF7F8FD,
-        ),
-        borderRadius: BorderRadius.circular(
-          16,
-        ),
-        border: Border.all(
-          color: Colors.black.withOpacity(
-            0.06,
-          ),
-        ),
+        color: const Color(0xFFF7F8FD),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withOpacity(0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                color: kMateriPrimary,
-                size: 18,
-              ),
-              const SizedBox(
-                width: 8,
-              ),
+              Icon(icon, color: kMateriPrimary, size: 18),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
@@ -2098,9 +1560,7 @@ class _DetailSection
               ),
             ],
           ),
-          const SizedBox(
-            height: 10,
-          ),
+          const SizedBox(height: 10),
           child,
         ],
       ),
@@ -2108,45 +1568,23 @@ class _DetailSection
   }
 }
 
-class _HintBox
-    extends
-        StatelessWidget {
+class _HintBox extends StatelessWidget {
   final String text;
-  const _HintBox({
-    required this.text,
-  });
+  const _HintBox({required this.text});
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: kMateriPrimary.withOpacity(
-          0.06,
-        ),
-        borderRadius: BorderRadius.circular(
-          16,
-        ),
-        border: Border.all(
-          color: kMateriPrimary.withOpacity(
-            0.12,
-          ),
-        ),
+        color: kMateriPrimary.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kMateriPrimary.withOpacity(0.12)),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            color: kMateriPrimary,
-          ),
-          const SizedBox(
-            width: 10,
-          ),
+          const Icon(Icons.info_outline_rounded, color: kMateriPrimary),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
@@ -2161,4 +1599,50 @@ class _HintBox
       ),
     );
   }
+}
+
+// ================== HELPERS ==================
+
+IconData _fileIcon(String? ext) {
+  final e = (ext ?? '').toLowerCase();
+  switch (e) {
+    case 'pdf':
+      return Icons.picture_as_pdf_rounded;
+    case 'doc':
+    case 'docx':
+      return Icons.description_rounded;
+    case 'xls':
+    case 'xlsx':
+      return Icons.grid_on_rounded;
+    case 'ppt':
+    case 'pptx':
+      return Icons.slideshow_rounded;
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+      return Icons.image_rounded;
+    default:
+      return Icons.attach_file_rounded;
+  }
+}
+
+String _fileMeta(String? ext, int? sizeBytes) {
+  final e = (ext ?? '').toUpperCase();
+  final s = _fmtBytes(sizeBytes ?? 0);
+  if (e.isEmpty && s == '0 B') return 'File tersedia';
+  if (e.isEmpty) return s;
+  if (s == '0 B') return e;
+  return '$e • $s';
+}
+
+String _fmtBytes(int bytes) {
+  if (bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  double size = bytes.toDouble();
+  int i = 0;
+  while (size >= 1024 && i < units.length - 1) {
+    size /= 1024;
+    i++;
+  }
+  return '${size.toStringAsFixed(i == 0 ? 0 : 1)} ${units[i]}';
 }

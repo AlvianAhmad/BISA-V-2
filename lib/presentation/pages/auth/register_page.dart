@@ -5,43 +5,31 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../viewmodels/auth/register_viewmodel.dart';
 import '../../../routes/app_routes.dart';
 
-class RegisterPage
-    extends
-        StatelessWidget {
-  const RegisterPage({
-    super.key,
-  });
+class RegisterPage extends StatelessWidget {
+  const RegisterPage({super.key});
 
   Widget _input(
     String hint,
     TextEditingController controller, {
     bool obscure = false,
     Widget? suffix,
+    TextInputType? keyboardType,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: const TextStyle(
-          color: Colors.white,
-        ),
+        keyboardType: keyboardType,
+        style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-            color: Colors.white70,
-          ),
+          hintStyle: const TextStyle(color: Colors.white70),
           filled: true,
-          fillColor: const Color(
-            0xFF204D9C,
-          ),
+          fillColor: const Color(0xFF204D9C),
           suffixIcon: suffix,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
+            borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide.none,
           ),
         ),
@@ -50,13 +38,8 @@ class RegisterPage
   }
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    final vm = context
-        .watch<
-          RegisterViewModel
-        >();
+  Widget build(BuildContext context) {
+    final vm = context.watch<RegisterViewModel>();
 
     return Scaffold(
       body: Stack(
@@ -64,35 +47,20 @@ class RegisterPage
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(
-                    0xFF89A7C2,
-                  ),
-                  Color(
-                    0xFF1E3C72,
-                  ),
-                ],
+                colors: [Color(0xFF89A7C2), Color(0xFF1E3C72)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
             ),
             child: SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(
-                  24,
-                ),
+                padding: const EdgeInsets.all(24),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     minHeight:
-                        MediaQuery.of(
-                          context,
-                        ).size.height -
-                        MediaQuery.of(
-                          context,
-                        ).padding.top -
-                        MediaQuery.of(
-                          context,
-                        ).padding.bottom,
+                        MediaQuery.of(context).size.height -
+                        MediaQuery.of(context).padding.top -
+                        MediaQuery.of(context).padding.bottom,
                   ),
                   child: IntrinsicHeight(
                     child: Column(
@@ -104,26 +72,20 @@ class RegisterPage
                               Icons.arrow_back,
                               color: Colors.white,
                             ),
-                            onPressed: () => Navigator.pop(
-                              context,
-                            ),
+                            onPressed: () => Navigator.pop(context),
                           ),
                         ),
 
                         CircleAvatar(
                           radius: 60,
-                          backgroundColor: const Color(
-                            0xFF002F6C,
-                          ),
+                          backgroundColor: const Color(0xFF002F6C),
                           child: Image.asset(
                             'assets/images/bisaa.png',
                             height: 60,
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 24,
-                        ),
+                        const SizedBox(height: 24),
 
                         Text(
                           "Daftar",
@@ -134,22 +96,31 @@ class RegisterPage
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
 
-                        _input(
-                          "Nama Lengkap",
-                          vm.nameC,
-                        ),
+                        // ✅ yang sudah ada
+                        _input("Nama Lengkap", vm.nameC),
                         _input(
                           "Nomor Telepon",
                           vm.phoneC,
+                          keyboardType: TextInputType.phone,
                         ),
+
+                        // ✅ tambahan dari UserEntity
+                        _input("Username", vm.usernameC),
+                        _input(
+                          "NIM",
+                          vm.nimC,
+                          keyboardType: TextInputType.number,
+                        ),
+                        _input("Program Studi", vm.programStudiC),
+
                         _input(
                           "Email",
                           vm.emailC,
+                          keyboardType: TextInputType.emailAddress,
                         ),
+
                         _input(
                           "Password",
                           vm.passwordC,
@@ -183,45 +154,28 @@ class RegisterPage
                           children: [
                             Checkbox(
                               value: vm.agree,
-                              onChanged:
-                                  (
-                                    v,
-                                  ) => vm.toggleAgree(
-                                    v ??
-                                        false,
-                                  ),
-                              side: const BorderSide(
-                                color: Colors.white,
-                              ),
+                              onChanged: (v) => vm.toggleAgree(v ?? false),
+                              side: const BorderSide(color: Colors.white),
                             ),
                             const Expanded(
                               child: Text(
                                 "Saya setuju syarat & ketentuan",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
                           ],
                         ),
 
-                        if (vm.errorMessage !=
-                            null)
+                        if (vm.errorMessage != null)
                           Padding(
-                            padding: const EdgeInsets.only(
-                              top: 6,
-                            ),
+                            padding: const EdgeInsets.only(top: 6),
                             child: Text(
                               vm.errorMessage!,
-                              style: const TextStyle(
-                                color: Colors.redAccent,
-                              ),
+                              style: const TextStyle(color: Colors.redAccent),
                             ),
                           ),
 
-                        const SizedBox(
-                          height: 16,
-                        ),
+                        const SizedBox(height: 16),
 
                         SizedBox(
                           width: double.infinity,
@@ -230,8 +184,7 @@ class RegisterPage
                                 ? null
                                 : () async {
                                     final success = await vm.register();
-                                    if (success &&
-                                        context.mounted) {
+                                    if (success && context.mounted) {
                                       Navigator.pushReplacementNamed(
                                         context,
                                         AppRoutes.login,
@@ -239,16 +192,10 @@ class RegisterPage
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(
-                                0xFF0E2E72,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 14,
-                              ),
+                              backgroundColor: const Color(0xFF0E2E72),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  10,
-                                ),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                             child: Text(
@@ -261,7 +208,7 @@ class RegisterPage
                           ),
                         ),
 
-                        const Spacer(), // bikin layout “narik” sampai bawah
+                        const Spacer(),
                       ],
                     ),
                   ),
@@ -274,9 +221,7 @@ class RegisterPage
             Container(
               color: Colors.black54,
               child: const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                ),
+                child: CircularProgressIndicator(color: Colors.white),
               ),
             ),
         ],
