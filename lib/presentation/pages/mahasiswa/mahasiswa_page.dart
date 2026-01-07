@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'kelas/kelas_page.dart';
 import 'materi/materi_page.dart';
 import 'tugas/tugas_page.dart';
@@ -242,78 +245,96 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 210,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_primary2, _primary],
-        ),
-      ),
-      child: Stack(
-        children: [
-          // wave/shape halus (simple)
-          Positioned(
-            left: -80,
-            top: 80,
-            child: Container(
-              width: 260,
-              height: 260,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            right: -120,
-            top: -40,
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
+    final user = FirebaseAuth.instance.currentUser;
 
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 56, 18, 16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Hi, Fauzan',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 30,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        'Selamat datang di LMS',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+    final Stream<DocumentSnapshot<Map<String, dynamic>>> stream = user == null
+        ? const Stream.empty()
+        : FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .snapshots();
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snap) {
+        final data = snap.data?.data();
+        final nama = (data?['nama'] ?? user?.displayName ?? 'Fauzan')
+            .toString();
+
+        return Container(
+          height: 210,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [_primary2, _primary],
+            ),
+          ),
+          child: Stack(
+            children: [
+              // wave/shape halus (simple)
+              Positioned(
+                left: -80,
+                top: 80,
+                child: Container(
+                  width: 260,
+                  height: 260,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.08),
+                    shape: BoxShape.circle,
                   ),
                 ),
-                const _Avatar(),
-              ],
-            ),
+              ),
+              Positioned(
+                right: -120,
+                top: -40,
+                child: Container(
+                  width: 280,
+                  height: 280,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.08),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 56, 18, 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hi, $nama',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Selamat datang di LMS',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const _Avatar(),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -713,7 +734,6 @@ class _CourseCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              // ✅ background soft shape (biar kaya contoh)
               Positioned(
                 right: -40,
                 top: -30,
@@ -738,8 +758,6 @@ class _CourseCard extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // ✅ gambar ilustrasi di kanan (sesuaikan file asset kamu)
               Positioned(
                 right: 10,
                 bottom: 0,
@@ -753,15 +771,8 @@ class _CourseCard extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // ✅ konten kiri
               Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  14,
-                  14,
-                  140,
-                  14,
-                ), // kanan dibuat lega buat gambar
+                padding: const EdgeInsets.fromLTRB(14, 14, 140, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -796,8 +807,6 @@ class _CourseCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-
-                    // ✅ progress bar seperti contoh
                     Text(
                       'Progress: $pct%',
                       style: const TextStyle(
@@ -876,7 +885,6 @@ class _BottomNav extends StatelessWidget {
         child: Container(
           height: 68,
           decoration: BoxDecoration(
-            // 🔵 WARNA BIRU SESUAI HEADER
             color: const Color(0xFF1B3C9E),
             borderRadius: BorderRadius.circular(26),
             boxShadow: const [
@@ -895,11 +903,8 @@ class _BottomNav extends StatelessWidget {
               type: BottomNavigationBarType.fixed,
               backgroundColor: Colors.transparent,
               elevation: 0,
-
-              // ✅ WARNA ICON & TEXT
               selectedItemColor: Colors.white,
               unselectedItemColor: Colors.white70,
-
               selectedLabelStyle: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 12,
@@ -910,7 +915,6 @@ class _BottomNav extends StatelessWidget {
                 fontSize: 11.5,
                 color: Colors.white70,
               ),
-
               items: const [
                 BottomNavigationBarItem(
                   icon: Icon(Icons.home_rounded),

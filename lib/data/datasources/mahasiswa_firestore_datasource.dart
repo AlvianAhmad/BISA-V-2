@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MahasiswaFirestoreDatasource {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore db = FirebaseFirestore.instance;
 
   // ================= JOIN KELAS =================
   Future<void> joinKelas({
     required String kodeKelas,
     required String mahasiswaId,
   }) async {
-    final kelasSnap = await _db
+    final kelasSnap = await db
         .collection('kelas')
         .where('kode', isEqualTo: kodeKelas)
         .limit(1)
@@ -21,10 +21,10 @@ class MahasiswaFirestoreDatasource {
     final kelasId = kelasSnap.docs.first.id;
     final docId = '$mahasiswaId-$kelasId';
 
-    final existing = await _db.collection('kelas_mahasiswa').doc(docId).get();
+    final existing = await db.collection('kelas_mahasiswa').doc(docId).get();
     if (existing.exists) return;
 
-    await _db.collection('kelas_mahasiswa').doc(docId).set({
+    await db.collection('kelas_mahasiswa').doc(docId).set({
       'mahasiswaId': mahasiswaId,
       'kelasId': kelasId,
       'joinedAt': FieldValue.serverTimestamp(),
@@ -33,19 +33,19 @@ class MahasiswaFirestoreDatasource {
 
   // ================= KELAS =================
   Stream<QuerySnapshot<Map<String, dynamic>>> kelasSaya(String mahasiswaId) {
-    return _db
+    return db
         .collection('kelas_mahasiswa')
         .where('mahasiswaId', isEqualTo: mahasiswaId)
         .snapshots();
   }
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> detailKelas(String kelasId) {
-    return _db.collection('kelas').doc(kelasId).snapshots();
+    return db.collection('kelas').doc(kelasId).snapshots();
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> semuaKelas() {
     // kalau error index, hapus orderBy
-    return _db
+    return db
         .collection('kelas')
         .orderBy('createdAt', descending: true)
         .snapshots();
@@ -55,7 +55,7 @@ class MahasiswaFirestoreDatasource {
   // Query by kelasId (kalau materi memang punya field kelasId)
   Stream<QuerySnapshot<Map<String, dynamic>>> materiByKelasId(String kelasId) {
     // kalau error index, hapus orderBy
-    return _db
+    return db
         .collection('materi')
         .where('kelasId', isEqualTo: kelasId)
         .orderBy('createdAt', descending: true)
@@ -67,7 +67,7 @@ class MahasiswaFirestoreDatasource {
     String kelasNama,
   ) {
     // kalau error index, hapus orderBy
-    return _db
+    return db
         .collection('materi')
         .where('kelasNama', isEqualTo: kelasNama)
         .orderBy('createdAt', descending: true)
@@ -79,7 +79,7 @@ class MahasiswaFirestoreDatasource {
     String kelasNama,
   ) {
     // kalau error index, hapus orderBy
-    return _db
+    return db
         .collection('materi')
         .where('kelas', isEqualTo: kelasNama)
         .orderBy('createdAt', descending: true)
@@ -90,33 +90,50 @@ class MahasiswaFirestoreDatasource {
   Stream<QuerySnapshot<Map<String, dynamic>>> tugasByKelasNama(
     String kelasNama,
   ) {
-    return _db
+    return db
         .collection('tugas')
         .where('kelas', isEqualTo: kelasNama)
         .snapshots();
   }
 
+  /// ✅ UPDATED: sekarang simpan juga nama + nim ke pengumpulan
   Future<void> kumpulTugas({
     required String tugasId,
     required String mahasiswaId,
+    required String url,
+    String? catatan,
   }) async {
-    await _db
+    // ambil profil mahasiswa dari users/{uid}
+    final userSnap = await db.collection('users').doc(mahasiswaId).get();
+    final u = userSnap.data() ?? {};
+
+    final nama = (u['nama'] ?? u['name'] ?? u['fullname'] ?? '-').toString();
+    final nim = (u['nim'] ?? u['NIM'] ?? '-').toString();
+
+    final ref = db
         .collection('tugas')
         .doc(tugasId)
         .collection('pengumpulan')
-        .doc(mahasiswaId)
-        .set({
-          'mahasiswaId': mahasiswaId,
-          'submittedAt': FieldValue.serverTimestamp(),
-          'status': 'submitted',
-        }, SetOptions(merge: true));
+        .doc(mahasiswaId);
+
+    await ref.set({
+      'mahasiswaId': mahasiswaId,
+
+      // ✅ tambahan biar admin bisa lihat nama + nim
+      'nama': nama,
+      'nim': nim,
+
+      'url': url.trim(),
+      'catatan': (catatan ?? '').trim(),
+
+      // biar aman, simpan waktu submit & update
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
-  Future<bool> sudahKumpul({
-    required String tugasId,
-    required String mahasiswaId,
-  }) async {
-    final doc = await _db
+  Future<bool> sudahKumpul(String tugasId, String mahasiswaId) async {
+    final doc = await db
         .collection('tugas')
         .doc(tugasId)
         .collection('pengumpulan')
@@ -126,11 +143,25 @@ class MahasiswaFirestoreDatasource {
     return doc.exists;
   }
 
+  Future<Map<String, dynamic>?> detailPengumpulan({
+    required String tugasId,
+    required String mahasiswaId,
+  }) async {
+    final doc = await db
+        .collection('tugas')
+        .doc(tugasId)
+        .collection('pengumpulan')
+        .doc(mahasiswaId)
+        .get();
+
+    return doc.data();
+  }
+
   // ================= JADWAL =================
   Stream<QuerySnapshot<Map<String, dynamic>>> jadwalByKelasNama(
     String kelasNama,
   ) {
-    return _db
+    return db
         .collection('jadwal')
         .where('kelas', isEqualTo: kelasNama)
         .snapshots();
@@ -141,7 +172,7 @@ class MahasiswaFirestoreDatasource {
     String kelasNama,
   ) {
     // (tanpa orderBy supaya gak butuh composite index)
-    return _db
+    return db
         .collection('absensi')
         .where('kelas', isEqualTo: kelasNama)
         .snapshots();
@@ -151,7 +182,15 @@ class MahasiswaFirestoreDatasource {
     required String absensiId,
     required String mahasiswaId,
   }) async {
-    await _db
+    // ambil profil mahasiswa dari users/{uid}
+    final userSnap = await db.collection('users').doc(mahasiswaId).get();
+    final u = userSnap.data() ?? {};
+
+    final nama = (u['nama'] ?? u['name'] ?? u['fullname'] ?? '-').toString();
+    final nim = (u['nim'] ?? u['npm'] ?? u['NIM'] ?? u['NPM'] ?? '-')
+        .toString();
+
+    await db
         .collection('absensi')
         .doc(absensiId)
         .collection('hadir')
@@ -159,6 +198,11 @@ class MahasiswaFirestoreDatasource {
         .set({
           'mahasiswaId': mahasiswaId,
           'hadir': true,
+
+          // ✅ tambahan biar admin/dosen bisa lihat
+          'nama': nama,
+          'nim': nim, // atau npm, tapi kita samakan pakai nim aja
+
           'waktu': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
   }
@@ -167,7 +211,7 @@ class MahasiswaFirestoreDatasource {
     required String absensiId,
     required String mahasiswaId,
   }) async {
-    final doc = await _db
+    final doc = await db
         .collection('absensi')
         .doc(absensiId)
         .collection('hadir')

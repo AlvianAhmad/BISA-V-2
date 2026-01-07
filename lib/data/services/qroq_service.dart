@@ -1,11 +1,9 @@
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class GroqService {
   static const String _apiKey =
-      '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';
-
+      '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';
   static const String _endpoint =
       'https://api.groq.com/openai/v1/chat/completions';
 
@@ -22,8 +20,8 @@ class GroqService {
           "messages": [
             {"role": "user", "content": prompt},
           ],
-          "temperature": 0.7,
-          "max_tokens": 512,
+          "temperature": 0.6,
+          "max_tokens": 700,
         }),
       );
 
@@ -32,7 +30,6 @@ class GroqService {
       }
 
       final data = jsonDecode(response.body);
-
       return data['choices'][0]['message']['content'];
     } catch (e) {
       return 'LEXA error: $e';

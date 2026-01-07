@@ -1,4 +1,4 @@
-import 'gemini_service.dart';
+import 'qroq_service.dart';
 import '../firestore_helper.dart';
 
 class LexaService {
@@ -23,6 +23,8 @@ Batasan:
 - Jika user bertanya hal sensitif/medis/hukum, jawab aman dan sarankan sumber profesional bila perlu.
 ''';
 
+  // ================== CHAT BIASA ==================
+
   Future<String> reply(String userMessage) async {
     final raw = userMessage.trim();
     if (raw.isEmpty) return 'Tulis pertanyaan dulu ya 😊';
@@ -34,7 +36,7 @@ Batasan:
       return 'Halo 👋 Saya LEXA, asisten akademikmu. Ada yang bisa saya bantu?';
     }
 
-    // ===== INTENT (akademik) =====
+    // ===== INTENT =====
     final wantsKelas = _containsAny(msg, [
       'kelas',
       'matkul',
@@ -69,25 +71,63 @@ Batasan:
       'hadir',
     ]);
 
-    // Prioritas biasanya: tugas > absensi > jadwal > materi > kelas
     if (wantsTugas) return _handleTugas(raw);
     if (wantsAbsensi) return _handleAbsensi(raw);
     if (wantsJadwal) return _handleJadwal(raw);
     if (wantsMateri) return _handleMateri(raw);
     if (wantsKelas) return _handleKelas(raw);
 
-    // ===== RANDOM / GENERAL QUESTION =====
-    // Tetap dijawab benar, tapi persona LEXA tetap dijaga lewat system prompt.
+    // ===== RANDOM / GENERAL =====
     return llm.generateReply(
       _wrapPrompt(
         userQuestion: raw,
         instruction: '''
 Jawab pertanyaan user dengan benar dan jelas.
 Kalau pertanyaannya di luar akademik, jawab singkat dan netral.
-Kalau user butuh bantuan akademik, arahkan dengan contoh pertanyaan yang bisa ditanyakan ke LEXA.
+Kalau user butuh bantuan akademik, arahkan dengan contoh pertanyaan ke LEXA.
 ''',
       ),
     );
+  }
+
+  // ================== CHAT DENGAN FILE ==================
+  // (INI YANG DITAMBAHKAN – FIX ERROR KAMU)
+
+  Future<String> replyWithFile({
+    required String question,
+    required String fileContent,
+  }) async {
+    final q = question.trim();
+    final content = fileContent.trim();
+
+    if (q.isEmpty) {
+      return 'Tulis pertanyaan tentang file tersebut ya 😊';
+    }
+
+    if (content.isEmpty) {
+      return 'Maaf, isi file tidak dapat dibaca atau kosong.';
+    }
+
+    // Batas aman token
+    final safeContent = content.length > 6000
+        ? content.substring(0, 6000)
+        : content;
+
+    return llm.generateReply('''
+$_systemPrompt
+
+KONTEKS FILE:
+$safeContent
+
+INSTRUKSI:
+- Jawab pertanyaan user BERDASARKAN isi file
+- Jangan mengarang jika tidak ada di file
+- Jika diminta ringkasan, buat ringkasan
+- Jika informasi tidak ditemukan, katakan dengan jujur
+
+PERTANYAAN USER:
+$q
+''');
   }
 
   // ================== HANDLERS ==================
@@ -95,7 +135,7 @@ Kalau user butuh bantuan akademik, arahkan dengan contoh pertanyaan yang bisa di
   Future<String> _handleKelas(String question) async {
     final kelas = await db.getKelas();
     if (kelas.isEmpty) {
-      return 'Saat ini belum ada data kelas yang tersedia. Coba cek lagi nanti ya.';
+      return 'Saat ini belum ada data kelas yang tersedia.';
     }
 
     return llm.generateReply(
@@ -103,8 +143,8 @@ Kalau user butuh bantuan akademik, arahkan dengan contoh pertanyaan yang bisa di
         userQuestion: question,
         dataBlock: 'DATA KELAS:\n${kelas.join(', ')}',
         instruction: '''
-Tampilkan daftar kelas secara rapi (bullet/nomor).
-Kalau user menyebut nama kelas tertentu, sebutkan apakah ada atau tidak.
+Tampilkan daftar kelas secara rapi.
+Jika user menyebut nama kelas tertentu, jelaskan apakah ada atau tidak.
 ''',
       ),
     );
@@ -115,7 +155,7 @@ Kalau user menyebut nama kelas tertentu, sebutkan apakah ada atau tidak.
     final data = jadwal.toString().trim();
 
     if (data.isEmpty || data == '[]' || data == '{}') {
-      return 'Belum ada jadwal yang tersimpan untuk saat ini.';
+      return 'Belum ada jadwal yang tersimpan.';
     }
 
     return llm.generateReply(
@@ -124,10 +164,7 @@ Kalau user menyebut nama kelas tertentu, sebutkan apakah ada atau tidak.
         dataBlock: 'DATA JADWAL:\n$data',
         instruction: '''
 Rangkum jadwal dengan rapi.
-Format yang disarankan:
-- Hari:
-  - Jam — Mata kuliah (Kelas) — Dosen (jika ada)
-Jika ada data yang kosong, jangan mengarang.
+Jangan mengarang data.
 ''',
       ),
     );
@@ -138,7 +175,7 @@ Jika ada data yang kosong, jangan mengarang.
     final data = tugas.toString().trim();
 
     if (data.isEmpty || data == '[]' || data == '{}') {
-      return 'Belum ada tugas yang tersedia saat ini.';
+      return 'Belum ada tugas saat ini.';
     }
 
     return llm.generateReply(
@@ -147,9 +184,7 @@ Jika ada data yang kosong, jangan mengarang.
         dataBlock: 'DATA TUGAS:\n$data',
         instruction: '''
 Buat daftar tugas ringkas.
-Jika ada deadline, tampilkan.
-Jika ada kelas, kelompokkan per kelas.
-Jangan menambahkan deadline/kelas yang tidak ada di data.
+Tampilkan deadline jika ada.
 ''',
       ),
     );
@@ -160,7 +195,7 @@ Jangan menambahkan deadline/kelas yang tidak ada di data.
     final data = materi.toString().trim();
 
     if (data.isEmpty || data == '[]' || data == '{}') {
-      return 'Belum ada materi yang tersedia saat ini.';
+      return 'Belum ada materi tersedia.';
     }
 
     return llm.generateReply(
@@ -169,15 +204,13 @@ Jangan menambahkan deadline/kelas yang tidak ada di data.
         dataBlock: 'DATA MATERI:\n$data',
         instruction: '''
 Jelaskan materi yang tersedia dengan rapi.
-Jika ada kelas, kelompokkan per kelas.
-Jika ada fileUrl/fileType, sebutkan secara singkat.
 ''',
       ),
     );
   }
 
   Future<String> _handleAbsensi(String question) async {
-    return 'Untuk absensi, coba buka menu Absensi di aplikasi ya 😊';
+    return 'Untuk absensi, silakan buka menu Absensi di aplikasi 😊';
   }
 
   // ================== PROMPT WRAPPER ==================
@@ -209,7 +242,6 @@ $userQuestion
     return false;
   }
 
-  /// Greeting yang "murni" (biar kalau user nulis "halo ada tugas?" tetap masuk intent tugas)
   bool _isGreetingOnly(String msg) {
     final cleaned = msg
         .replaceAll(RegExp(r'[^\w\s]'), ' ')
@@ -229,15 +261,12 @@ $userQuestion
       'permisi',
     ];
 
-    // kalau isi pesan cuma greeting + optional "lexa"
     final tokens = cleaned.split(' ').where((e) => e.isNotEmpty).toList();
     if (tokens.isEmpty) return false;
 
-    // hapus "lexa" biar "halo lexa" dianggap greeting
     final filtered = tokens.where((t) => t != 'lexa').toList();
     if (filtered.isEmpty) return true;
 
-    // harus semua token adalah greeting
     return filtered.every((t) => greetings.contains(t));
   }
 }

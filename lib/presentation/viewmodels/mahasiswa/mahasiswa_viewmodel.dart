@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../../../data/datasources/mahasiswa_firestore_datasource.dart';
 
 class MahasiswaViewModel extends ChangeNotifier {
@@ -7,8 +9,14 @@ class MahasiswaViewModel extends ChangeNotifier {
 
   MahasiswaViewModel(this.ds);
 
-  /// TODO: ganti FirebaseAuth (uid)
-  final String mahasiswaId = 'mhs_001';
+  // ✅ Ambil UID user yang sedang login
+  String get mahasiswaId {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User belum login. Silakan login dulu.');
+    }
+    return user.uid;
+  }
 
   // ================= JOIN KELAS =================
   Future<void> joinKelas(String kodeKelas) async {
@@ -41,12 +49,25 @@ class MahasiswaViewModel extends ChangeNotifier {
     String kelasNama,
   ) => ds.tugasByKelasNama(kelasNama);
 
-  Future<void> kumpulTugas(String tugasId) {
-    return ds.kumpulTugas(tugasId: tugasId, mahasiswaId: mahasiswaId);
+  Future<void> kumpulTugasLink({
+    required String tugasId,
+    required String url,
+    String? catatan,
+  }) async {
+    await ds.kumpulTugas(
+      tugasId: tugasId,
+      mahasiswaId: mahasiswaId,
+      url: url,
+      catatan: catatan,
+    );
   }
 
   Future<bool> sudahKumpul(String tugasId) {
-    return ds.sudahKumpul(tugasId: tugasId, mahasiswaId: mahasiswaId);
+    return ds.sudahKumpul(tugasId, mahasiswaId);
+  }
+
+  Future<Map<String, dynamic>?> detailPengumpulan(String tugasId) {
+    return ds.detailPengumpulan(tugasId: tugasId, mahasiswaId: mahasiswaId);
   }
 
   // ================= JADWAL =================
