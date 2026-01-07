@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 
 import 'firebase_options.dart';
 import 'routes/app_router.dart';
@@ -68,116 +70,240 @@ import 'domain/usecases/materi/update_materi.dart';
 import 'domain/usecases/materi/delete_materi.dart';
 import 'presentation/viewmodels/admin/materi/materi_view_model.dart';
 
-Future<void> main() async {
+Future<
+  void
+>
+main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-  runApp(const MyApp());
+  await initializeDateFormatting(
+    'id_ID',
+    null,
+  );
+  Intl.defaultLocale = 'id_ID';
+
+  runApp(
+    const MyApp(),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp
+    extends
+        StatelessWidget {
+  const MyApp({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     // ===== AUTH =====
-    final authRepository = AuthRepositoryImpl(AuthFirebaseDatasource());
+    final authRepository = AuthRepositoryImpl(
+      AuthFirebaseDatasource(),
+    );
 
     // ===== MAHASISWA =====
     final mahasiswaDatasource = MahasiswaFirestoreDatasource();
 
     // ===== ADMIN REPOSITORIES =====
     final jadwalRepository = JadwalRepositoryImpl(
-      JadwalRemoteDataSource(FirebaseFirestore.instance),
+      JadwalRemoteDataSource(
+        FirebaseFirestore.instance,
+      ),
     );
 
     final kelasRepository = KelasRepositoryImpl(
-      KelasRemoteDataSource(FirebaseFirestore.instance),
+      KelasRemoteDataSource(
+        FirebaseFirestore.instance,
+      ),
     );
 
     final tugasRepository = TugasRepositoryImpl(
-      TugasRemoteDataSource(FirebaseFirestore.instance),
+      TugasRemoteDataSource(
+        FirebaseFirestore.instance,
+      ),
     );
 
     final absensiRepository = AbsensiRepositoryImpl(
-      AbsensiRemoteDatasource(FirebaseFirestore.instance),
+      AbsensiRemoteDatasource(
+        FirebaseFirestore.instance,
+      ),
     );
 
     final materiRepository = MateriRepositoryImpl(
-      MateriRemoteDatasource(FirebaseFirestore.instance),
+      MateriRemoteDatasource(
+        FirebaseFirestore.instance,
+      ),
     );
 
     // ===== MATERI REMOTE (UNTUK MAHASISWA) =====
-    final materiRemoteDs = MateriRemoteDatasource(FirebaseFirestore.instance);
+    final materiRemoteDs = MateriRemoteDatasource(
+      FirebaseFirestore.instance,
+    );
 
     return MultiProvider(
       providers: [
         // ===== AUTH =====
-        ChangeNotifierProvider(create: (_) => AuthViewModel(authRepository)),
-        ChangeNotifierProvider(create: (_) => AdminViewModel(authRepository)),
-        ChangeNotifierProvider(create: (_) => LoginViewModel(authRepository)),
         ChangeNotifierProvider(
-          create: (_) => RegisterViewModel(authRepository),
+          create:
+              (
+                _,
+              ) => AuthViewModel(
+                authRepository,
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (
+                _,
+              ) => AdminViewModel(
+                authRepository,
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (
+                _,
+              ) => LoginViewModel(
+                authRepository,
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (
+                _,
+              ) => RegisterViewModel(
+                authRepository,
+              ),
         ),
 
         // ===== MAHASISWA (GLOBAL) =====
         ChangeNotifierProvider(
-          create: (_) => MahasiswaViewModel(mahasiswaDatasource),
+          create:
+              (
+                _,
+              ) => MahasiswaViewModel(
+                mahasiswaDatasource,
+              ),
         ),
 
         // ✅ ===== MATERI MAHASISWA (BARU, PAKAI RemoteDatasource) =====
         ChangeNotifierProvider(
-          create: (_) => mhs_materi.MateriViewModel(materiRemoteDs),
+          create:
+              (
+                _,
+              ) => mhs_materi.MateriViewModel(
+                materiRemoteDs,
+              ),
         ),
 
         // ===== ADMIN JADWAL =====
         ChangeNotifierProvider(
-          create: (_) => JadwalViewModel(
-            getJadwal: GetJadwal(jadwalRepository),
-            addJadwal: AddJadwal(jadwalRepository),
-            updateJadwal: UpdateJadwal(jadwalRepository),
-            deleteJadwal: DeleteJadwal(jadwalRepository),
-          ),
+          create:
+              (
+                _,
+              ) => JadwalViewModel(
+                getJadwal: GetJadwal(
+                  jadwalRepository,
+                ),
+                addJadwal: AddJadwal(
+                  jadwalRepository,
+                ),
+                updateJadwal: UpdateJadwal(
+                  jadwalRepository,
+                ),
+                deleteJadwal: DeleteJadwal(
+                  jadwalRepository,
+                ),
+              ),
         ),
 
         // ===== ADMIN KELAS =====
         ChangeNotifierProvider(
-          create: (_) => KelasViewModel(
-            getKelas: GetKelas(kelasRepository),
-            addKelas: AddKelas(kelasRepository),
-            updateKelas: UpdateKelas(kelasRepository),
-            deleteKelas: DeleteKelas(kelasRepository),
-          ),
+          create:
+              (
+                _,
+              ) => KelasViewModel(
+                getKelas: GetKelas(
+                  kelasRepository,
+                ),
+                addKelas: AddKelas(
+                  kelasRepository,
+                ),
+                updateKelas: UpdateKelas(
+                  kelasRepository,
+                ),
+                deleteKelas: DeleteKelas(
+                  kelasRepository,
+                ),
+              ),
         ),
 
         // ===== ADMIN TUGAS =====
         ChangeNotifierProvider(
-          create: (_) => TugasViewModel(
-            getTugas: GetTugas(tugasRepository),
-            addTugas: AddTugas(tugasRepository),
-            updateTugas: UpdateTugas(tugasRepository),
-            deleteTugas: DeleteTugas(tugasRepository),
-          ),
+          create:
+              (
+                _,
+              ) => TugasViewModel(
+                getTugas: GetTugas(
+                  tugasRepository,
+                ),
+                addTugas: AddTugas(
+                  tugasRepository,
+                ),
+                updateTugas: UpdateTugas(
+                  tugasRepository,
+                ),
+                deleteTugas: DeleteTugas(
+                  tugasRepository,
+                ),
+              ),
         ),
 
         // ===== ADMIN ABSENSI =====
         ChangeNotifierProvider(
-          create: (_) => AbsensiViewModel(
-            getAbsensi: GetAbsensi(absensiRepository),
-            addAbsensi: AddAbsensi(absensiRepository),
-            updateAbsensi: UpdateAbsensi(absensiRepository),
-            deleteAbsensi: DeleteAbsensi(absensiRepository),
-          ),
+          create:
+              (
+                _,
+              ) => AbsensiViewModel(
+                getAbsensi: GetAbsensi(
+                  absensiRepository,
+                ),
+                addAbsensi: AddAbsensi(
+                  absensiRepository,
+                ),
+                updateAbsensi: UpdateAbsensi(
+                  absensiRepository,
+                ),
+                deleteAbsensi: DeleteAbsensi(
+                  absensiRepository,
+                ),
+              ),
         ),
 
         // ===== ADMIN MATERI =====
         ChangeNotifierProvider(
-          create: (_) => MateriViewModel(
-            getMateri: GetMateri(materiRepository),
-            addMateri: AddMateri(materiRepository),
-            updateMateri: UpdateMateri(materiRepository),
-            deleteMateri: DeleteMateri(materiRepository),
-          ),
+          create:
+              (
+                _,
+              ) => MateriViewModel(
+                getMateri: GetMateri(
+                  materiRepository,
+                ),
+                addMateri: AddMateri(
+                  materiRepository,
+                ),
+                updateMateri: UpdateMateri(
+                  materiRepository,
+                ),
+                deleteMateri: DeleteMateri(
+                  materiRepository,
+                ),
+              ),
         ),
       ],
       child: MaterialApp(

@@ -1,8 +1,6 @@
 // lib/presentation/pages/admin/admin_page.dart
 // ignore_for_file: deprecated_member_use
 
-import 'dart:ui';
-
 import 'package:bisa/presentation/pages/admin/absensi/absensi_admin_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -114,7 +112,6 @@ class _AdminPageView
   int _responsiveCrossAxisCount(
     double width,
   ) {
-    // kamu bisa ubah rules ini kalau mau
     if (width >=
         1200)
       return 4;
@@ -139,11 +136,22 @@ class _AdminPageView
     final modulCount = _responsiveCrossAxisCount(
       width,
     );
+
+    // Ringkasan: HP tetap 2 kolom biar gak kebesaran
     final ringkasanCount =
         width >=
             900
         ? 3
         : 2;
+
+    final ringkasanRatio =
+        width >=
+            1200
+        ? 2.4
+        : (width >=
+                  900
+              ? 2.1
+              : 1.65);
 
     // biar tinggi card grid tetap enak di desktop
     final modulRatio =
@@ -154,11 +162,6 @@ class _AdminPageView
                   900
               ? 3.2
               : 2.8);
-    final ringkasanRatio =
-        width >=
-            1200
-        ? 2.4
-        : 1.75;
 
     return Scaffold(
       backgroundColor: _bg,
@@ -177,16 +180,12 @@ class _AdminPageView
           primaryColor: _primary,
         ),
       ),
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: _text,
         elevation: 0,
-
-        // penting biar ga berubah warna saat scroll (Material 3)
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-
         centerTitle: false,
         title: const Text(
           'Dashboard Admin',
@@ -200,7 +199,7 @@ class _AdminPageView
             onPressed: () => vm.onTapNotifications(
               context,
             ),
-            icon: Icon(
+            icon: const Icon(
               Icons.notifications_none_outlined,
               color: _primary,
             ),
@@ -210,7 +209,7 @@ class _AdminPageView
             onPressed: () => vm.onTapSettings(
               context,
             ),
-            icon: Icon(
+            icon: const Icon(
               Icons.settings_outlined,
               color: _primary,
             ),
@@ -220,7 +219,6 @@ class _AdminPageView
           ),
         ],
       ),
-
       body: SafeArea(
         top: true,
         child: vm.isLoading
@@ -238,13 +236,11 @@ class _AdminPageView
                         16,
                         0,
                       ),
-
                       child: _HeroBanner(
                         primary: _primary,
                       ),
                     ),
                   ),
-
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
@@ -262,6 +258,7 @@ class _AdminPageView
                     ),
                   ),
 
+                  // ===== RINGKASAN GRID =====
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -308,7 +305,6 @@ class _AdminPageView
                       ),
                     ),
                   ),
-
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -328,7 +324,6 @@ class _AdminPageView
                       ),
                     ),
                   ),
-
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
@@ -346,6 +341,7 @@ class _AdminPageView
                     ),
                   ),
 
+                  // ===== MODUL GRID =====
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(
                       16,
@@ -422,7 +418,6 @@ class _AdminPageView
                               ),
                             ),
                           ),
-
                           _MenuTile(
                             title: 'LEXA',
                             subtitle: 'Chat Bot',
@@ -447,7 +442,6 @@ class _AdminPageView
                 ],
               ),
       ),
-
       floatingActionButton: _FabModern(
         primary: _primary,
         onTap: () => Navigator.push(
@@ -509,10 +503,10 @@ class _HeroBanner
       ),
       child: Row(
         children: [
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Selamat datang 👋',
                   style: TextStyle(
@@ -643,194 +637,263 @@ class _StatCardModern
   Widget build(
     BuildContext context,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(
-        14,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(
-          18,
-        ),
-        border: Border.all(
-          color: Colors.black.withOpacity(
-            0.05,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(
-              0.05,
-            ),
-            blurRadius: 14,
-            offset: const Offset(
-              0,
-              10,
-            ),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // icon box
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color:
-                  const Color(
-                    0xFF0E2E72,
-                  ).withOpacity(
-                    0.10,
-                  ),
-              borderRadius: BorderRadius.circular(
-                16,
-              ),
-              border: Border.all(
-                color:
-                    const Color(
-                      0xFF0E2E72,
-                    ).withOpacity(
-                      0.10,
-                    ),
-              ),
-            ),
-            child: Icon(
-              icon,
-              color: const Color(
-                0xFF0E2E72,
-              ),
-              size: 24,
-            ),
-          ),
-          const SizedBox(
-            width: 12,
-          ),
+    return LayoutBuilder(
+      builder:
+          (
+            context,
+            c,
+          ) {
+            // Compact: tinggi sempit
+            final compact =
+                c.maxHeight <
+                140;
 
-          // text area
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // title
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Color(
-                      0xFF58608B,
-                    ),
-                    height: 1.1,
+            // Narrow: lebar sempit (biasanya di HP 2 kolom)
+            final narrow =
+                c.maxWidth <
+                190;
+
+            final titleSize = compact
+                ? 12.5
+                : 13.0;
+            final valueSize = compact
+                ? 20.0
+                : 22.0;
+            final chipSize = compact
+                ? 10.5
+                : 11.5;
+
+            final gapTop = compact
+                ? 4.0
+                : 8.0;
+            final gapMid = compact
+                ? 6.0
+                : 10.0;
+
+            Widget chip() {
+              return Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: compact
+                      ? 8
+                      : 10,
+                  vertical: compact
+                      ? 4
+                      : 6,
+                ),
+
+                decoration: BoxDecoration(
+                  color:
+                      const Color(
+                        0xFF0E2E72,
+                      ).withOpacity(
+                        0.08,
+                      ),
+                  borderRadius: BorderRadius.circular(
+                    999,
+                  ),
+                  border: Border.all(
+                    color:
+                        const Color(
+                          0xFF0E2E72,
+                        ).withOpacity(
+                          0.10,
+                        ),
                   ),
                 ),
-                const SizedBox(
-                  height: 8,
-                ),
-
-                // value + chip
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        value,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Color(
-                            0xFF1A2552,
-                          ),
-                          height: 1.0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            const Color(
-                              0xFF0E2E72,
-                            ).withOpacity(
-                              0.08,
-                            ),
-                        borderRadius: BorderRadius.circular(
-                          999,
-                        ),
-                        border: Border.all(
-                          color:
-                              const Color(
-                                0xFF0E2E72,
-                              ).withOpacity(
-                                0.10,
-                              ),
-                        ),
-                      ),
-                      child: Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w800,
-                          color: Color(
-                            0xFF0E2E72,
-                          ),
-                          height: 1.0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(
-                  height: 10,
-                ),
-
-                // divider tipis biar rapih
-                Container(
-                  height: 1,
-                  width: double.infinity,
-                  color: Colors.black.withOpacity(
-                    0.05,
-                  ),
-                ),
-
-                const SizedBox(
-                  height: 8,
-                ),
-
-                // hint kecil (optional)
-                const Text(
-                  'Terupdate otomatis',
+                child: Text(
+                  subtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: Color(
-                      0xFF8B92B2,
+                    fontSize: chipSize,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(
+                      0xFF0E2E72,
                     ),
                     height: 1.0,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
+              );
+            }
+
+            Widget valueText() {
+              // ScaleDown biar angka ga pernah “hilang”
+              return FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: valueSize,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(
+                      0xFF1A2552,
+                    ),
+                    height: 1.0,
+                  ),
+                ),
+              );
+            }
+
+            return Container(
+              padding: EdgeInsets.all(
+                compact
+                    ? 12
+                    : 14,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(
+                  18,
+                ),
+                border: Border.all(
+                  color: Colors.black.withOpacity(
+                    0.05,
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(
+                      0.05,
+                    ),
+                    blurRadius: 14,
+                    offset: const Offset(
+                      0,
+                      10,
+                    ),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: compact
+                        ? 44
+                        : 48,
+                    height: compact
+                        ? 44
+                        : 48,
+                    decoration: BoxDecoration(
+                      color:
+                          const Color(
+                            0xFF0E2E72,
+                          ).withOpacity(
+                            0.10,
+                          ),
+                      borderRadius: BorderRadius.circular(
+                        16,
+                      ),
+                      border: Border.all(
+                        color:
+                            const Color(
+                              0xFF0E2E72,
+                            ).withOpacity(
+                              0.10,
+                            ),
+                      ),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: const Color(
+                        0xFF0E2E72,
+                      ),
+                      size: compact
+                          ? 22
+                          : 24,
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 12,
+                  ),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(
+                              0xFF58608B,
+                            ),
+                            height: 1.1,
+                          ),
+                        ),
+                        SizedBox(
+                          height: gapTop,
+                        ),
+
+                        // === INI YANG FIX: kalau sempit, angka & chip jadi 2 baris ===
+                        if (narrow) ...[
+                          SizedBox(
+                            height: compact
+                                ? 2
+                                : 0,
+                          ),
+                          valueText(),
+                          const SizedBox(
+                            height: 6,
+                          ),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: chip(),
+                          ),
+                        ] else ...[
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: valueText(),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              chip(),
+                            ],
+                          ),
+                        ],
+
+                        if (!compact) ...[
+                          SizedBox(
+                            height: gapMid,
+                          ),
+                          Container(
+                            height: 1,
+                            width: double.infinity,
+                            color: Colors.black.withOpacity(
+                              0.05,
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          const Text(
+                            'Terupdate otomatis',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(
+                                0xFF8B92B2,
+                              ),
+                              height: 1.0,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
     );
   }
 }
