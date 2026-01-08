@@ -1,10 +1,21 @@
 // lib/presentation/pages/mahasiswa/kelas/kelas_page.dart
 import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'detail_kelas_page.dart';
-import 'join_kelas_page.dart'; // ✅ TAMBAH INI
+import 'join_kelas_page.dart';
+
+class _RelJoinKelas {
+  final String relId;
+  final String kelasId;
+  const _RelJoinKelas({
+    required this.relId,
+    required this.kelasId,
+  });
+}
 
 class KelasPage
     extends
@@ -35,19 +46,12 @@ class _KelasPageState
     0xFF6F7AA6,
   );
 
-  final TextEditingController _search = TextEditingController();
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(
     BuildContext context,
   ) {
     final db = FirebaseFirestore.instance;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
       backgroundColor: _bg,
@@ -64,7 +68,7 @@ class _KelasPageState
           ),
         ),
         title: const Text(
-          'Daftar Kelas',
+          'Kelas Saya',
           style: TextStyle(
             color: _textDark,
             fontWeight: FontWeight.w900,
@@ -78,19 +82,29 @@ class _KelasPageState
         ],
       ),
 
-      // ✅ TOMBOL AMBIL / GABUNG KELAS BARU
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (
-                    _,
-                  ) => const JoinKelasPage(),
-            ),
-          );
-          // list akan otomatis update karena StreamBuilder
+          final joined =
+              await Navigator.push<
+                bool
+              >(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (
+                        _,
+                      ) => const JoinKelasPage(),
+                ),
+              );
+
+          if (joined ==
+                  true &&
+              context.mounted) {
+            _showTopToast(
+              context,
+              message: 'Berhasil gabung kelas',
+            );
+          }
         },
         icon: const Icon(
           Icons.group_add_rounded,
@@ -110,350 +124,507 @@ class _KelasPageState
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
       body:
-          StreamBuilder<
-            QuerySnapshot<
-              Map<
-                String,
-                dynamic
+          (uid ==
+              null)
+          ? const Center(
+              child: Text(
+                'Kamu belum login.',
+                style: TextStyle(
+                  color: _muted,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            )
+          : StreamBuilder<
+              DocumentSnapshot<
+                Map<
+                  String,
+                  dynamic
+                >
               >
-            >
-          >(
-            stream: db
-                .collection(
-                  'kelas',
-                )
-                .snapshots(),
-            builder:
-                (
-                  context,
-                  snapshot,
-                ) {
-                  if (snapshot.connectionState ==
-                      ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        'Error: ${snapshot.error}',
-                      ),
-                    );
-                  }
+            >(
+              // ambil user buat tahu primaryKelasId (opsional)
+              stream: db
+                  .collection(
+                    'users',
+                  )
+                  .doc(
+                    uid,
+                  )
+                  .snapshots(),
+              builder:
+                  (
+                    context,
+                    userSnap,
+                  ) {
+                    if (userSnap.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    if (userSnap.hasError) {
+                      return Center(
+                        child: Text(
+                          'Error: ${userSnap.error}',
+                        ),
+                      );
+                    }
 
-                  final docs =
-                      snapshot.data?.docs ??
-                      [];
+                    final userData =
+                        userSnap.data?.data() ??
+                        {};
 
-                  // filter kelas master (bukan doc join)
-                  final kelasMaster = docs.where(
-                    (
-                      doc,
-                    ) {
-                      final d = doc.data();
-                      final hasNama =
-                          d['nama'] !=
-                          null;
-
-                      final isJoinDoc =
-                          d['mahasiswaId'] !=
-                              null ||
-                          d['joinedAt'] !=
-                              null ||
-                          d['type'] ==
-                              'join';
-
-                      return hasNama &&
-                          !isJoinDoc;
-                    },
-                  ).toList();
-
-                  // search filter
-                  final q = _search.text.trim().toLowerCase();
-                  final filtered = q.isEmpty
-                      ? kelasMaster
-                      : kelasMaster.where(
+                    // ✅ ini kunci multi kelas:
+                    // ambil semua relasi kelas_mahasiswa untuk uid
+                    return StreamBuilder<
+                      QuerySnapshot<
+                        Map<
+                          String,
+                          dynamic
+                        >
+                      >
+                    >(
+                      stream: db
+                          .collection(
+                            'kelas_mahasiswa',
+                          )
+                          .where(
+                            'mahasiswaId',
+                            isEqualTo: uid,
+                          )
+                          .snapshots(),
+                      builder:
                           (
-                            doc,
+                            context,
+                            relSnap,
                           ) {
-                            final d = doc.data();
-                            final nama =
-                                (d['nama'] ??
-                                        '')
-                                    .toString()
-                                    .toLowerCase();
-                            final jurusan =
-                                (d['jurusan'] ??
-                                        '')
-                                    .toString()
-                                    .toLowerCase();
-                            final kode =
-                                (d['kode'] ??
-                                        '')
-                                    .toString()
-                                    .toLowerCase();
-                            final semester =
-                                (d['semester'] ??
-                                        '')
-                                    .toString()
-                                    .toLowerCase();
-
-                            return nama.contains(
-                                  q,
-                                ) ||
-                                jurusan.contains(
-                                  q,
-                                ) ||
-                                kode.contains(
-                                  q,
-                                ) ||
-                                semester.contains(
-                                  q,
-                                );
-                          },
-                        ).toList();
-
-                  return CustomScrollView(
-                    slivers: [
-                      // SEARCH BAR
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            16,
-                            2,
-                            16,
-                            14,
-                          ),
-                          child: _SearchBar(
-                            controller: _search,
-                            onChanged:
-                                (
-                                  _,
-                                ) => setState(
-                                  () {},
-                                ),
-                          ),
-                        ),
-                      ),
-
-                      // EMPTY STATE
-                      if (filtered.isEmpty)
-                        SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: Center(
-                            child: Text(
-                              q.isEmpty
-                                  ? 'Belum ada kelas'
-                                  : 'Kelas tidak ditemukan',
-                              style: const TextStyle(
-                                color: _muted,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      // LIST
-                      if (filtered.isNotEmpty)
-                        SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (
-                              context,
-                              index,
-                            ) {
-                              final doc = filtered[index];
-                              final d = doc.data();
-
-                              final nama =
-                                  (d['nama'] ??
-                                          '-')
-                                      .toString();
-                              final jurusan =
-                                  (d['jurusan'] ??
-                                          '')
-                                      .toString();
-                              final semester =
-                                  (d['semester'] ??
-                                          '')
-                                      .toString();
-                              final kode =
-                                  (d['kode'] ??
-                                          '')
-                                      .toString();
-                              final dosen =
-                                  (d['dosen'] ??
-                                          'Dosen')
-                                      .toString();
-
-                              final theme = _CardTheme.pick(
-                                nama,
-                                index,
+                            if (relSnap.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
                               );
-
-                              return Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  0,
-                                  16,
-                                  14,
+                            }
+                            if (relSnap.hasError) {
+                              return Center(
+                                child: Text(
+                                  'Error: ${relSnap.error}',
                                 ),
-                                child: _KelasModernCard(
-                                  title: nama,
-                                  kode: kode.isEmpty
-                                      ? null
-                                      : kode,
-                                  jurusan: jurusan.isEmpty
-                                      ? null
-                                      : jurusan,
-                                  semester: semester.isEmpty
-                                      ? null
-                                      : semester,
-                                  dosen: dosen,
-                                  theme: theme,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (
-                                              _,
-                                            ) => DetailKelasPage(
-                                              kelasId: doc.id,
-                                            ),
+                              );
+                            }
+
+                            final relDocs =
+                                relSnap.data?.docs ??
+                                [];
+
+                            if (relDocs.isEmpty) {
+                              return const _EmptyPrimaryKelas();
+                            }
+
+                            // kumpulkan semua kelasId dari relasi
+                            final kelasIds = relDocs
+                                .map(
+                                  (
+                                    e,
+                                  ) =>
+                                      (e.data()['kelasId'] ??
+                                              '')
+                                          .toString(),
+                                )
+                                .where(
+                                  (
+                                    id,
+                                  ) => id.isNotEmpty,
+                                )
+                                .toList();
+
+                            return ListView(
+                              padding: const EdgeInsets.fromLTRB(
+                                16,
+                                16,
+                                16,
+                                110,
+                              ),
+                              children: [
+                                // info kecil
+
+                                // render tiap kelasId -> ambil detail kelas -> card
+                                ...List.generate(
+                                  kelasIds.length,
+                                  (
+                                    index,
+                                  ) {
+                                    final kelasId = kelasIds[index];
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 14,
                                       ),
+                                      child:
+                                          StreamBuilder<
+                                            DocumentSnapshot<
+                                              Map<
+                                                String,
+                                                dynamic
+                                              >
+                                            >
+                                          >(
+                                            stream: db
+                                                .collection(
+                                                  'kelas',
+                                                )
+                                                .doc(
+                                                  kelasId,
+                                                )
+                                                .snapshots(),
+                                            builder:
+                                                (
+                                                  context,
+                                                  kelasSnap,
+                                                ) {
+                                                  if (!kelasSnap.hasData ||
+                                                      !kelasSnap.data!.exists) {
+                                                    return _BrokenKelasCard(
+                                                      kelasId: kelasId,
+                                                    );
+                                                  }
+
+                                                  final d =
+                                                      kelasSnap.data!.data() ??
+                                                      {};
+                                                  final nama =
+                                                      (d['nama'] ??
+                                                              '-')
+                                                          .toString();
+                                                  final jurusan =
+                                                      (d['jurusan'] ??
+                                                              '')
+                                                          .toString();
+                                                  final semester =
+                                                      (d['semester'] ??
+                                                              '')
+                                                          .toString();
+                                                  final kode =
+                                                      (d['kode'] ??
+                                                              '')
+                                                          .toString();
+                                                  final dosen =
+                                                      (d['dosen'] ??
+                                                              'Dosen')
+                                                          .toString();
+
+                                                  final theme = _CardTheme.pick(
+                                                    nama,
+                                                    index,
+                                                  );
+
+                                                  return Stack(
+                                                    children: [
+                                                      _KelasModernCard(
+                                                        title: nama,
+                                                        kode: kode.isEmpty
+                                                            ? null
+                                                            : kode,
+                                                        jurusan: jurusan.isEmpty
+                                                            ? null
+                                                            : jurusan,
+                                                        semester: semester.isEmpty
+                                                            ? null
+                                                            : semester,
+                                                        dosen: dosen,
+                                                        theme: theme,
+                                                        onTap: () async {
+                                                          final result = await Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder:
+                                                                  (
+                                                                    _,
+                                                                  ) => DetailKelasPage(
+                                                                    kelasId: kelasId,
+                                                                  ),
+                                                            ),
+                                                          );
+
+                                                          if (!context.mounted) return;
+
+                                                          if (result
+                                                                  is Map &&
+                                                              result['deleted'] ==
+                                                                  true) {
+                                                            _showTopToast(
+                                                              context,
+                                                              message:
+                                                                  (result['message'] ??
+                                                                          'Kelas berhasil dihapus')
+                                                                      .toString(),
+                                                            );
+                                                          }
+                                                        },
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                          ),
                                     );
                                   },
                                 ),
-                              );
-                            },
-                            childCount: filtered.length,
-                          ),
-                        ),
+                              ],
+                            );
+                          },
+                    );
+                  },
+            ),
+    );
+  }
 
-                      const SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 90,
+  void _showTopToast(
+    BuildContext context, {
+    required String message,
+    Color bgColor = const Color(
+      0xFF22C55E,
+    ),
+    IconData icon = Icons.check_circle_rounded,
+  }) {
+    final overlay = Overlay.of(
+      context,
+    );
+    if (overlay ==
+        null)
+      return;
+
+    late OverlayEntry entry;
+
+    entry = OverlayEntry(
+      builder:
+          (
+            _,
+          ) {
+            final top =
+                MediaQuery.of(
+                  context,
+                ).padding.top +
+                12;
+            return Positioned(
+              top: top,
+              left: 16,
+              right: 16,
+              child: Material(
+                color: Colors.transparent,
+                child:
+                    TweenAnimationBuilder<
+                      double
+                    >(
+                      duration: const Duration(
+                        milliseconds: 220,
+                      ),
+                      curve: Curves.easeOutCubic,
+                      tween: Tween(
+                        begin: 0.0,
+                        end: 1.0,
+                      ),
+                      builder:
+                          (
+                            context,
+                            t,
+                            child,
+                          ) {
+                            return Opacity(
+                              opacity: t,
+                              child: Transform.translate(
+                                offset: Offset(
+                                  0,
+                                  (1 -
+                                          t) *
+                                      -14,
+                                ),
+                                child: child,
+                              ),
+                            );
+                          },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
                         ),
-                      ), // ruang utk FAB
-                    ],
-                  );
-                },
-          ),
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(
+                            18,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(
+                                0.25,
+                              ),
+                              blurRadius: 16,
+                              offset: const Offset(
+                                0,
+                                8,
+                              ),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              icon,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Expanded(
+                              child: Text(
+                                message,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 6,
+                            ),
+                            InkWell(
+                              onTap: () => entry.remove(),
+                              borderRadius: BorderRadius.circular(
+                                999,
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(
+                                  6,
+                                ),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+              ),
+            );
+          },
+    );
+
+    overlay.insert(
+      entry,
+    );
+
+    Future.delayed(
+      const Duration(
+        seconds: 2,
+      ),
+      () {
+        try {
+          entry.remove();
+        } catch (
+          _
+        ) {}
+      },
     );
   }
 }
 
-/// ======================
-/// SEARCH BAR MODERN
-/// ======================
-class _SearchBar
+class _BrokenKelasCard
     extends
         StatelessWidget {
-  final TextEditingController controller;
-  final ValueChanged<
-    String
-  >
-  onChanged;
-
-  const _SearchBar({
-    required this.controller,
-    required this.onChanged,
+  final String kelasId;
+  const _BrokenKelasCard({
+    required this.kelasId,
   });
 
   @override
   Widget build(
     BuildContext context,
   ) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(
-        18,
+    return Container(
+      padding: const EdgeInsets.all(
+        16,
       ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: 10,
-          sigmaY: 10,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(
+          18,
         ),
-        child: Container(
-          height: 52,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
+        border: Border.all(
+          color: const Color(
+            0x14000000,
           ),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(
-              0.78,
-            ),
-            borderRadius: BorderRadius.circular(
-              18,
-            ),
-            border: Border.all(
-              color: const Color(
-                0x14000000,
+        ),
+      ),
+      child: Text(
+        'Kelas tidak ditemukan / sudah dihapus.\n(ID: $kelasId)',
+        style: const TextStyle(
+          color: Color(
+            0xFF6F7AA6,
+          ),
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyPrimaryKelas
+    extends
+        StatelessWidget {
+  const _EmptyPrimaryKelas();
+
+  static const Color _muted = Color(
+    0xFF6F7AA6,
+  );
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(
+          24,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.class_,
+              size: 64,
+              color: Color(
+                0xFF1B3C9E,
               ),
             ),
-            boxShadow: const [
-              BoxShadow(
+            const SizedBox(
+              height: 12,
+            ),
+            const Text(
+              'Kamu belum punya Kelas',
+              textAlign: TextAlign.center,
+              style: TextStyle(
                 color: Color(
-                  0x0F000000,
+                  0xFF1A2552,
                 ),
-                blurRadius: 18,
-                offset: Offset(
-                  0,
-                  10,
-                ),
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.search_rounded,
-                color: Color(
-                  0xFF6F7AA6,
-                ),
+            ),
+            const SizedBox(
+              height: 8,
+            ),
+            const Text(
+              'Tekan tombol “Gabung Kelas” di kanan bawah untuk mengambil kelas pertama kamu.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: _muted,
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  onChanged: onChanged,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'Cari kelas...',
-                    hintStyle: TextStyle(
-                      color: Color(
-                        0xFF6F7AA6,
-                      ),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  style: const TextStyle(
-                    color: Color(
-                      0xFF1A2552,
-                    ),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              if (controller.text.isNotEmpty)
-                IconButton(
-                  onPressed: () {
-                    controller.clear();
-                    onChanged(
-                      '',
-                    );
-                  },
-                  icon: const Icon(
-                    Icons.close_rounded,
-                  ),
-                  color: const Color(
-                    0xFF6F7AA6,
-                  ),
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -461,9 +632,7 @@ class _SearchBar
 }
 
 /// ======================
-/// CARD KELAS MODERN (lebih menarik)
-/// - bagian dosen dibuat chip, bukan kotak
-/// - ada chip semester
+/// CARD KELAS MODERN (punyamu tetap)
 /// ======================
 class _KelasModernCard
     extends
@@ -523,7 +692,6 @@ class _KelasModernCard
           ),
           child: Stack(
             children: [
-              // soft circles
               Positioned(
                 right: -60,
                 top: -60,
@@ -544,8 +712,6 @@ class _KelasModernCard
                   size: 240,
                 ),
               ),
-
-              // subtle gloss
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -565,8 +731,6 @@ class _KelasModernCard
                   ),
                 ),
               ),
-
-              // content
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   16,
@@ -577,7 +741,6 @@ class _KelasModernCard
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title + badge kode
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -609,8 +772,6 @@ class _KelasModernCard
                     const SizedBox(
                       height: 10,
                     ),
-
-                    // ✅ Prodi / Jurusan (baris sendiri)
                     if (jurusan !=
                             null &&
                         jurusan!.isNotEmpty)
@@ -637,12 +798,9 @@ class _KelasModernCard
                           fontSize: 13.6,
                         ),
                       ),
-
                     const SizedBox(
                       height: 6,
                     ),
-
-                    // ✅ Semester (baris bawahnya)
                     if (semester !=
                             null &&
                         semester!.isNotEmpty)
@@ -658,10 +816,7 @@ class _KelasModernCard
                           fontSize: 13.2,
                         ),
                       ),
-
                     const Spacer(),
-
-                    // ✅ Chips dosen + semester (lebih menarik)
                     Row(
                       children: [
                         Expanded(
