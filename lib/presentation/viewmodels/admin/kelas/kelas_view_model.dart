@@ -1,11 +1,14 @@
+import 'package:bisa/domain/entities/kelas.dart';
 import 'package:flutter/material.dart';
-import '../../../../domain/entities/kelas.dart';
-import '../../../../domain/usecases/kelas/add_kelas.dart';
-import '../../../../domain/usecases/kelas/get_kelas.dart';
-import '../../../../domain/usecases/kelas/update_kelas.dart';
-import '../../../../domain/usecases/kelas/delete_kelas.dart';
 
-class KelasViewModel extends ChangeNotifier {
+import 'package:bisa/domain/usecases/kelas/add_kelas.dart';
+import 'package:bisa/domain/usecases/kelas/get_kelas.dart';
+import 'package:bisa/domain/usecases/kelas/update_kelas.dart';
+import 'package:bisa/domain/usecases/kelas/delete_kelas.dart';
+
+class KelasViewModel
+    extends
+        ChangeNotifier {
   final GetKelas getKelas;
   final AddKelas addKelas;
   final UpdateKelas updateKelas;
@@ -20,27 +23,60 @@ class KelasViewModel extends ChangeNotifier {
     _init();
   }
 
-  final List<Kelas> _kelasList = [];
-  List<Kelas> get kelasList => _kelasList;
+  final List<
+    Kelas
+  >
+  _kelasList = [];
+  List<
+    Kelas
+  >
+  get kelasList => _kelasList;
 
   void _init() {
-    getKelas().listen((data) {
-      _kelasList
-        ..clear()
-        ..addAll(data);
-      notifyListeners();
-    });
+    getKelas().listen(
+      (
+        data,
+      ) {
+        _kelasList
+          ..clear()
+          ..addAll(
+            data,
+          );
+        notifyListeners();
+      },
+    );
   }
 
-  Future<void> tambahKelas(Kelas kelas) async {
-    await addKelas(kelas);
+  Future<
+    void
+  >
+  tambahKelas(
+    Kelas kelas,
+  ) async {
+    await addKelas(
+      kelas,
+    );
   }
 
-  Future<void> editKelas(Kelas kelas) async {
-    await updateKelas(kelas);
+  Future<
+    void
+  >
+  editKelas(
+    Kelas kelas,
+  ) async {
+    await updateKelas(
+      kelas,
+    );
   }
 
-  Future<void> hapusKelas(String id) async {
-    await deleteKelas(id);
+  Future<
+    void
+  >
+  hapusKelas(
+    String id,
+  ) async {
+    await deleteKelas(
+      id,
+    );
   }
 }
