@@ -2,6 +2,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../data/services/lexa_services.dart';
 import '../../../../data/services/qroq_service.dart';
@@ -27,6 +28,9 @@ class _LexaChatPageState extends State<LexaChatPage> {
   bool isTyping = false;
   bool _showJump = false;
 
+  String? _attachedContent;
+  String? _attachedLabel;
+
   static const Color _bg = Color(0xFFF5F6FA);
 
   @override
@@ -36,10 +40,7 @@ class _LexaChatPageState extends State<LexaChatPage> {
     lexa = LexaService(GroqService(), FirestoreHelper());
     fileReader = FileReaderService();
 
-    // 🔴 PENTING: update UI saat user mengetik
-    _controller.addListener(() {
-      setState(() {});
-    });
+    _controller.addListener(() => setState(() {}));
 
     messages.add(
       _ChatMessage(
@@ -70,72 +71,105 @@ class _LexaChatPageState extends State<LexaChatPage> {
     super.dispose();
   }
 
-  // ===================== SEND TEXT =====================
-
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
-    if (text.isEmpty || isTyping) return;
+    final hasFile =
+        _attachedContent != null && _attachedContent!.trim().isNotEmpty;
+
+    debugPrint(
+      'SEND: hasFile=$hasFile, text="$text", fileLen=${_attachedContent?.length}',
+    );
+
+    if ((text.isEmpty && !hasFile) || isTyping) return;
 
     setState(() {
-      messages.add(
-        _ChatMessage(text: text, isUser: true, createdAt: DateTime.now()),
-      );
+      if (text.isNotEmpty) {
+        messages.add(
+          _ChatMessage(text: text, isUser: true, createdAt: DateTime.now()),
+        );
+      }
+      if (hasFile) {
+        messages.add(
+          _ChatMessage(
+            text: '📎 ${_attachedLabel ?? "File terlampir"}',
+            isUser: true,
+            createdAt: DateTime.now(),
+          ),
+        );
+      }
       isTyping = true;
     });
 
     _controller.clear();
+    _focus.unfocus();
     _scrollDown();
 
-    final reply = await lexa.reply(text);
+    String reply;
+    try {
+      if (hasFile) {
+        final question = text.isNotEmpty ? text : 'Ringkas isi file ini';
+        reply = await lexa.replyWithFile(
+          question: question,
+          fileContent: _attachedContent!,
+        );
+      } else {
+        reply = await lexa.reply(text);
+      }
+    } catch (e) {
+      reply = 'Maaf, terjadi error: $e';
+    }
 
     if (!mounted) return;
+
     setState(() {
       messages.add(
         _ChatMessage(text: reply, isUser: false, createdAt: DateTime.now()),
       );
       isTyping = false;
+
+      _attachedContent = null;
+      _attachedLabel = null;
     });
 
     _scrollDown();
   }
 
-  // ===================== PICK FILE =====================
-
-  Future<void> _pickFileAndSend() async {
+  Future<void> _pickFile() async {
     if (isTyping) return;
 
-    final content = await fileReader.pickAndReadFile();
-    if (content == null || content.trim().isEmpty) {
+    final result = await fileReader.pickAndReadFile();
+    if (result == null) return;
+
+    final name = result['name'] ?? 'File';
+    final content = result['content'] ?? '';
+
+    debugPrint('ATTACH: name="$name", len=${content.length}');
+
+    if (content.trim().isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Isi file kosong / tidak terbaca. Jika PDF scan, perlu OCR.',
+          ),
+        ),
+      );
       return;
     }
 
     setState(() {
-      messages.add(
-        _ChatMessage(
-          text: '📎 File berhasil diunggah',
-          isUser: true,
-          createdAt: DateTime.now(),
-        ),
-      );
-      isTyping = true;
+      _attachedContent = content;
+      _attachedLabel = name;
     });
 
-    _scrollDown();
+    _focus.requestFocus();
+  }
 
-    final reply = await lexa.replyWithFile(
-      question: 'Tolong jelaskan isi file ini',
-      fileContent: content,
-    );
-
-    if (!mounted) return;
+  void _removeAttachment() {
     setState(() {
-      messages.add(
-        _ChatMessage(text: reply, isUser: false, createdAt: DateTime.now()),
-      );
-      isTyping = false;
+      _attachedContent = null;
+      _attachedLabel = null;
     });
-
-    _scrollDown();
   }
 
   void _scrollDown({bool instant = false}) {
@@ -154,7 +188,10 @@ class _LexaChatPageState extends State<LexaChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final canSend = _controller.text.trim().isNotEmpty && !isTyping;
+    final hasFile =
+        _attachedContent != null && _attachedContent!.trim().isNotEmpty;
+    final canSend =
+        (!isTyping) && (_controller.text.trim().isNotEmpty || hasFile);
 
     return Scaffold(
       backgroundColor: _bg,
@@ -188,8 +225,11 @@ class _LexaChatPageState extends State<LexaChatPage> {
                 focusNode: _focus,
                 enabled: !isTyping,
                 canSend: canSend,
+                hasAttachment: hasFile,
+                attachmentLabel: _attachedLabel ?? 'File terlampir',
+                onRemoveAttachment: _removeAttachment,
                 onSend: _sendMessage,
-                onPickFile: _pickFileAndSend,
+                onPickFile: _pickFile,
               ),
             ],
           ),
@@ -262,6 +302,10 @@ class _InputDock extends StatelessWidget {
   final VoidCallback onSend;
   final VoidCallback onPickFile;
 
+  final bool hasAttachment;
+  final String attachmentLabel;
+  final VoidCallback onRemoveAttachment;
+
   const _InputDock({
     required this.controller,
     required this.focusNode,
@@ -269,6 +313,9 @@ class _InputDock extends StatelessWidget {
     required this.canSend,
     required this.onSend,
     required this.onPickFile,
+    required this.hasAttachment,
+    required this.attachmentLabel,
+    required this.onRemoveAttachment,
   });
 
   @override
@@ -277,29 +324,92 @@ class _InputDock extends StatelessWidget {
       top: false,
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: const Icon(Icons.attach_file_rounded),
-              onPressed: enabled ? onPickFile : null,
-            ),
-            Expanded(
-              child: TextField(
-                controller: controller,
-                focusNode: focusNode,
-                enabled: enabled,
-                minLines: 1,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  hintText: 'Tulis pesan ke LEXA...',
-                  border: InputBorder.none,
+            if (hasAttachment)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.black.withOpacity(0.06)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0C000000),
+                      blurRadius: 10,
+                      offset: Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.insert_drive_file_rounded,
+                      color: Color(0xFF1B3C9E),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        attachmentLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      onPressed: enabled ? onRemoveAttachment : null,
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.send_rounded),
-              color: canSend ? Colors.blue : Colors.grey,
-              onPressed: canSend ? onSend : null,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.black.withOpacity(0.06)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0D000000),
+                    blurRadius: 14,
+                    offset: Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.attach_file_rounded),
+                    onPressed: enabled ? onPickFile : null,
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      enabled: enabled,
+                      minLines: 1,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        hintText: 'Tulis pesan ke LEXA...',
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.send_rounded),
+                    color: canSend ? const Color(0xFF1B3C9E) : Colors.grey,
+                    onPressed: canSend ? onSend : null,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

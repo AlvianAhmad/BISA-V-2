@@ -74,7 +74,6 @@ class AkunPage extends StatelessWidget {
                     _InfoTile(label: 'Username', value: username),
                     _InfoTile(label: 'NIM', value: nim),
                     _InfoTile(label: 'Program Studi', value: programStudi),
-                    _InfoTile(label: 'Kelas ID', value: kelasId),
                     _InfoTile(label: 'Email', value: email),
 
                     const SizedBox(height: 14),

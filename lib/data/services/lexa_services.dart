@@ -90,8 +90,7 @@ Kalau user butuh bantuan akademik, arahkan dengan contoh pertanyaan ke LEXA.
     );
   }
 
-  // ================== CHAT DENGAN FILE ==================
-  // (INI YANG DITAMBAHKAN – FIX ERROR KAMU)
+  // ================== CHAT DENGAN FILE (ROUTER) ==================
 
   Future<String> replyWithFile({
     required String question,
@@ -100,34 +99,104 @@ Kalau user butuh bantuan akademik, arahkan dengan contoh pertanyaan ke LEXA.
     final q = question.trim();
     final content = fileContent.trim();
 
-    if (q.isEmpty) {
-      return 'Tulis pertanyaan tentang file tersebut ya 😊';
-    }
+    if (q.isEmpty) return 'Tulis pertanyaan dulu ya 😊';
 
+    // kalau file kosong, tetap jawab normal
     if (content.isEmpty) {
-      return 'Maaf, isi file tidak dapat dibaca atau kosong.';
+      return reply(q);
     }
 
-    // Batas aman token
-    final safeContent = content.length > 6000
-        ? content.substring(0, 6000)
+    final lowerQ = q.toLowerCase();
+
+    // file-intent: user minta ringkasan/analisis/kutip dari file
+    final fileIntent = _containsAny(lowerQ, [
+      'isi file',
+      'isi pdf',
+      'ringkas',
+      'rangkum',
+      'resume',
+      'buat ringkasan',
+      'jelaskan isi',
+      'apa isi',
+      'apa inti',
+      'kesimpulan',
+      'poin penting',
+      'bab',
+      'chapter',
+      'halaman',
+      'paragraf',
+      'kutip',
+      'ambil',
+      'berdasarkan file',
+      'berdasarkan pdf',
+      'dari file',
+      'dari pdf',
+      'tuliskan kembali',
+      'jelaskan bagian',
+      'intisari',
+    ]);
+
+    // intent kampus/LMS -> pakai reply normal (lebih akurat karena pakai db)
+    final lmsIntent = _containsAny(lowerQ, [
+      'kelas',
+      'jadwal',
+      'tugas',
+      'materi',
+      'absen',
+      'absensi',
+      'kehadiran',
+      'deadline',
+      'matkul',
+      'mata kuliah',
+      'nilai',
+    ]);
+
+    // kalau user tidak ada indikasi nanya file dan jelas nanya LMS -> jawab normal
+    if (!fileIntent && lmsIntent) {
+      return reply(q);
+    }
+
+    // kalau pertanyaannya sangat umum tapi ada file terlampir,
+    // tetap boleh coba jawab dari file dulu, lalu kalau gak ada kasih jawaban umum.
+    final safeContent = content.length > 8000
+        ? content.substring(0, 8000)
         : content;
 
-    return llm.generateReply('''
-$_systemPrompt
+    final prompt =
+        '''
+Kamu adalah LEXA, asisten akademik.
 
-KONTEKS FILE:
+Tugas:
+1) Cek apakah jawaban ada di ISI FILE.
+2) Jika ada -> jawab berdasarkan file.
+3) Jika tidak ada -> tulis: "Tidak ditemukan di file." lalu berikan Jawaban Umum bila memungkinkan.
+
+Aturan:
+- Jangan mengarang isi file.
+- Bedakan sumber:
+  [Berdasarkan File]
+  [Jawaban Umum]
+
+=== ISI FILE (SUMBER UTAMA) ===
+<<<FILE_START
 $safeContent
+FILE_END>>>
 
-INSTRUKSI:
-- Jawab pertanyaan user BERDASARKAN isi file
-- Jangan mengarang jika tidak ada di file
-- Jika diminta ringkasan, buat ringkasan
-- Jika informasi tidak ditemukan, katakan dengan jujur
-
-PERTANYAAN USER:
+=== PERTANYAAN USER ===
 $q
-''');
+
+Format jawaban:
+[Berdasarkan File]
+- ...
+
+Jika tidak ditemukan:
+Tidak ditemukan di file.
+
+[Jawaban Umum]
+- ...
+''';
+
+    return llm.generateReply(prompt);
   }
 
   // ================== HANDLERS ==================

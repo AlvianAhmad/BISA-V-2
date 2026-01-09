@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class GroqService {
   static const String _apiKey =
-      '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';
+      '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';
   static const String _endpoint =
       'https://api.groq.com/openai/v1/chat/completions';
 
