@@ -26,7 +26,6 @@ class _MahasiswaPageState extends State<MahasiswaPage> {
         onOpenKelas: () => _push(const KelasPage()),
         onOpenJadwal: () => _push(const KelasPage()),
         onOpenTugas: () => _push(const KelasPage()),
-        onOpenNilai: () => _push(const _PlaceholderPage(title: 'Nilai')),
       ),
       const KelasPage(), // Materi (sementara pilih kelas dulu)
       const KelasPage(), // Jadwal (sementara pilih kelas dulu)
@@ -54,13 +53,11 @@ class _HomeDashboard extends StatelessWidget {
   final VoidCallback onOpenKelas;
   final VoidCallback onOpenJadwal;
   final VoidCallback onOpenTugas;
-  final VoidCallback onOpenNilai;
 
   const _HomeDashboard({
     required this.onOpenKelas,
     required this.onOpenJadwal,
     required this.onOpenTugas,
-    required this.onOpenNilai,
   });
 
   @override
@@ -73,7 +70,6 @@ class _HomeDashboard extends StatelessWidget {
             onKelas: onOpenKelas,
             onJadwal: onOpenJadwal,
             onTugas: onOpenTugas,
-            onNilai: onOpenNilai,
           ),
         ),
 
@@ -101,13 +97,11 @@ class _HeaderWithQuickMenu extends StatelessWidget {
   final VoidCallback onKelas;
   final VoidCallback onJadwal;
   final VoidCallback onTugas;
-  final VoidCallback onNilai;
 
   const _HeaderWithQuickMenu({
     required this.onKelas,
     required this.onJadwal,
     required this.onTugas,
-    required this.onNilai,
   });
 
   @override
@@ -152,7 +146,6 @@ class _HeaderWithQuickMenu extends StatelessWidget {
                 onKelas: onKelas,
                 onJadwal: onJadwal,
                 onTugas: onTugas,
-                onNilai: onNilai,
               ),
             ),
           ),
@@ -295,13 +288,11 @@ class _QuickMenuRow extends StatelessWidget {
   final VoidCallback onKelas;
   final VoidCallback onJadwal;
   final VoidCallback onTugas;
-  final VoidCallback onNilai;
 
   const _QuickMenuRow({
     required this.onKelas,
     required this.onJadwal,
     required this.onTugas,
-    required this.onNilai,
   });
 
   @override
@@ -334,21 +325,9 @@ class _QuickMenuRow extends StatelessWidget {
             onTap: onTugas,
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _QuickMenuCard(
-            title: 'Nilai',
-            icon: Icons.school_rounded,
-            color: const Color(0xFF2E9E67),
-            onTap: onOpenNilaiGuard(context),
-          ),
-        ),
       ],
     );
   }
-
-  // biar konsisten seperti yang lain (tanpa ubah struktur)
-  VoidCallback onOpenNilaiGuard(BuildContext context) => onNilai;
 }
 
 class _QuickMenuCard extends StatelessWidget {

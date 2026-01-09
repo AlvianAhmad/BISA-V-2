@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // ✅ WAJIB
 import '../../../domain/repositories/auth_repository.dart';
 
 class LoginViewModel extends ChangeNotifier {
@@ -99,20 +100,25 @@ class LoginViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> resetPassword() async {
-    isLoading = true;
+  Future<void> resetPassword({required String email}) async {
+    isLoading = true; // ✅ biar UI keblock saat proses
     errorMessage = null;
     notifyListeners();
 
     try {
-      final input = inputC.text.trim();
-      if (input.isEmpty)
-        throw Exception('Masukkan email untuk reset password.');
-      if (!input.contains('@')) throw Exception('Masukkan email yang valid.');
-
-      await _repo.resetPassword(input);
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-email') {
+        errorMessage = 'Format email tidak valid.';
+      } else if (e.code == 'user-not-found') {
+        errorMessage = 'Email tidak terdaftar.';
+      } else if (e.code == 'too-many-requests') {
+        errorMessage = 'Terlalu banyak percobaan. Coba lagi nanti.';
+      } else {
+        errorMessage = 'Gagal kirim reset: ${e.message}';
+      }
     } catch (e) {
-      errorMessage = _mapFirebaseAuthMessage(e.toString());
+      errorMessage = 'Gagal kirim reset: $e';
     } finally {
       isLoading = false;
       notifyListeners();

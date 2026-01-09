@@ -18,6 +18,12 @@ class LoginPage extends StatelessWidget {
     }
   }
 
+  // ✅ validasi email sederhana
+  bool _isEmail(String input) {
+    final s = input.trim();
+    return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(s);
+  }
+
   Widget _input({
     required String hint,
     required TextEditingController controller,
@@ -74,7 +80,6 @@ class LoginPage extends StatelessWidget {
                   child: IntrinsicHeight(
                     child: Column(
                       children: [
-                        // BACK -> WELCOME
                         Align(
                           alignment: Alignment.topLeft,
                           child: IconButton(
@@ -93,7 +98,6 @@ class LoginPage extends StatelessWidget {
 
                         const SizedBox(height: 10),
 
-                        // LOGO
                         CircleAvatar(
                           radius: 65,
                           backgroundColor: const Color(0xFF002F6C),
@@ -138,7 +142,6 @@ class LoginPage extends StatelessWidget {
 
                         const SizedBox(height: 8),
 
-                        // ERROR
                         if (vm.errorMessage != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
@@ -153,7 +156,6 @@ class LoginPage extends StatelessWidget {
 
                         const SizedBox(height: 16),
 
-                        // LOGIN EMAIL/USERNAME
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -194,7 +196,6 @@ class LoginPage extends StatelessWidget {
 
                         const SizedBox(height: 20),
 
-                        // LOGIN GOOGLE
                         OutlinedButton.icon(
                           onPressed: vm.isLoading
                               ? null
@@ -229,20 +230,41 @@ class LoginPage extends StatelessWidget {
 
                         const SizedBox(height: 12),
 
-                        // RESET PASSWORD
+                        // ✅ RESET PASSWORD (SUDAH PASS email)
                         TextButton(
                           onPressed: vm.isLoading
                               ? null
                               : () async {
-                                  await vm.resetPassword();
-                                  if (vm.errorMessage == null &&
-                                      context.mounted) {
+                                  final input = vm.inputC.text.trim();
+
+                                  // wajib email (reset password Firebase cuma bisa email)
+                                  if (!_isEmail(input)) {
+                                    if (!context.mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
-                                          'Link reset password dikirim ke email',
+                                          'Untuk reset password, masukkan EMAIL yang valid (bukan username).',
                                         ),
                                       ),
+                                    );
+                                    return;
+                                  }
+
+                                  await vm.resetPassword(email: input);
+
+                                  if (!context.mounted) return;
+
+                                  if (vm.errorMessage == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Link reset password dikirim ke email (cek Spam/Promosi).',
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(vm.errorMessage!)),
                                     );
                                   }
                                 },
@@ -254,7 +276,6 @@ class LoginPage extends StatelessWidget {
 
                         const SizedBox(height: 8),
 
-                        // KE REGISTER
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -290,7 +311,6 @@ class LoginPage extends StatelessWidget {
             ),
           ),
 
-          // LOADING OVERLAY
           if (vm.isLoading)
             Container(
               width: double.infinity,
